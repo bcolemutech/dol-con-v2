@@ -1,6 +1,6 @@
 ﻿namespace DolSdk.BaseTypes;
 
-public class Root
+public class Map
 {
     public Info info { get; set; }
     public Settings settings { get; set; }
