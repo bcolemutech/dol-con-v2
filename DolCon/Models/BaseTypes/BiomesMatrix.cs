@@ -1,8 +1,8 @@
-﻿namespace DolSdk.BaseTypes;
+﻿namespace DolCon.Models.BaseTypes;
 
 using Newtonsoft.Json;
 
-public class BiomesMartix
+public class BiomesMatrix
 {
     [JsonProperty("0")]
     public int _0 { get; set; }

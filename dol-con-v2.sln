@@ -5,8 +5,6 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DolCon", "DolCon\DolCon.csproj", "{9DD9DF23-EC78-4264-9C9C-49C1954FB73A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DolSdk", "DolSdk\DolSdk.csproj", "{C3E2CE49-27E8-4E95-8015-A7DCD38AC64A}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,9 +18,5 @@ Global
 		{9DD9DF23-EC78-4264-9C9C-49C1954FB73A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9DD9DF23-EC78-4264-9C9C-49C1954FB73A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9DD9DF23-EC78-4264-9C9C-49C1954FB73A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C3E2CE49-27E8-4E95-8015-A7DCD38AC64A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C3E2CE49-27E8-4E95-8015-A7DCD38AC64A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C3E2CE49-27E8-4E95-8015-A7DCD38AC64A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C3E2CE49-27E8-4E95-8015-A7DCD38AC64A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

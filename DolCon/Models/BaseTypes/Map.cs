@@ -1,4 +1,4 @@
-﻿namespace DolSdk.BaseTypes;
+﻿namespace DolCon.Models.BaseTypes;
 
 public class Map
 {
