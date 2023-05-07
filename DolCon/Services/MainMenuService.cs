@@ -23,18 +23,43 @@ public class MainMenuService : IMainMenuService
         var startSelection = AnsiConsole.Prompt(
             new SelectionPrompt<string>()
             .Title("Start a new game or load a save?")
-            .AddChoices(new[] { "New game", "Load game" })
+            .AddChoices("New game", "Load game")
         );
         
-        if (startSelection == "New game")
+        switch (startSelection)
         {
-            await StartNewGame();
-        }
-        else if (startSelection == "Load game")
-        {
-            AnsiConsole.WriteLine("Loading a save...");
+            case "New game":
+                await StartNewGame();
+                break;
+            case "Load game":
+                await LoadGame();
+                break;
         }
         System.Environment.Exit(0);
+    }
+
+    private async Task LoadGame()
+    {
+        var saves = _saveGameService.GetSaves();
+
+        if (!saves.Any())
+        {
+            return;
+        }
+
+        var saveSelection = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+                .Title("Select a save to load")
+                .AddChoices(saves.Select(x => x.Name)
+                ));
+
+        AnsiConsole.MarkupLine("Loading save [yellow]{0}[/]", saveSelection);
+        
+        var saveFile = saves.First(x => x.Name == saveSelection);
+        
+        var map = await _saveGameService.LoadGame(saveFile);
+        
+        AnsiConsole.WriteLine("Save loaded, starting game...");
     }
 
     private async Task StartNewGame()
