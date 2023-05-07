@@ -7,7 +7,7 @@ using Spectre.Console;
 public interface IMapService
 {
     IEnumerable<FileInfo> GetMaps();
-    Map LoadMap(FileInfo mapFile);
+    Task<Map> LoadMap(FileInfo mapFile);
 }
 
 public class MapService : IMapService
@@ -38,15 +38,15 @@ public class MapService : IMapService
         return new List<FileInfo>();
     }
 
-    public Map LoadMap(FileInfo mapFile)
+    public async Task<Map> LoadMap(FileInfo mapFile)
     {
         Map? map = null;
-        AnsiConsole.Status().Start("Loading map...", ctx =>
+        await AnsiConsole.Status().StartAsync("Loading map...", async ctx =>
         {
             ctx.Spinner(Spinner.Known.Star);
             ctx.SpinnerStyle(Style.Parse("yellow"));
-
-            map = JsonSerializer.Deserialize<Map>(File.ReadAllText(mapFile.FullName));
+            var stream = File.OpenRead(mapFile.FullName);
+            map = await JsonSerializer.DeserializeAsync<Map>(stream);
         });
         return map ?? throw new DolMapException("Failed to load map");
     }
