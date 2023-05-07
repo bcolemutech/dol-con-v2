@@ -6,7 +6,7 @@ using var host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((hostContext, services) =>
     {
         services.AddSingleton<ISaveGameService, SaveGameService>();
-        services.AddHostedService<MainMenu>();
+        services.AddHostedService<HostedService>();
     })
     .Build();
     
