@@ -2,6 +2,7 @@
 
 public class Burg
 {
+    public bool isCityOfLight { get; set; }
     public int? cell { get; set; }
     public double? x { get; set; }
     public double? y { get; set; }
@@ -12,7 +13,7 @@ public class Burg
     public int? feature { get; set; }
     public int? capital { get; set; }
     public int? port { get; set; }
-    public double? population { get; set; }
+    public double population { get; set; } = 0;
     public string type { get; set; }
     public Coa coa { get; set; }
     public int? citadel { get; set; }
