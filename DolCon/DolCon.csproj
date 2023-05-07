@@ -13,4 +13,8 @@
       <PackageReference Include="Spectre.Console" Version="0.46.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\DolSdk\DolSdk.csproj" />
+    </ItemGroup>
+
 </Project>
