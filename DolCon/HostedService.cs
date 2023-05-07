@@ -3,13 +3,13 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-public class MainMenu : IHostedService
+public class HostedService : IHostedService
 {
     private readonly IHostApplicationLifetime _appLifetime;
     private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<MainMenu> _logger;
+    private readonly ILogger<HostedService> _logger;
 
-    public MainMenu(IHostApplicationLifetime appLifetime, IServiceProvider serviceProvider, ILogger<MainMenu> logger)
+    public HostedService(IHostApplicationLifetime appLifetime, IServiceProvider serviceProvider, ILogger<HostedService> logger)
     {
         _appLifetime = appLifetime;
         _serviceProvider = serviceProvider;
