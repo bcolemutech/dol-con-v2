@@ -18,7 +18,7 @@ public class Cell
     public int conf { get; set; }
     public int biome { get; set; }
     public int s { get; set; }
-    public int pop { get; set; }
+    public decimal pop { get; set; }
     public int culture { get; set; }
     public int burg { get; set; }
     public int road { get; set; }
