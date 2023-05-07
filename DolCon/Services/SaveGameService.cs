@@ -1,7 +1,7 @@
 ﻿namespace DolCon.Services;
 
 using System.Text.Json;
-using DolSdk.BaseTypes;
+using Models.BaseTypes;
 using Spectre.Console;
 using Settings = Models.Settings;
 
