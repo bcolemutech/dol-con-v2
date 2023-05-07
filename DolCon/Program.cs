@@ -1,2 +1,15 @@
-﻿// See https://aka.ms/new-console-template for more information
-Console.WriteLine("Hello, World!");
+﻿using DolCon.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+
+using var host = Host.CreateDefaultBuilder(args)
+    .ConfigureServices((hostContext, services) =>
+    {
+        services.AddSingleton<ISaveGameService, SaveGameService>();
+        services.AddSingleton<IMainMenuService, MainMenuService>();
+        services.AddSingleton<IMapService, MapService>();
+        services.AddHostedService<HostedService>();
+    })
+    .Build();
+    
+await host.RunAsync();
