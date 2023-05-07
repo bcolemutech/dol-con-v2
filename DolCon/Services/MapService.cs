@@ -1,7 +1,7 @@
 ﻿namespace DolCon.Services;
 
 using System.Text.Json;
-using DolSdk.BaseTypes;
+using Models.BaseTypes;
 using Spectre.Console;
 
 public interface IMapService
@@ -48,14 +48,21 @@ public class MapService : IMapService
             ctx.Refresh();
             map = await DeserializeMap(mapFile) ?? throw new DolMapException("Failed to load map");
             AnsiConsole.MarkupLine("Loaded map [yellow]{0}[/]", mapFile.Name);
-            ctx.Status("Identifying City of Light...");
-            ctx.Refresh();
-
-            var topPop = map.cells.burgs.Max(x => x.population);
-            var cityOfLight = map.cells.burgs.First(x => Math.Abs(x.population - topPop) < 0.01);
-            cityOfLight.isCityOfLight = true;
+            ProvisionMap(ctx, map);
         });
         return map;
+    }
+
+    private static void ProvisionMap(StatusContext ctx, Map map)
+    {
+        ctx.Status("Identifying City of Light...");
+        ctx.Refresh();
+
+        var topPop = map.cells.burgs.Max(x => x.population);
+        var cityOfLight = map.cells.burgs.First(x => Math.Abs(x.population - topPop) < 0.01);
+        cityOfLight.isCityOfLight = true;
+        AnsiConsole.MarkupLine("City of Light established as [yellow]{0}[/]", cityOfLight.name);
+        
     }
 
     private static async Task<Map?> DeserializeMap(FileSystemInfo mapFile)
