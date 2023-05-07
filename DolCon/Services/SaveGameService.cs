@@ -14,10 +14,11 @@ public class SaveGameService : ISaveGameService
 {
     private readonly Settings? _settings;
     private readonly string _savesPath;
-    
+
     public SaveGameService()
     {
-        var settingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DolCon", "settings.json");
+        var settingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DolCon",
+            "settings.json");
         AnsiConsole.WriteLine("Settings path: [yellow]{0}[/]", settingsPath);
         if (File.Exists(settingsPath))
         {
@@ -31,8 +32,9 @@ public class SaveGameService : ISaveGameService
             _settings = new Settings();
             File.WriteAllText(settingsPath, JsonSerializer.Serialize(_settings));
         }
-        
-        _savesPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DolCon", "Saves");
+
+        _savesPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DolCon",
+            "Saves");
         AnsiConsole.WriteLine("Saves path: [yellow]{0}[/]", _savesPath);
         if (Directory.Exists(_savesPath)) return;
         AnsiConsole.WriteLine("Creating saves directory...");
@@ -41,8 +43,13 @@ public class SaveGameService : ISaveGameService
 
     public async Task SaveNewGame(Map map)
     {
-        var saveGamePath = Path.Combine(_savesPath, $"{map.info.mapName}.AutoSave.json");
-        AnsiConsole.WriteLine("Saving game to [yellow]{0}[/]", saveGamePath);
-        await File.WriteAllTextAsync(saveGamePath, JsonSerializer.Serialize(map));
+        await AnsiConsole.Status().StartAsync("Saving game...", async ctx =>
+        {
+            ctx.Spinner(Spinner.Known.Star);
+            ctx.SpinnerStyle(Style.Parse("yellow"));
+            var saveGamePath = Path.Combine(_savesPath, $"{map.info.mapName}.AutoSave.json");
+            AnsiConsole.MarkupLine("Saving game to [yellow]{0}[/]", saveGamePath);
+            await File.WriteAllTextAsync(saveGamePath, JsonSerializer.Serialize(map));
+        });
     }
 }

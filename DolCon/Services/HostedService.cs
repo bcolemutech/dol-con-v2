@@ -24,11 +24,17 @@ public class HostedService : IHostedService
 
         _appLifetime.ApplicationStarted.Register(() =>
         {
-            Task.Run(() =>
+            var task = Task.Run(async () =>
             {
                 _logger.LogInformation("Application started");
-                _mainMenuService.Show(cancellationToken);
+                await _mainMenuService.Show(cancellationToken);
             }, cancellationToken);
+            task.Wait(cancellationToken);
+            if(task.IsFaulted && task.Exception != null)
+            {
+               throw task.Exception;
+            }
+
         });
 
         _appLifetime.ApplicationStopping.Register(() =>
