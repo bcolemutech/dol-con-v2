@@ -7,7 +7,7 @@ using Spectre.Console;
 
 public interface ISaveGameService
 {
-    Task<string> SaveGame(Map map, string saveName = "AutoSave");
+    Task<string> SaveGame(string saveName = "AutoSave");
     IEnumerable<FileInfo> GetSaves();
     Task LoadGame(FileInfo saveFile);
 }
@@ -16,6 +16,7 @@ public class SaveGameService : ISaveGameService
 {
     public static Map CurrentMap { get; set; } = new();
     public static Party Party { get; set; } = new();
+    public static Guid CurrentPlayerId { get; set; } = Guid.NewGuid();
     private readonly string _savesPath;
 
     public SaveGameService()
@@ -28,15 +29,17 @@ public class SaveGameService : ISaveGameService
         Directory.CreateDirectory(_savesPath);
     }
 
-    public async Task<string> SaveGame(Map map, string saveName = "AutoSave")
+    public async Task<string> SaveGame(string saveName = "AutoSave")
     {
-        var saveGamePath = Path.Combine(_savesPath, $"{map.info.mapName}.{saveName}.json");
+        var saveGamePath = Path.Combine(_savesPath, $"{CurrentMap.info.mapName}.{saveName}.json");
         await AnsiConsole.Status().StartAsync("Saving game...", async ctx =>
         {
             ctx.Spinner(Spinner.Known.Star);
             ctx.SpinnerStyle(Style.Parse("yellow"));
             AnsiConsole.MarkupLine("Saving game to [yellow]{0}[/]", saveGamePath);
-            await File.WriteAllTextAsync(saveGamePath, JsonSerializer.Serialize(map));
+            CurrentMap.Party = Party;
+            CurrentMap.CurrentPlayerId = CurrentPlayerId;
+            await File.WriteAllTextAsync(saveGamePath, JsonSerializer.Serialize(CurrentMap));
         });
         return saveGamePath;
     }
@@ -59,5 +62,7 @@ public class SaveGameService : ISaveGameService
         });
         
         CurrentMap = map ?? throw new DolSaveGameException("Failed to load game");
+        Party = CurrentMap.Party;
+        CurrentPlayerId = CurrentMap.CurrentPlayerId;
     }
 }
