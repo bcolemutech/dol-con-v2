@@ -7,7 +7,7 @@ using Spectre.Console;
 public interface IMapService
 {
     IEnumerable<FileInfo> GetMaps();
-    Task<Map> LoadMap(FileInfo mapFile);
+    Task LoadMap(FileInfo mapFile);
 }
 
 public class MapService : IMapService
@@ -40,7 +40,7 @@ public class MapService : IMapService
         return new List<FileInfo>();
     }
 
-    public async Task<Map> LoadMap(FileInfo mapFile)
+    public async Task LoadMap(FileInfo mapFile)
     {
         Map map = new();
         await AnsiConsole.Status().StartAsync("Loading map...", async ctx =>
@@ -52,7 +52,7 @@ public class MapService : IMapService
             AnsiConsole.MarkupLine("Loaded map [yellow]{0}[/]", mapFile.Name);
             ProvisionMap(ctx, map);
         });
-        return map;
+        SaveGameService.CurrentMap = map;
     }
 
     private void ProvisionMap(StatusContext ctx, Map map)
