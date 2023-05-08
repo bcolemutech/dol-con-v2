@@ -31,16 +31,16 @@ public class MainMenuService : IMainMenuService
         switch (startSelection)
         {
             case "New game":
-                await StartNewGame();
+                await StartNewGame(cancellationToken);
                 break;
             case "Load game":
-                await LoadGame();
+                await LoadGame(cancellationToken);
                 break;
         }
         System.Environment.Exit(0);
     }
 
-    private async Task LoadGame()
+    private async Task LoadGame(CancellationToken cancellationToken)
     {
         var saves = _saveService.GetSaves();
 
@@ -63,10 +63,10 @@ public class MainMenuService : IMainMenuService
         
         AnsiConsole.WriteLine("Save loaded, starting game...");
         
-        await _gameService.Start();
+        await _gameService.Start(cancellationToken);
     }
 
-    private async Task StartNewGame()
+    private async Task StartNewGame(CancellationToken cancellationToken)
     {
         var maps = _mapService.GetMaps();
 
@@ -97,6 +97,6 @@ public class MainMenuService : IMainMenuService
         
         AnsiConsole.WriteLine("Game loaded, starting game...");
         
-        await _gameService.Start();
+        await _gameService.Start(cancellationToken);
     }
 }
