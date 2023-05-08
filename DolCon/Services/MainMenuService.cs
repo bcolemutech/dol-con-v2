@@ -57,7 +57,7 @@ public class MainMenuService : IMainMenuService
         
         var saveFile = saves.First(x => x.Name == saveSelection);
         
-        var map = await _saveGameService.LoadGame(saveFile);
+        await _saveGameService.LoadGame(saveFile);
         
         AnsiConsole.WriteLine("Save loaded, starting game...");
     }
@@ -85,8 +85,12 @@ public class MainMenuService : IMainMenuService
         
         AnsiConsole.WriteLine("Map loaded, saving game...");
         
-        await _saveGameService.SaveNewGame(map);
+        var path = await _saveGameService.SaveGame(map);
         
-        AnsiConsole.WriteLine("Game saved, starting game...");
+        AnsiConsole.WriteLine("Game saved, loading game...");
+        
+        await _saveGameService.LoadGame(new FileInfo(path));
+        
+        AnsiConsole.WriteLine("Game loaded, starting game...");
     }
 }

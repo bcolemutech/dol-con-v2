@@ -13,9 +13,11 @@ public interface IMapService
 public class MapService : IMapService
 {
     private readonly string _mapsPath;
+    private readonly IPlayerService _playerService;
 
-    public MapService()
+    public MapService(IPlayerService playerService)
     {
+        _playerService = playerService;
         _mapsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DolCon", "Maps");
         if (Directory.Exists(_mapsPath)) return;
         
@@ -53,7 +55,7 @@ public class MapService : IMapService
         return map;
     }
 
-    private static void ProvisionMap(StatusContext ctx, Map map)
+    private void ProvisionMap(StatusContext ctx, Map map)
     {
         ctx.Status("Identifying City of Light...");
         ctx.Refresh();
@@ -63,18 +65,18 @@ public class MapService : IMapService
         cityOfLight.isCityOfLight = true;
         AnsiConsole.MarkupLine("City of Light established as [yellow]{0}[/]", cityOfLight.name);
         
+        ctx.Status("Setting player position...");
+        ctx.Refresh();
+
+        var player = _playerService.SetPlayer("Player 1", false);
+        player.Cell = cityOfLight.cell;
+        player.Burg = cityOfLight.i;
+        AnsiConsole.MarkupLine("Player position set to [yellow]{0}[/]", cityOfLight.name);
     }
 
     private static async Task<Map?> DeserializeMap(FileSystemInfo mapFile)
     {
         var stream = File.OpenRead(mapFile.FullName);
         return await JsonSerializer.DeserializeAsync<Map>(stream);
-    }
-}
-
-public class DolMapException : Exception
-{
-    public DolMapException(string message) : base(message)
-    {
     }
 }

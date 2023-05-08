@@ -8,6 +8,7 @@ using var host = Host.CreateDefaultBuilder(args)
         services.AddSingleton<ISaveGameService, SaveGameService>();
         services.AddSingleton<IMainMenuService, MainMenuService>();
         services.AddSingleton<IMapService, MapService>();
+        services.AddSingleton<IPlayerService, PlayerService>();
         services.AddHostedService<HostedService>();
     })
     .Build();
