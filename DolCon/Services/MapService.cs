@@ -69,8 +69,10 @@ public class MapService : IMapService
         ctx.Refresh();
 
         var player = _playerService.SetPlayer("Player 1", false);
-        player.Cell = cityOfLight.cell;
-        player.Burg = cityOfLight.i;
+        SaveGameService.Party.Players.Add(player);
+        SaveGameService.CurrentPlayerId = player.Id;
+        SaveGameService.Party.Cell = cityOfLight.cell;
+        SaveGameService.Party.Burg = cityOfLight.i;
         AnsiConsole.MarkupLine("Player position set to [yellow]{0}[/]", cityOfLight.name);
     }
 
