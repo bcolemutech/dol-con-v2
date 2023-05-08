@@ -1,40 +1,25 @@
 ﻿namespace DolCon.Services;
 
 using System.Text.Json;
+using Models;
 using Models.BaseTypes;
 using Spectre.Console;
-using Settings = Models.Settings;
 
 public interface ISaveGameService
 {
-    Task SaveNewGame(Map map);
+    Task<string> SaveGame(Map map, string saveName = "AutoSave");
     IEnumerable<FileInfo> GetSaves();
-    Task<Map> LoadGame(FileInfo saveFile);
+    Task LoadGame(FileInfo saveFile);
 }
 
 public class SaveGameService : ISaveGameService
 {
-    private readonly Settings? _settings;
+    public static Map CurrentMap { get; set; } = new();
+    public static Party Party { get; set; } = new();
     private readonly string _savesPath;
 
     public SaveGameService()
     {
-        var settingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DolCon",
-            "settings.json");
-        AnsiConsole.WriteLine("Settings path: [yellow]{0}[/]", settingsPath);
-        if (File.Exists(settingsPath))
-        {
-            AnsiConsole.WriteLine("Loading settings...");
-            _settings = JsonSerializer.Deserialize<Settings>(File.ReadAllText(settingsPath));
-        }
-        else
-        {
-            AnsiConsole.WriteLine("Settings not found, creating new settings...");
-            Directory.CreateDirectory(Path.GetDirectoryName(settingsPath) ?? throw new InvalidOperationException());
-            _settings = new Settings();
-            File.WriteAllText(settingsPath, JsonSerializer.Serialize(_settings));
-        }
-
         _savesPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DolCon",
             "Saves");
         AnsiConsole.WriteLine("Saves path: [yellow]{0}[/]", _savesPath);
@@ -43,16 +28,17 @@ public class SaveGameService : ISaveGameService
         Directory.CreateDirectory(_savesPath);
     }
 
-    public async Task SaveNewGame(Map map)
+    public async Task<string> SaveGame(Map map, string saveName = "AutoSave")
     {
+        var saveGamePath = Path.Combine(_savesPath, $"{map.info.mapName}.{saveName}.json");
         await AnsiConsole.Status().StartAsync("Saving game...", async ctx =>
         {
             ctx.Spinner(Spinner.Known.Star);
             ctx.SpinnerStyle(Style.Parse("yellow"));
-            var saveGamePath = Path.Combine(_savesPath, $"{map.info.mapName}.AutoSave.json");
             AnsiConsole.MarkupLine("Saving game to [yellow]{0}[/]", saveGamePath);
             await File.WriteAllTextAsync(saveGamePath, JsonSerializer.Serialize(map));
         });
+        return saveGamePath;
     }
 
     public IEnumerable<FileInfo> GetSaves()
@@ -60,7 +46,7 @@ public class SaveGameService : ISaveGameService
         return new DirectoryInfo(_savesPath).GetFiles("*.json");
     }
 
-    public async Task<Map> LoadGame(FileInfo saveFile)
+    public async Task LoadGame(FileInfo saveFile)
     {
         Map? map = null;
         await AnsiConsole.Status().StartAsync("Loading game...", async ctx =>
@@ -72,13 +58,6 @@ public class SaveGameService : ISaveGameService
             AnsiConsole.MarkupLine("Loaded game from [yellow]{0}[/]", saveFile.FullName);
         });
         
-        return map ?? throw new DolSaveGameException("Failed to load game");
-    }
-}
-
-public class DolSaveGameException : Exception
-{
-    public DolSaveGameException(string message) : base(message)
-    {
+        CurrentMap = map ?? throw new DolSaveGameException("Failed to load game");
     }
 }
