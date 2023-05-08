@@ -10,12 +10,14 @@ public interface IMainMenuService
 public class MainMenuService : IMainMenuService
 {
     private readonly IMapService _mapService;
-    private readonly ISaveGameService _saveGameService;
+    private readonly ISaveGameService _saveService;
+    private readonly IGameService _gameService;
 
-    public MainMenuService(IMapService mapService, ISaveGameService saveGameService)
+    public MainMenuService(IMapService mapService, ISaveGameService saveService, IGameService gameService)
     {
         _mapService = mapService;
-        _saveGameService = saveGameService;
+        _saveService = saveService;
+        _gameService = gameService;
     }
 
     public async Task Show(CancellationToken cancellationToken)
@@ -23,7 +25,7 @@ public class MainMenuService : IMainMenuService
         var startSelection = AnsiConsole.Prompt(
             new SelectionPrompt<string>()
             .Title("Start a new game or load a save?")
-            .AddChoices("New game", "Load game")
+            .AddChoices("New game", "Load game", "Exit")
         );
         
         switch (startSelection)
@@ -40,7 +42,7 @@ public class MainMenuService : IMainMenuService
 
     private async Task LoadGame()
     {
-        var saves = _saveGameService.GetSaves();
+        var saves = _saveService.GetSaves();
 
         if (!saves.Any())
         {
@@ -57,9 +59,11 @@ public class MainMenuService : IMainMenuService
         
         var saveFile = saves.First(x => x.Name == saveSelection);
         
-        await _saveGameService.LoadGame(saveFile);
+        await _saveService.LoadGame(saveFile);
         
         AnsiConsole.WriteLine("Save loaded, starting game...");
+        
+        await _gameService.Start();
     }
 
     private async Task StartNewGame()
@@ -81,16 +85,18 @@ public class MainMenuService : IMainMenuService
         
         var mapFile = maps.First(x => x.Name == newGameSelection);
         
-        var map = await _mapService.LoadMap(mapFile);
+        await _mapService.LoadMap(mapFile);
         
         AnsiConsole.WriteLine("Map loaded, saving game...");
         
-        var path = await _saveGameService.SaveGame(map);
+        var path = await _saveService.SaveGame();
         
         AnsiConsole.WriteLine("Game saved, loading game...");
         
-        await _saveGameService.LoadGame(new FileInfo(path));
+        await _saveService.LoadGame(new FileInfo(path));
         
         AnsiConsole.WriteLine("Game loaded, starting game...");
+        
+        await _gameService.Start();
     }
 }
