@@ -3,7 +3,7 @@
 public class Burg
 {
     public bool isCityOfLight { get; set; }
-    public int? cell { get; set; }
+    public int cell { get; set; }
     public double? x { get; set; }
     public double? y { get; set; }
     public int? state { get; set; }
