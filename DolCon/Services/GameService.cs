@@ -71,17 +71,18 @@ public class GameService : IGameService
                             _screen = Screen.Quests;
                             break;
                     }
+
                     break;
                 case Screen.Navigation:
-                    if (key.Key == ConsoleKey.Escape)
+                    switch (key.Key)
                     {
-                        _screen = Screen.Home;
-                    }
-
-                    if (key.Key is ConsoleKey.D1 or ConsoleKey.NumPad1 && SaveGameService.Party.Burg != null)
-                    {
-                        SaveGameService.Party.Burg = null;
-                        _screen = Screen.Home;
+                        case ConsoleKey.Escape:
+                            _screen = Screen.Home;
+                            break;
+                        case ConsoleKey.D1 or ConsoleKey.NumPad1 when SaveGameService.Party.Burg != null:
+                            SaveGameService.Party.Burg = null;
+                            _screen = Screen.Home;
+                            break;
                     }
 
                     if (int.TryParse(key.KeyChar.ToString(), out var number))
