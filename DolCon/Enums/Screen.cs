@@ -7,5 +7,5 @@ public enum Screen
     Inventory = 73,
     Character = 67,
     Quests = 81,
-    Exit = 27
+    Exit = 69
 }
