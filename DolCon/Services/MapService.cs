@@ -60,8 +60,8 @@ public class MapService : IMapService
         ctx.Status("Identifying City of Light...");
         ctx.Refresh();
 
-        var topPop = map.cells.burgs.Max(x => x.population);
-        var cityOfLight = map.cells.burgs.First(x => Math.Abs(x.population - topPop) < 0.01);
+        var topPop = map.Collections.burgs.Max(x => x.population);
+        var cityOfLight = map.Collections.burgs.First(x => Math.Abs(x.population - topPop) < 0.01);
         cityOfLight.isCityOfLight = true;
         AnsiConsole.MarkupLine("City of Light established as [yellow]{0}[/]", cityOfLight.name);
         
