@@ -21,11 +21,7 @@ public partial class GameService : IGameService
             AnsiConsole.MarkupLine("[red]Game cancelled[/]");
             System.Environment.Exit(0);
         });
-        await HomeScreen(token);
-    }
-
-    private async Task HomeScreen(CancellationToken token)
-    {
+        
         var layout = new Layout("Root")
             .SplitRows(
                 new Layout("Display"),
@@ -33,12 +29,12 @@ public partial class GameService : IGameService
 
         _display = layout["Display"];
         _controls = layout["Controls"];
-
+        
         _display.Ratio = 4;
         _screen = Screen.Home;
-        RenderHome();
-
+        RenderScreen(' ');
         AnsiConsole.Write(layout);
+
         await ProcessKey(token);
     }
 
@@ -51,7 +47,7 @@ public partial class GameService : IGameService
             if (Enum.IsDefined((Screen)key.Key))
             {
                 _screen = (Screen)key.Key;
-                RenderScreen(null);
+                RenderScreen();
                 continue;
             }
 
@@ -59,7 +55,7 @@ public partial class GameService : IGameService
         } while (token.IsCancellationRequested == false || _screen != Screen.Exit);
     }
 
-    private void RenderScreen(char? keyChar)
+    private void RenderScreen(char? keyChar = null)
     {
         var value = keyChar ?? ' ';
         switch (_screen)
