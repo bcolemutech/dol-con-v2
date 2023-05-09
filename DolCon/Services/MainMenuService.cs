@@ -38,6 +38,8 @@ public class MainMenuService : IMainMenuService
                 await LoadGame(cancellationToken);
                 break;
         }
+
+        await _saveService.SaveGame();
         System.Environment.Exit(0);
     }
 
