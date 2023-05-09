@@ -57,7 +57,9 @@ public class SaveGameService : ISaveGameService
             ctx.Spinner(Spinner.Known.Star);
             ctx.SpinnerStyle(Style.Parse("yellow"));
             AnsiConsole.MarkupLine("Loading game from [yellow]{0}[/]", saveFile.FullName);
-            map = await JsonSerializer.DeserializeAsync<Map>(File.OpenRead(saveFile.FullName));
+            var fileStream = File.OpenRead(saveFile.FullName);
+            map = await JsonSerializer.DeserializeAsync<Map>(fileStream);
+            fileStream.Close();
             AnsiConsole.MarkupLine("Loaded game from [yellow]{0}[/]", saveFile.FullName);
         });
         
