@@ -13,6 +13,7 @@ public partial class GameService : IGameService
     private Layout _display;
     private Layout _controls;
     private Screen _screen;
+    private LiveDisplayContext _ctx;
 
     public async Task Start(CancellationToken token)
     {
@@ -32,10 +33,15 @@ public partial class GameService : IGameService
         
         _display.Ratio = 4;
         _screen = Screen.Home;
-        RenderScreen(' ');
-        AnsiConsole.Write(layout);
+        
+        await AnsiConsole.Live(layout).StartAsync(async ctx =>
+        {
+            _ctx = ctx;
+            
+            RenderScreen(' ');
 
-        await ProcessKey(token);
+            await ProcessKey(token);
+        });
     }
 
     private async Task ProcessKey(CancellationToken token)

@@ -62,6 +62,7 @@ public partial class GameService
                         ),
                         VerticalAlignment.Middle))
                 .Expand());
+        _ctx.Refresh();
 
         _controls.Update(
             new Panel(
@@ -72,5 +73,6 @@ public partial class GameService
                         ),
                         VerticalAlignment.Middle))
                 .Expand());
+        _ctx.Refresh();
     }
 }

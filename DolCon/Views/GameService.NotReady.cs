@@ -1,9 +1,18 @@
 ﻿namespace DolCon.Views;
 
+using Spectre.Console;
+
 public partial class GameService
 {
     private void RenderNotReady()
     {
-        throw new NotImplementedException();
+        _display.Update(
+            new Panel(
+                Align.Center(
+                    new Rows(
+                        new Markup($"[bold]{_screen.ToString()} screen is not ready!!![/]")
+                    ),
+                    VerticalAlignment.Middle)));
+        _ctx.Refresh();
     }
 }
