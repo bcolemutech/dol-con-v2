@@ -1,6 +1,8 @@
 ﻿using DolCon.Services;
+using DolCon.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using GameService = DolCon.Views.GameService;
 
 using var host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((hostContext, services) =>
