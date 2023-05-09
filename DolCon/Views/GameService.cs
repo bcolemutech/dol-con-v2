@@ -48,11 +48,13 @@ public partial class GameService : IGameService
             {
                 _screen = (Screen)key.Key;
                 RenderScreen();
-                continue;
+            }
+            else
+            {
+                RenderScreen(key.KeyChar);
             }
 
-            RenderScreen(key.KeyChar);
-        } while (token.IsCancellationRequested == false || _screen != Screen.Exit);
+        } while (token.IsCancellationRequested == false && _screen != Screen.Exit);
     }
 
     private void RenderScreen(char? keyChar = null)
