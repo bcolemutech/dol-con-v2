@@ -26,13 +26,4 @@ public class Cell
     public int state { get; set; }
     public int religion { get; set; }
     public int province { get; set; }
-    public List<Cell> cells { get; set; }
-    public List<object> features { get; set; }
-    public List<Culture> cultures { get; set; }
-    public List<Burg> burgs { get; set; }
-    public List<State> states { get; set; }
-    public List<object> provinces { get; set; }
-    public List<Religion> religions { get; set; }
-    public List<River> rivers { get; set; }
-    public List<Marker> markers { get; set; }
 }
