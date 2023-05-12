@@ -1,6 +1,8 @@
 ﻿namespace DolCon.Services;
 
+using System.Drawing;
 using System.Text.Json;
+using Enums;
 using Models.BaseTypes;
 using Spectre.Console;
 
@@ -12,6 +14,16 @@ public interface IMapService
 
 public class MapService : IMapService
 {
+    
+    public static Direction GetDirection(Point origin, Point destination) {
+        var angle = Math.Atan2(destination.Y - origin.Y, destination.X - origin.X);
+        angle += Math.PI;
+        angle /= Math.PI / 4;
+        var halfQuarter = Convert.ToInt32(angle);
+        halfQuarter %= 8;
+        return (Direction)halfQuarter;
+    }
+    
     private readonly string _mapsPath;
     private readonly IPlayerService _playerService;
 
