@@ -78,4 +78,30 @@ public class SaveGameService : ISaveGameService
         Party = CurrentMap.Party;
         CurrentPlayerId = CurrentMap.CurrentPlayerId;
     }
+
+    public static Cell GetCell(int cellId)
+    {
+        return CurrentMap.Collections.cells[cellId];
+    }
+
+    public static Burg? GetBurg(int cellBurg)
+    {
+        return CurrentMap.Collections.burgs.Find(x => x.i == cellBurg);
+    }
+
+    public static string GetBiome(int cellBiome)
+    {
+        return CurrentMap.biomes.name[cellBiome];
+    }
+
+    public static Province GetProvince(int cellProvince)
+    {
+        return CurrentMap.Collections.provinces[cellProvince];
+    }
+
+    public static State GetState(int cellState)
+    {
+        return CurrentMap.Collections.states[cellState];
+    }
+    
 }
