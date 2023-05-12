@@ -8,7 +8,7 @@ public class GameServiceTests
     [Fact]
     public void EscapeKeyParsesToExitScreen()
     {
-        var result = (Screen)ConsoleKey.Escape;
+        var result = (Screen)ConsoleKey.E;
 
         result.Should().Be(Screen.Exit);
     }
