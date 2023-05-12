@@ -17,6 +17,17 @@ public class SaveGameService : ISaveGameService
     public static Map CurrentMap { get; set; } = new();
     public static Party Party { get; set; } = new();
     public static Guid CurrentPlayerId { get; set; } = Guid.NewGuid();
+    
+    public static Cell CurrentCell => CurrentMap.Collections.cells[Party.Cell];
+    
+    public static Burg? CurrentBurg => Party.Burg.HasValue ? CurrentMap.Collections.burgs[Party.Burg.Value] : null;
+    
+    public static Province CurrentProvince => CurrentMap.Collections.provinces[CurrentCell.province];
+    
+    public static State CurrentState => CurrentMap.Collections.states[CurrentCell.state];
+    
+    public static string CurrentBiome => CurrentMap.biomes.name[CurrentCell.biome];
+    
     private readonly string _savesPath;
 
     public SaveGameService()

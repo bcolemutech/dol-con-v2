@@ -8,13 +8,11 @@ public partial class GameService
 {
     private void RenderHome()
     {
-        var currentCell = SaveGameService.CurrentMap.Collections.cells.First(x => x.i == SaveGameService.Party.Cell);
-        var burg = SaveGameService.Party.Burg.HasValue
-            ? SaveGameService.CurrentMap.Collections.burgs[SaveGameService.Party.Burg.Value]
-            : null;
-        var biome = SaveGameService.CurrentMap.biomes.name[currentCell.biome];
-        var province = SaveGameService.CurrentMap.Collections.provinces[currentCell.province];
-        var state = SaveGameService.CurrentMap.Collections.states[currentCell.state];
+        var currentCell = SaveGameService.CurrentCell;
+        var burg = SaveGameService.CurrentBurg;
+        var biome = SaveGameService.CurrentBiome;
+        var province = SaveGameService.CurrentProvince;
+        var state = SaveGameService.CurrentState;
         var homePanels = new List<IRenderable>
         {
             new Panel(
