@@ -1,5 +1,6 @@
 ﻿namespace DolCon.Models.BaseTypes;
 
+using System.Text.Json.Serialization;
 using Newtonsoft.Json;
 
 public class Map
@@ -8,7 +9,7 @@ public class Map
     public Settings settings { get; set; }
     public Coords coords { get; set; }
     
-    [Newtonsoft.Json.JsonProperty("cells")]
+    [JsonPropertyName("cells")]
     public MapCollections Collections { get; set; }
     public Biomes biomes { get; set; }
     public List<NameBasis> nameBases { get; set; }
