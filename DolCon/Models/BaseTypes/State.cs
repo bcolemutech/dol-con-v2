@@ -22,7 +22,7 @@ public class State
     public List<Campaign> campaigns { get; set; }
     public string form { get; set; }
     public string formName { get; set; }
-    public string fullName { get; set; }
+    public string? fullName { get; set; }
     public List<double> pole { get; set; }
     public double? alert { get; set; }
     public List<Military> military { get; set; }
