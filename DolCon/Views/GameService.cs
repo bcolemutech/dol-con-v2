@@ -1,6 +1,7 @@
 ﻿namespace DolCon.Views;
 
 using DolCon.Enums;
+using Services;
 using Spectre.Console;
 
 public interface IGameService
@@ -14,6 +15,13 @@ public partial class GameService : IGameService
     private Layout _controls;
     private Screen _screen;
     private LiveDisplayContext _ctx;
+    
+    private readonly IImageService _imageService;
+
+    public GameService(IImageService imageService)
+    {
+        _imageService = imageService;
+    }
 
     public async Task Start(CancellationToken token)
     {
@@ -83,11 +91,21 @@ public partial class GameService : IGameService
             case Screen.Quests:
                 RenderNotReady();
                 break;
+            case Screen.Map:
+                RenderHome();
+                OpenMap();
+                break;
             case Screen.Exit:
                 break;
             default:
                 RenderNotReady();
                 break;
         }
+    }
+
+    private void OpenMap()
+    {
+        _imageService.ProcessSvg();
+        _imageService.OpenImage();
     }
 }
