@@ -25,10 +25,10 @@ public class MainMenuService : IMainMenuService
     {
         var startSelection = AnsiConsole.Prompt(
             new SelectionPrompt<string>()
-            .Title("Start a new game or load a save?")
-            .AddChoices("New game", "Load game", "Exit")
+                .Title("Start a new game or load a save?")
+                .AddChoices("New game", "Load game", "Exit")
         );
-        
+
         switch (startSelection)
         {
             case "New game":
@@ -49,6 +49,7 @@ public class MainMenuService : IMainMenuService
 
         if (!saves.Any())
         {
+            AnsiConsole.MarkupLine("[red]No saves found![/]");
             return;
         }
 
@@ -59,13 +60,13 @@ public class MainMenuService : IMainMenuService
                 ));
 
         AnsiConsole.MarkupLine("Loading save [yellow]{0}[/]", saveSelection);
-        
+
         var saveFile = saves.First(x => x.Name == saveSelection);
-        
+
         await _saveService.LoadGame(saveFile);
-        
+
         AnsiConsole.WriteLine("Save loaded, starting game...");
-        
+
         await _gameService.Start(cancellationToken);
     }
 
@@ -85,21 +86,21 @@ public class MainMenuService : IMainMenuService
                 ));
 
         AnsiConsole.MarkupLine("Starting a new game on map [yellow]{0}[/]", newGameSelection);
-        
+
         var mapFile = maps.First(x => x.Name == newGameSelection);
-        
+
         await _mapService.LoadMap(mapFile);
-        
+
         AnsiConsole.WriteLine("Map loaded, saving game...");
-        
+
         var path = await _saveService.SaveGame();
-        
+
         AnsiConsole.WriteLine("Game saved, loading game...");
-        
+
         await _saveService.LoadGame(new FileInfo(path));
-        
+
         AnsiConsole.WriteLine("Game loaded, starting game...");
-        
+
         await _gameService.Start(cancellationToken);
     }
 }

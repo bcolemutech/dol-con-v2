@@ -14,8 +14,8 @@ public interface IMapService
 
 public class MapService : IMapService
 {
-    
-    public static Direction GetDirection(Point origin, Point destination) {
+    public static Direction GetDirection(Point origin, Point destination)
+    {
         var angle = Math.Atan2(destination.Y - origin.Y, destination.X - origin.X);
         angle += Math.PI;
         angle /= Math.PI / 4;
@@ -23,16 +23,17 @@ public class MapService : IMapService
         halfQuarter %= 8;
         return (Direction)halfQuarter;
     }
-    
+
     private readonly string _mapsPath;
     private readonly IPlayerService _playerService;
 
     public MapService(IPlayerService playerService)
     {
         _playerService = playerService;
-        _mapsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DolCon", "Maps");
+        _mapsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DolCon",
+            "Maps");
         if (Directory.Exists(_mapsPath)) return;
-        
+
         AnsiConsole.WriteLine("Creating maps directory...");
         Directory.CreateDirectory(_mapsPath);
     }
@@ -46,9 +47,11 @@ public class MapService : IMapService
         }
 
         AnsiConsole.MarkupLine("[red bold]No maps found![/]");
-        AnsiConsole.WriteLine("Create a map using Azgaar's Fantasy Map Generator (https://azgaar.github.io/Fantasy-Map-Generator/).");
-        AnsiConsole.WriteLine("Once you have created a map, export it as a JSON file and place it in the maps directory.");
-        
+        AnsiConsole.WriteLine(
+            "Create a map using Azgaar's Fantasy Map Generator (https://azgaar.github.io/Fantasy-Map-Generator/).");
+        AnsiConsole.WriteLine(
+            "Once you have created a map, export it as a JSON file and place it in the maps directory.");
+
         return new List<FileInfo>();
     }
 
@@ -76,7 +79,7 @@ public class MapService : IMapService
         var cityOfLight = map.Collections.burgs.First(x => Math.Abs(x.population - topPop) < 0.01);
         cityOfLight.isCityOfLight = true;
         AnsiConsole.MarkupLine("City of Light established as [yellow]{0}[/]", cityOfLight.name);
-        
+
         ctx.Status("Setting player position...");
         ctx.Refresh();
 
