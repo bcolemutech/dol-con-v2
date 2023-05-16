@@ -1,6 +1,8 @@
 ﻿using DolCon.Services;
+using DolCon.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using GameService = DolCon.Views.GameService;
 
 using var host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((hostContext, services) =>
@@ -8,6 +10,8 @@ using var host = Host.CreateDefaultBuilder(args)
         services.AddSingleton<ISaveGameService, SaveGameService>();
         services.AddSingleton<IMainMenuService, MainMenuService>();
         services.AddSingleton<IMapService, MapService>();
+        services.AddSingleton<IPlayerService, PlayerService>();
+        services.AddSingleton<IGameService, GameService>();
         services.AddHostedService<HostedService>();
     })
     .Build();

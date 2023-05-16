@@ -1,40 +1,37 @@
 ﻿namespace DolCon.Services;
 
 using System.Text.Json;
-using DolSdk.BaseTypes;
+using Models;
+using Models.BaseTypes;
 using Spectre.Console;
-using Settings = Models.Settings;
 
 public interface ISaveGameService
 {
-    Task SaveNewGame(Map map);
+    Task<string> SaveGame(string saveName = "AutoSave");
     IEnumerable<FileInfo> GetSaves();
-    Task<Map> LoadGame(FileInfo saveFile);
+    Task LoadGame(FileInfo saveFile);
 }
 
 public class SaveGameService : ISaveGameService
 {
-    private readonly Settings? _settings;
+    public static Map CurrentMap { get; set; } = new();
+    public static Party Party { get; set; } = new();
+    public static Guid CurrentPlayerId { get; set; } = Guid.NewGuid();
+    
+    public static Cell CurrentCell => CurrentMap.Collections.cells[Party.Cell];
+    
+    public static Burg? CurrentBurg => Party.Burg.HasValue ? CurrentMap.Collections.burgs[Party.Burg.Value] : null;
+    
+    public static Province CurrentProvince => CurrentMap.Collections.provinces[CurrentCell.province];
+    
+    public static State CurrentState => CurrentMap.Collections.states[CurrentCell.state];
+    
+    public static string CurrentBiome => CurrentMap.biomes.name[CurrentCell.biome];
+    
     private readonly string _savesPath;
 
     public SaveGameService()
     {
-        var settingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DolCon",
-            "settings.json");
-        AnsiConsole.WriteLine("Settings path: [yellow]{0}[/]", settingsPath);
-        if (File.Exists(settingsPath))
-        {
-            AnsiConsole.WriteLine("Loading settings...");
-            _settings = JsonSerializer.Deserialize<Settings>(File.ReadAllText(settingsPath));
-        }
-        else
-        {
-            AnsiConsole.WriteLine("Settings not found, creating new settings...");
-            Directory.CreateDirectory(Path.GetDirectoryName(settingsPath) ?? throw new InvalidOperationException());
-            _settings = new Settings();
-            File.WriteAllText(settingsPath, JsonSerializer.Serialize(_settings));
-        }
-
         _savesPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DolCon",
             "Saves");
         AnsiConsole.WriteLine("Saves path: [yellow]{0}[/]", _savesPath);
@@ -43,16 +40,19 @@ public class SaveGameService : ISaveGameService
         Directory.CreateDirectory(_savesPath);
     }
 
-    public async Task SaveNewGame(Map map)
+    public async Task<string> SaveGame(string saveName = "AutoSave")
     {
+        var saveGamePath = Path.Combine(_savesPath, $"{CurrentMap.info.mapName}.{saveName}.json");
         await AnsiConsole.Status().StartAsync("Saving game...", async ctx =>
         {
             ctx.Spinner(Spinner.Known.Star);
             ctx.SpinnerStyle(Style.Parse("yellow"));
-            var saveGamePath = Path.Combine(_savesPath, $"{map.info.mapName}.AutoSave.json");
             AnsiConsole.MarkupLine("Saving game to [yellow]{0}[/]", saveGamePath);
-            await File.WriteAllTextAsync(saveGamePath, JsonSerializer.Serialize(map));
+            CurrentMap.Party = Party;
+            CurrentMap.CurrentPlayerId = CurrentPlayerId;
+            await File.WriteAllTextAsync(saveGamePath, JsonSerializer.Serialize(CurrentMap));
         });
+        return saveGamePath;
     }
 
     public IEnumerable<FileInfo> GetSaves()
@@ -60,7 +60,7 @@ public class SaveGameService : ISaveGameService
         return new DirectoryInfo(_savesPath).GetFiles("*.json");
     }
 
-    public async Task<Map> LoadGame(FileInfo saveFile)
+    public async Task LoadGame(FileInfo saveFile)
     {
         Map? map = null;
         await AnsiConsole.Status().StartAsync("Loading game...", async ctx =>
@@ -68,17 +68,40 @@ public class SaveGameService : ISaveGameService
             ctx.Spinner(Spinner.Known.Star);
             ctx.SpinnerStyle(Style.Parse("yellow"));
             AnsiConsole.MarkupLine("Loading game from [yellow]{0}[/]", saveFile.FullName);
-            map = await JsonSerializer.DeserializeAsync<Map>(File.OpenRead(saveFile.FullName));
+            var fileStream = File.OpenRead(saveFile.FullName);
+            map = await JsonSerializer.DeserializeAsync<Map>(fileStream);
+            fileStream.Close();
             AnsiConsole.MarkupLine("Loaded game from [yellow]{0}[/]", saveFile.FullName);
         });
         
-        return map ?? throw new DolSaveGameException("Failed to load game");
+        CurrentMap = map ?? throw new DolSaveGameException("Failed to load game");
+        Party = CurrentMap.Party;
+        CurrentPlayerId = CurrentMap.CurrentPlayerId;
     }
-}
 
-public class DolSaveGameException : Exception
-{
-    public DolSaveGameException(string message) : base(message)
+    public static Cell GetCell(int cellId)
     {
+        return CurrentMap.Collections.cells[cellId];
     }
+
+    public static Burg? GetBurg(int cellBurg)
+    {
+        return CurrentMap.Collections.burgs.Find(x => x.i == cellBurg);
+    }
+
+    public static string GetBiome(int cellBiome)
+    {
+        return CurrentMap.biomes.name[cellBiome];
+    }
+
+    public static Province GetProvince(int cellProvince)
+    {
+        return CurrentMap.Collections.provinces[cellProvince];
+    }
+
+    public static State GetState(int cellState)
+    {
+        return CurrentMap.Collections.states[cellState];
+    }
+    
 }
