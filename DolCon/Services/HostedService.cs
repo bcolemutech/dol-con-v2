@@ -1,5 +1,6 @@
 ﻿namespace DolCon.Services;
 
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -50,10 +51,12 @@ public class HostedService : IHostedService
         return Task.CompletedTask;
     }
 
-    public Task StopAsync(CancellationToken cancellationToken)
+    public async Task StopAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Stopping application");
+        
+        var saveService = _serviceProvider.GetService<ISaveGameService>();
 
-        return Task.CompletedTask;
+        if (saveService != null) await saveService.SaveGame();
     }
 }
