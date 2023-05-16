@@ -13,6 +13,7 @@ public partial class GameService
         var biome = SaveGameService.CurrentBiome;
         var province = SaveGameService.CurrentProvince;
         var state = SaveGameService.CurrentState;
+        var availableBurg = currentCell.burg > 0 ? $"[green]{SaveGameService.GetBurg(currentCell.burg)?.name}" : "[red]None";
         var homePanels = new List<IRenderable>
         {
             new Panel(
@@ -22,9 +23,9 @@ public partial class GameService
                         new Markup($"Biome: [green]{biome}[/]"),
                         new Markup($"Rural Population: [green]{Convert.ToInt32(currentCell.pop * 1000)}[/]"),
                         new Markup($"Province: [green]{province.fullName}[/]"),
-                        new Markup($"State: [green]{state.fullName}[/]")
-                    ),
-                    VerticalAlignment.Middle))
+                        new Markup($"State: [green]{state.fullName}[/]"),
+                        new Markup($"Burg: {availableBurg}[/]")
+                    )))
         };
         if (burg != null)
         {
@@ -48,18 +49,32 @@ public partial class GameService
                         new Markup(cityTitle),
                         new Markup($"Population: [green]{Convert.ToInt32(burg.population * 1000)}[/]"),
                         new Text(featuresString)
-                    )
-                    , VerticalAlignment.Middle)));
+                    ))));
         }
+        else
+        {
+            homePanels.Add(new Panel(
+                Align.Center(
+                    new Rows(
+                        new Markup("[bold]Current Burg[/]"),
+                        new Markup($"[green]None[/]")
+                    ))));
+        }
+        
+        homePanels.Add(new Panel(
+            Align.Center(
+                new Rows(
+                    new Markup("[bold]Current Location[/]"),
+                    new Markup($"[green]None[/]")
+                ))));
 
-        _display.Update(
-            new Panel(
-                    Align.Center(
-                        new Rows(
-                            homePanels
-                        ),
-                        VerticalAlignment.Middle))
-                .Expand());
+        var grid = new Grid();
+        grid.AddColumn();
+        grid.AddColumn();
+        grid.AddColumn();
+        grid.AddRow(homePanels.ToArray());
+
+        _display.Update(grid);
         _ctx.Refresh();
 
         _controls.Update(
