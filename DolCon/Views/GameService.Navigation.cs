@@ -27,6 +27,7 @@ public partial class GameService
         if (int.TryParse(value.ToString(), out var direction))
         {
             SaveGameService.Party.Cell = _directionOptions[direction];
+            _imageService.ProcessSvg();
         }
 
         currentCell = SaveGameService.CurrentCell;
