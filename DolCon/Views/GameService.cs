@@ -63,12 +63,28 @@ public partial class GameService : IGameService
                 _screen = (Screen)key.Key;
                 RenderScreen();
             }
+            else if (Enum.IsDefined((HotKeys)key.Key))
+            {
+                ProcessHotKey((HotKeys)key.Key);
+            }
             else
             {
                 RenderScreen(key.KeyChar);
             }
 
         } while (token.IsCancellationRequested == false && _screen != Screen.Exit);
+    }
+
+    private void ProcessHotKey(HotKeys hotKey)
+    {
+        switch (hotKey)
+        {
+            case HotKeys.Map:
+                _imageService.OpenImage();
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(hotKey), hotKey, null);
+        }
     }
 
     private void RenderScreen(char? keyChar = null)
@@ -91,21 +107,11 @@ public partial class GameService : IGameService
             case Screen.Quests:
                 RenderNotReady();
                 break;
-            case Screen.Map:
-                RenderHome();
-                OpenMap();
-                break;
             case Screen.Exit:
                 break;
             default:
                 RenderNotReady();
                 break;
         }
-    }
-
-    private void OpenMap()
-    {
-        _imageService.ProcessSvg();
-        _imageService.OpenImage();
     }
 }
