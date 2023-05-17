@@ -14,13 +14,13 @@ public interface IMapService
 
 public class MapService : IMapService
 {
-    public static Direction GetDirection(Point origin, Point destination)
+    public static Direction GetDirection(double ax, double ay, double bx, double by)
     {
-        var angle = Math.Atan2(destination.Y - origin.Y, destination.X - origin.X);
+        var angle = Math.Atan2(by - ay, bx - ax);
         angle += Math.PI;
-        angle /= Math.PI / 4;
+        angle /= Math.PI / 8;
         var halfQuarter = Convert.ToInt32(angle);
-        halfQuarter %= 8;
+        halfQuarter %= 16;
         return (Direction)halfQuarter;
     }
 
