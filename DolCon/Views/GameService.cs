@@ -1,6 +1,7 @@
 ﻿namespace DolCon.Views;
 
 using DolCon.Enums;
+using Services;
 using Spectre.Console;
 
 public interface IGameService
@@ -14,6 +15,13 @@ public partial class GameService : IGameService
     private Layout _controls;
     private Screen _screen;
     private LiveDisplayContext _ctx;
+    
+    private readonly IImageService _imageService;
+
+    public GameService(IImageService imageService)
+    {
+        _imageService = imageService;
+    }
 
     public async Task Start(CancellationToken token)
     {
@@ -55,12 +63,28 @@ public partial class GameService : IGameService
                 _screen = (Screen)key.Key;
                 RenderScreen();
             }
+            else if (Enum.IsDefined((HotKeys)key.Key))
+            {
+                ProcessHotKey((HotKeys)key.Key);
+            }
             else
             {
                 RenderScreen(key.KeyChar);
             }
 
         } while (token.IsCancellationRequested == false && _screen != Screen.Exit);
+    }
+
+    private void ProcessHotKey(HotKeys hotKey)
+    {
+        switch (hotKey)
+        {
+            case HotKeys.Map:
+                _imageService.OpenImage();
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(hotKey), hotKey, null);
+        }
     }
 
     private void RenderScreen(char? keyChar = null)
