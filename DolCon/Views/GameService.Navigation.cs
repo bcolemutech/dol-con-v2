@@ -79,9 +79,7 @@ public partial class GameService
                 var cellBiome = SaveGameService.GetBiome(cell.biome);
                 var cellProvince = SaveGameService.GetProvince(cell.province);
                 var cellState = SaveGameService.GetState(cell.state);
-                var cellDirection = MapService.GetDirection(new Point((int)currentCell.p[0], (int)currentCell.p[1]),
-                    new Point((int)cell.p[0], (int)cell.p[1])
-                );
+                var cellDirection = MapService.GetDirection(currentCell.p[0], currentCell.p[1], cell.p[0], cell.p[1]);
                 var key = i++;
                 _directionOptions.Add(key, cellId);
 
