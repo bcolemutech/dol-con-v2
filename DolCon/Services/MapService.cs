@@ -72,12 +72,30 @@ public class MapService : IMapService
 
     private void ProvisionMap(StatusContext ctx, Map map)
     {
+        ctx.Status("Adjusting burgs' population...");
+        ctx.Refresh();
+        
+        var maxPop = map.Collections.burgs.Max(x => x.population);
+        var minPop = map.Collections.burgs.Min(x => x.population);
+        var positionCeiling = maxPop - minPop;
+
+        var adjustedMax = maxPop * 3;
+        var adjustedMin = minPop / 3;
+        var adjustedPositionCeiling = adjustedMax - adjustedMin;
+        
+        foreach (var burg in map.Collections.burgs)
+        {
+            var adjustedPosition = (burg.population - minPop) / positionCeiling * adjustedPositionCeiling;
+            burg.population = adjustedPosition + adjustedMin;
+        }
+        
         ctx.Status("Identifying City of Light...");
         ctx.Refresh();
 
         var topPop = map.Collections.burgs.Max(x => x.population);
         var cityOfLight = map.Collections.burgs.First(x => Math.Abs(x.population - topPop) < 0.01);
         cityOfLight.isCityOfLight = true;
+        cityOfLight.population *= 3;
         AnsiConsole.MarkupLine("City of Light established as [yellow]{0}[/]", cityOfLight.name);
 
         ctx.Status("Setting player position...");
