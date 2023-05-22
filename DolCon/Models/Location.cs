@@ -4,9 +4,9 @@ using Enums;
 
 public class Location
 {
-    string Name { get; set; }
-    LocationType Type { get; set; }
-    Rarity Rarity { get; set; }
-    int Explored { get; set; }
-    DateTime LastExplored { get; set; }
+    public string Name { get; set; }
+    public LocationType Type { get; set; }
+    public Rarity Rarity { get; set; }
+    public int Explored { get; set; }
+    public DateTime LastExplored { get; set; }
 }
