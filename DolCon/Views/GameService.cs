@@ -42,6 +42,8 @@ public partial class GameService : IGameService
         _display.Ratio = 4;
         _screen = Screen.Home;
         
+        AnsiConsole.Clear();
+        
         await AnsiConsole.Live(layout).StartAsync(async ctx =>
         {
             _ctx = ctx;
