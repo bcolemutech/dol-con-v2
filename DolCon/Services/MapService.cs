@@ -9,7 +9,7 @@ using Spectre.Console;
 public interface IMapService
 {
     IEnumerable<FileInfo> GetMaps();
-    Task LoadMap(FileInfo mapFile);
+    void LoadMap(FileInfo mapFile);
 }
 
 public class MapService : IMapService
@@ -26,11 +26,13 @@ public class MapService : IMapService
 
     private readonly string _mapsPath;
     private readonly IPlayerService _playerService;
+    private readonly IImageService _imageService;
     private static List<LocationType> _burgTypes = new();
 
-    public MapService(IPlayerService playerService)
+    public MapService(IPlayerService playerService, IImageService imageService)
     {
         _playerService = playerService;
+        _imageService = imageService;
         _mapsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DolCon",
             "Maps");
         if (Directory.Exists(_mapsPath)) return;
@@ -56,15 +58,15 @@ public class MapService : IMapService
         return new List<FileInfo>();
     }
 
-    public async Task LoadMap(FileInfo mapFile)
+    public void LoadMap(FileInfo mapFile)
     {
         Map map = new();
-        await AnsiConsole.Status().StartAsync("Loading map...", async ctx =>
+        AnsiConsole.Status().Start("Loading map...", ctx =>
         {
             ctx.Spinner(Spinner.Known.Star);
             ctx.SpinnerStyle(Style.Parse("yellow"));
             ctx.Refresh();
-            map = await DeserializeMap(mapFile) ?? throw new DolMapException("Failed to load map");
+            map = DeserializeMap(mapFile).Result ?? throw new DolMapException("Failed to load map");
             AnsiConsole.MarkupLine("Loaded map [yellow]{0}[/]", mapFile.Name);
             ProvisionMap(ctx, map);
         });
@@ -73,6 +75,17 @@ public class MapService : IMapService
 
     private void ProvisionMap(StatusContext ctx, Map map)
     {
+        ctx.Status("Identifying City of Light...");
+        ctx.Refresh();
+
+        var topPop = map.Collections.burgs.Max(x => x.population);
+        var cityOfLight = map.Collections.burgs.First(x => Math.Abs(x.population - topPop) < 0.01);
+        cityOfLight.isCityOfLight = true;
+
+        var dolLocations = LocationTypes.Types.Where(x => x.NeedsCityOfLight).ToList();
+        cityOfLight.locations.AddRange(dolLocations.Select(x => new Location { Type = x, Name = x.Type, Rarity = x.Rarity }));
+        AnsiConsole.MarkupLine("City of Light established as [yellow]{0}[/]", cityOfLight.name);
+        
         ctx.Status("Adjusting burgs' population...");
         ctx.Refresh();
 
@@ -93,15 +106,6 @@ public class MapService : IMapService
             ProvisionBurg(burg, minPop, positionCeiling, adjustedPositionCeiling, adjustedMin);
         }
 
-        ctx.Status("Identifying City of Light...");
-        ctx.Refresh();
-
-        var topPop = map.Collections.burgs.Max(x => x.population);
-        var cityOfLight = map.Collections.burgs.First(x => Math.Abs(x.population - topPop) < 0.01);
-        cityOfLight.isCityOfLight = true;
-        cityOfLight.population *= 3;
-        AnsiConsole.MarkupLine("City of Light established as [yellow]{0}[/]", cityOfLight.name);
-
         ctx.Status("Setting player position...");
         ctx.Refresh();
 
@@ -110,6 +114,8 @@ public class MapService : IMapService
         SaveGameService.CurrentPlayerId = player.Id;
         SaveGameService.Party.Cell = cityOfLight.cell;
         SaveGameService.Party.Burg = cityOfLight.i;
+        _imageService.ProcessSvg();
+        
         AnsiConsole.MarkupLine("Player position set to [yellow]{0}[/]", cityOfLight.name);
     }
 
@@ -118,17 +124,18 @@ public class MapService : IMapService
     {
         var adjustedPosition = (burg.population - minPop) / positionCeiling * adjustedPositionCeiling;
         burg.population = adjustedPosition + adjustedMin;
-        burg.size = burg.population switch
+        burg.population = burg.isCityOfLight ? burg.population * 3 : burg.population;
+        burg.size = (burg.population * 1000) switch
         {
-            > 0 and < 100 => BurgSize.Hamlet,
-            >= 100 and < 1000 => BurgSize.Village,
-            >= 1000 and < 5000 => BurgSize.Town,
-            >= 5000 and < 25000 => BurgSize.City,
-            >= 25000 and < 100000 => BurgSize.Metropolis,
-            >= 100000 => BurgSize.Megalopolis,
+            > 0 and < 1000 => BurgSize.Hamlet,
+            >= 1000 and < 5000 => BurgSize.Village,
+            >= 5000 and < 25000 => BurgSize.Town,
+            >= 25000 and < 100000 => BurgSize.City,
+            >= 100000 and < 300000 => BurgSize.Metropolis,
+            >= 300000 => BurgSize.Megalopolis,
             _ => burg.size
         };
-        burg.locations = ProvisionBurgLocations(burg);
+        burg.locations.AddRange(ProvisionBurgLocations(burg));
     }
 
     private static List<Location> ProvisionBurgLocations(Burg burg)
@@ -192,12 +199,6 @@ public class MapService : IMapService
                     break;
             }
         }
-
-        if (burg.isCityOfLight)
-        {
-            var dolLocations = LocationTypes.Types.Where(x => x.NeedsCityOfLight).ToList();
-            locations.AddRange(dolLocations.Select(x => new Location { Type = x, Name = x.Type, Rarity = x.Rarity }));
-        }
         
         var cnt = _burgTypes.Count - 1;
         for (var i = 0; i < 5; i++)
@@ -210,17 +211,21 @@ public class MapService : IMapService
                 var locationType = _burgTypes[rnd];
                 if (rarity < locationType.Rarity || rarity > locationType.MaxRarity)
                 {
+                    j++;
                     continue;
                 }
                 if (locationType.AllowMultiple == false && locations.Any(x => x.Type.Type == locationType.Type))
                 {
+                    j++;
                     continue;
                 }
                 if ((locationType.NeedsCitadel && burg.citadel != 1) ||
                     (locationType.NeedsPlaza && burg.plaza != 1) ||
                     (locationType.NeedsShanty && burg.shanty != 1) ||
-                    (locationType.NeedsWalls && burg.walls != 1))
+                    (locationType.NeedsWalls && burg.walls != 1) ||
+                    (locationType.NeedsTemple && burg.temple != 1))
                 {
+                    j++;
                     continue;
                 }
 
@@ -233,6 +238,12 @@ public class MapService : IMapService
                 locations.Add(location);
                 j++;
             }
+        }
+
+        if (locations.Count == 0)
+        {
+            var tavern = LocationTypes.Types.First(x => x.Type == "tavern");
+            locations.Add(new Location { Type = tavern, Name = $"{burg.name} Tavern", Rarity = tavern.Rarity });
         }
 
         return locations;
