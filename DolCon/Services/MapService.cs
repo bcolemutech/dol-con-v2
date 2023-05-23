@@ -195,13 +195,14 @@ public class MapService : IMapService
 
         if (burg.isCityOfLight)
         {
-            throw new NotImplementedException();
+            var dolLocations = LocationTypes.Types.Where(x => x.NeedsCityOfLight).ToList();
+            locations.AddRange(dolLocations.Select(x => new Location { Type = x, Name = x.Type, Rarity = x.Rarity }));
         }
         
         var cnt = _burgTypes.Count - 1;
-        for (int i = 0; i < 5; i++)
+        for (var i = 0; i < 5; i++)
         {
-            int j = 0;
+            var j = 0;
             while ( j < sequence[i])
             {
                 var rarity = (Rarity)i;
