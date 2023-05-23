@@ -89,7 +89,7 @@ public class MainMenuService : IMainMenuService
 
         var mapFile = maps.First(x => x.Name == newGameSelection);
 
-        await _mapService.LoadMap(mapFile);
+        _mapService.LoadMap(mapFile);
 
         AnsiConsole.WriteLine("Map loaded, saving game...");
 

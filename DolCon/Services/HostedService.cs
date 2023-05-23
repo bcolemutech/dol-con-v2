@@ -31,7 +31,7 @@ public class HostedService : IHostedService
                 await _mainMenuService.Show(cancellationToken);
             }, cancellationToken);
             task.Wait(cancellationToken);
-            if(task.IsFaulted && task.Exception != null)
+            if(task is { IsFaulted: true, Exception: not null })
             {
                throw task.Exception;
             }
