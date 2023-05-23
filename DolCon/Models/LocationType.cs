@@ -724,7 +724,7 @@ public static class LocationTypes
             false,
             true,
             Array.Empty<Tag>(),
-            new[] { Service.lodging, Service.food }
+            new[] { Service.lodging, Service.food, Service.combat }
         ),
         new LocationType(
             "The Paladin's Fortress",
@@ -742,7 +742,7 @@ public static class LocationTypes
             false,
             true,
             Array.Empty<Tag>(),
-            new[] { Service.lodging, Service.healing, Service.food, Service.drinks }
+            new[] { Service.lodging, Service.healing, Service.food, Service.drinks, Service.combat }
         ),
         new LocationType(
             "The Paladin's Forge",
