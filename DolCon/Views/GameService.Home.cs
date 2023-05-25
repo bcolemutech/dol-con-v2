@@ -1,5 +1,6 @@
 ﻿namespace DolCon.Views;
 
+using Enums;
 using Services;
 using Spectre.Console;
 using Spectre.Console.Rendering;
@@ -13,7 +14,9 @@ public partial class GameService
         var biome = SaveGameService.CurrentBiome;
         var province = SaveGameService.CurrentProvince;
         var state = SaveGameService.CurrentState;
-        var availableBurg = currentCell.burg > 0 ? $"[green]{SaveGameService.GetBurg(currentCell.burg)?.name}" : "[red]None";
+        var availableBurg = currentCell.burg > 0
+            ? $"[green]{SaveGameService.GetBurg(currentCell.burg)?.name}"
+            : "[red]None";
         var homePanels = new List<IRenderable>
         {
             new Panel(
@@ -43,12 +46,28 @@ public partial class GameService
                 $"{(burg.shanty == 1 ? "Shanty Town" : string.Empty)}"
             };
             var featuresString = string.Join(" | ", features.Where(x => !string.IsNullOrEmpty(x)));
+
+            var rows = new List<IRenderable>
+            {
+                new Markup(cityTitle),
+                new Markup($"Population: [green]{Convert.ToInt32(burg.population * 1000)}[/]"),
+                new Markup(featuresString)
+            };
+            rows.AddRange(from location in burg.locations.OrderByDescending(x => x.Rarity)
+                let color = location.Rarity switch
+                {
+                    Rarity.uncommon => "green",
+                    Rarity.rare => "blue",
+                    Rarity.epic => "purple",
+                    Rarity.legendary => "yellow",
+                    _ => "white"
+                }
+                select new Markup($"[{color}]{location.Name}[/]"));
+
             homePanels.Add(new Panel(
                 Align.Center(
                     new Rows(
-                        new Markup(cityTitle),
-                        new Markup($"Population: [green]{Convert.ToInt32(burg.population * 1000)}[/]"),
-                        new Text(featuresString)
+                        rows.ToArray()
                     ))));
         }
         else
@@ -57,15 +76,15 @@ public partial class GameService
                 Align.Center(
                     new Rows(
                         new Markup("[bold]Current Burg[/]"),
-                        new Markup($"[green]None[/]")
+                        new Markup("[green]None[/]")
                     ))));
         }
-        
+
         homePanels.Add(new Panel(
             Align.Center(
                 new Rows(
                     new Markup("[bold]Current Location[/]"),
-                    new Markup($"[green]None[/]")
+                    new Markup("[green]None[/]")
                 ))));
 
         var grid = new Grid();
