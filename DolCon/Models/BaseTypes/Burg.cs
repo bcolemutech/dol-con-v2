@@ -1,5 +1,7 @@
 ﻿namespace DolCon.Models.BaseTypes;
 
+using Enums;
+
 public class Burg
 {
     public bool isCityOfLight { get; set; }
@@ -21,4 +23,6 @@ public class Burg
     public int? walls { get; set; }
     public int? shanty { get; set; }
     public int? temple { get; set; }
+    public List<Location> locations { get; set; } = new List<Location>();
+    public BurgSize size { get; set; }
 }
