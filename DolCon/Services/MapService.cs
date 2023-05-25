@@ -91,19 +91,15 @@ public class MapService : IMapService
 
         var maxPop = map.Collections.burgs.Max(x => x.population);
         var minPop = map.Collections.burgs.Min(x => x.population);
-        var positionCeiling = maxPop - minPop;
 
-        var adjustedMax = maxPop * 3;
-        var adjustedMin = minPop / 3;
-        var adjustedPositionCeiling = adjustedMax - adjustedMin;
-        
         _burgTypes = LocationTypes.Types.Where(x => x is { NeedsCityOfLight: false, IsBurgLocation: true, NeedsPort: false, NeedsTemple: false }).ToList();
 
         foreach (var burg in map.Collections.burgs)
         {
             ctx.Status($"Adjusting {burg.name}...");
             ctx.Refresh();
-            ProvisionBurg(burg, minPop, positionCeiling, adjustedPositionCeiling, adjustedMin);
+            AdjustBurgSize(burg, minPop);
+            burg.locations.AddRange(ProvisionBurgLocations(burg));
         }
 
         ctx.Status("Setting player position...");
@@ -119,23 +115,32 @@ public class MapService : IMapService
         AnsiConsole.MarkupLine("Player position set to [yellow]{0}[/]", cityOfLight.name);
     }
 
-    private static void ProvisionBurg(Burg burg, double minPop, double positionCeiling, double adjustedPositionCeiling,
-        double adjustedMin)
+    public static void AdjustBurgSize(Burg burg, double minPop)
     {
-        var adjustedPosition = (burg.population - minPop) / positionCeiling * adjustedPositionCeiling;
-        burg.population = adjustedPosition + adjustedMin;
-        burg.population = burg.isCityOfLight ? burg.population * 3 : burg.population;
-        burg.size = (burg.population * 1000) switch
+        double maxPop = 75;
+        double idealMin = .1;
+        double idealMax = 350;
+
+        if (burg.population < maxPop)
         {
-            > 0 and < 1000 => BurgSize.Hamlet,
-            >= 1000 and < 5000 => BurgSize.Village,
-            >= 5000 and < 25000 => BurgSize.Town,
-            >= 25000 and < 100000 => BurgSize.City,
-            >= 100000 and < 300000 => BurgSize.Metropolis,
-            >= 300000 => BurgSize.Megalopolis,
+            burg.population = (((burg.population - minPop) / (maxPop - minPop)) * (idealMax - idealMin)) + idealMin;
+
+            burg.population = burg.isCityOfLight ? burg.population * 3 : burg.population;
+        }
+        else
+        {
+            burg.population += idealMax;
+        }
+
+        burg.size = burg.population switch
+        {
+            > 0 and < 2 => BurgSize.Village,
+            >= 2 and < 50 => BurgSize.Town,
+            >= 50 and < 150 => BurgSize.City,
+            >= 150 and < 300 => BurgSize.Metropolis,
+            >= 300 => BurgSize.Megalopolis,
             _ => burg.size
         };
-        burg.locations.AddRange(ProvisionBurgLocations(burg));
     }
 
     private static List<Location> ProvisionBurgLocations(Burg burg)
@@ -144,7 +149,6 @@ public class MapService : IMapService
 
         var sequence = burg.size switch
         {
-            BurgSize.Hamlet => new[] { 1, 0, 0, 0, 0 },
             BurgSize.Village => new[] { 2, 1, 0, 0, 0 },
             BurgSize.Town => new[] { 3, 2, 1, 0, 0 },
             BurgSize.City => new[] { 5, 3, 2, 1, 0 },
@@ -157,19 +161,18 @@ public class MapService : IMapService
         {
             switch (burg.size)
             {
-                case BurgSize.Hamlet:
+                case BurgSize.Village:
                     var pier = LocationTypes.Types.First(x => x.Type == "pier");
                     locations.Add(new Location { Type = pier, Name = "Pier", Rarity = pier.Rarity });
                     break;
-                case BurgSize.Village:
+                case BurgSize.Town:
                     var dock = LocationTypes.Types.First(x => x.Type == "dock");
                     locations.Add(new Location { Type = dock, Name = $"{burg.name} Docks", Rarity = dock.Rarity });
                     break;
-                case BurgSize.Town:
+                case BurgSize.City:
                     var harbor = LocationTypes.Types.First(x => x.Type == "harbor");
                     locations.Add(new Location { Type = harbor, Name = $"{burg.name} Harbor", Rarity = harbor.Rarity });
                     break;
-                case BurgSize.City:
                 case BurgSize.Metropolis:
                 case BurgSize.Megalopolis:
                     var port = LocationTypes.Types.First(x => x.Type == "port");
@@ -182,17 +185,16 @@ public class MapService : IMapService
         {
             switch (burg.size)
             {
-                case BurgSize.Hamlet:
                 case BurgSize.Village:
+                case BurgSize.Town:
                     var shrine = LocationTypes.Types.First(x => x.Type == "shrine");
                     locations.Add(new Location { Type = shrine, Name = $"{burg.name} Shrine", Rarity = shrine.Rarity });
                     break;
-                case BurgSize.Town:
                 case BurgSize.City:
+                case BurgSize.Metropolis:
                     var temple = LocationTypes.Types.First(x => x.Type == "temple");
                     locations.Add(new Location { Type = temple, Name = $"{burg.name} Temple", Rarity = temple.Rarity });
                     break;
-                case BurgSize.Metropolis:
                 case BurgSize.Megalopolis:
                     var basilica = LocationTypes.Types.First(x => x.Type == "basilica");
                     locations.Add(new Location { Type = basilica, Name = $"{burg.name} Basilica", Rarity = basilica.Rarity });
@@ -201,7 +203,7 @@ public class MapService : IMapService
         }
         
         var cnt = _burgTypes.Count - 1;
-        for (var i = 0; i < 5; i++)
+        for (var i = 0; i < 4; i++)
         {
             var j = 0;
             while ( j < sequence[i])

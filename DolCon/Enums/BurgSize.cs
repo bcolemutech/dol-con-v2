@@ -2,7 +2,6 @@
 
 public enum BurgSize
 {
-    Hamlet,
     Village,
     Town,
     City,
