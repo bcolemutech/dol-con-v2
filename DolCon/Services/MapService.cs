@@ -83,16 +83,18 @@ public class MapService : IMapService
         cityOfLight.isCityOfLight = true;
 
         var dolLocations = LocationTypes.Types.Where(x => x.NeedsCityOfLight).ToList();
-        cityOfLight.locations.AddRange(dolLocations.Select(x => new Location { Type = x, Name = x.Type, Rarity = x.Rarity }));
+        cityOfLight.locations.AddRange(dolLocations.Select(x => new Location
+            { Type = x, Name = x.Type, Rarity = x.Rarity }));
         AnsiConsole.MarkupLine("City of Light established as [yellow]{0}[/]", cityOfLight.name);
-        
+
         ctx.Status("Adjusting burgs' population...");
         ctx.Refresh();
 
         var maxPop = map.Collections.burgs.Max(x => x.population);
         var minPop = map.Collections.burgs.Min(x => x.population);
 
-        _burgTypes = LocationTypes.Types.Where(x => x is { NeedsCityOfLight: false, IsBurgLocation: true, NeedsPort: false, NeedsTemple: false }).ToList();
+        _burgTypes = LocationTypes.Types.Where(x => x is
+            { NeedsCityOfLight: false, IsBurgLocation: true, NeedsPort: false, NeedsTemple: false }).ToList();
 
         foreach (var burg in map.Collections.burgs)
         {
@@ -111,7 +113,7 @@ public class MapService : IMapService
         SaveGameService.Party.Cell = cityOfLight.cell;
         SaveGameService.Party.Burg = cityOfLight.i;
         _imageService.ProcessSvg();
-        
+
         AnsiConsole.MarkupLine("Player position set to [yellow]{0}[/]", cityOfLight.name);
     }
 
@@ -197,16 +199,45 @@ public class MapService : IMapService
                     break;
                 case BurgSize.Megalopolis:
                     var basilica = LocationTypes.Types.First(x => x.Type == "basilica");
-                    locations.Add(new Location { Type = basilica, Name = $"{burg.name} Basilica", Rarity = basilica.Rarity });
+                    locations.Add(new Location
+                        { Type = basilica, Name = $"{burg.name} Basilica", Rarity = basilica.Rarity });
                     break;
             }
         }
-        
+
+        if (burg is { citadel: 1, isCityOfLight: false })
+        {
+            switch (burg.size)
+            {
+                case BurgSize.Village:
+                case BurgSize.Town:
+                    var manor = LocationTypes.Types.First(x => x.Type == "manor");
+                    locations.Add(new Location { Type = manor, Name = $"{burg.name} Manor", Rarity = manor.Rarity });
+                    break;
+                case BurgSize.City:
+                    var castle = LocationTypes.Types.First(x => x.Type == "castle");
+                    locations.Add(new Location { Type = castle, Name = $"{burg.name} Castle", Rarity = castle.Rarity });
+                    break;
+                case BurgSize.Metropolis:
+                    var fortress = LocationTypes.Types.First(x => x.Type == "fortress");
+                    locations.Add(new Location
+                        { Type = fortress, Name = $"{burg.name} Fortress", Rarity = fortress.Rarity });
+                    break;
+                case BurgSize.Megalopolis:
+                    var citadel = LocationTypes.Types.First(x => x.Type == "citadel");
+                    locations.Add(new Location
+                        { Type = citadel, Name = $"{burg.name} Citadel", Rarity = citadel.Rarity });
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
         var cnt = _burgTypes.Count - 1;
         for (var i = 0; i < 4; i++)
         {
             var j = 0;
-            while ( j < sequence[i])
+            while (j < sequence[i])
             {
                 var rarity = (Rarity)i;
                 var rnd = new Random().Next(0, cnt);
@@ -216,11 +247,13 @@ public class MapService : IMapService
                     j++;
                     continue;
                 }
+
                 if (locationType.AllowMultiple == false && locations.Any(x => x.Type.Type == locationType.Type))
                 {
                     j++;
                     continue;
                 }
+
                 if ((locationType.NeedsCitadel && burg.citadel != 1) ||
                     (locationType.NeedsPlaza && burg.plaza != 1) ||
                     (locationType.NeedsShanty && burg.shanty != 1) ||
