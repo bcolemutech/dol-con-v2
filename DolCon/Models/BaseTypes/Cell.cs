@@ -26,4 +26,5 @@ public class Cell
     public int state { get; set; }
     public int religion { get; set; }
     public int province { get; set; }
+    public List<Location> locations { get; set; } = new List<Location>();
 }
