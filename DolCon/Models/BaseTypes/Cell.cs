@@ -1,5 +1,7 @@
 ﻿namespace DolCon.Models.BaseTypes;
 
+using Enums;
+
 public class Cell
 {
     public int i { get; set; }
@@ -27,4 +29,18 @@ public class Cell
     public int religion { get; set; }
     public int province { get; set; }
     public List<Location> locations { get; set; } = new List<Location>();
+
+    public PopDensity PopDensity =>
+        this.pop switch
+        {
+            < (int)PopDensity.rural => PopDensity.wild,
+            < (int)PopDensity.urban => PopDensity.rural,
+            _ => PopDensity.urban
+        };
+
+    public CellSize CellSize => this.area switch
+    {
+        < 150 => CellSize.small,
+        _ => CellSize.large
+    };
 }
