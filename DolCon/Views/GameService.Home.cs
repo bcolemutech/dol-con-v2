@@ -17,19 +17,38 @@ public partial class GameService
         var availableBurg = currentCell.burg > 0
             ? $"[green]{SaveGameService.GetBurg(currentCell.burg)?.name}"
             : "[red]None";
-        var homePanels = new List<IRenderable>
+        var homePanels = new List<IRenderable>();
+
+        var areaLines = new List<IRenderable>
         {
-            new Panel(
-                Align.Center(
-                    new Rows(
-                        new Markup("[bold]Current Area[/]"),
-                        new Markup($"Biome: [green]{biome}[/]"),
-                        new Markup($"Rural Population: [green]{Convert.ToInt32(currentCell.pop * 1000)}[/]"),
-                        new Markup($"Province: [green]{province.fullName}[/]"),
-                        new Markup($"State: [green]{state.fullName}[/]"),
-                        new Markup($"Burg: {availableBurg}[/]")
-                    )))
+            new Markup($"[bold]Current Area[/]"),
+            new Markup($"Biome: [green]{biome}[/]"),
+            new Markup($"Rural Population: [green]{Convert.ToInt32(currentCell.pop * 1000)}[/]"),
+            new Markup($"Province: [green]{province.fullName}[/]"),
+            new Markup($"State: [green]{state.fullName}[/]"),
+            new Markup($"Burg: {availableBurg}[/]"),
+            new Markup($"Area Type: [green]{currentCell.area}[/]"),
+            new Markup($"Size: [green]{currentCell.CellSize}[/]"),
+            new Markup($"Pop Density: [green]{currentCell.PopDensity}[/]"),
         };
+        if (currentCell.locations.Any())
+        {
+            areaLines.Add(new Markup($"[green bold]Locations[/]"));
+            areaLines.AddRange(
+                currentCell.locations
+                    .OrderByDescending(x => x.Rarity)
+                    .Select(x => new Markup($"[green]{x.Name}[/]"))
+            );
+        }
+
+        var areaRows = new Rows(
+            areaLines.ToArray()
+        );
+        
+        var areaPanel = new Panel(Align.Center(areaRows));
+
+        homePanels.Add(areaPanel);
+
         if (burg != null)
         {
             var cityTitle = burg.isCityOfLight
