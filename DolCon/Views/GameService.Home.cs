@@ -27,7 +27,6 @@ public partial class GameService
             new Markup($"Province: [green]{province.fullName}[/]"),
             new Markup($"State: [green]{state.fullName}[/]"),
             new Markup($"Burg: {availableBurg}[/]"),
-            new Markup($"Area Type: [green]{currentCell.area}[/]"),
             new Markup($"Size: [green]{currentCell.CellSize}[/]"),
             new Markup($"Pop Density: [green]{currentCell.PopDensity}[/]"),
         };
