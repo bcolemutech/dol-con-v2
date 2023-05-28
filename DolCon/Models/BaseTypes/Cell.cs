@@ -31,7 +31,7 @@ public class Cell
     public List<Location> locations { get; set; } = new List<Location>();
 
     public PopDensity PopDensity =>
-        this.pop switch
+        (this.pop * 1000) switch
         {
             < (int)PopDensity.rural => PopDensity.wild,
             < (int)PopDensity.urban => PopDensity.rural,
@@ -40,7 +40,7 @@ public class Cell
 
     public CellSize CellSize => this.area switch
     {
-        < 150 => CellSize.small,
+        < 100 => CellSize.small,
         _ => CellSize.large
     };
 }
