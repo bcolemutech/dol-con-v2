@@ -28,6 +28,7 @@ public class MapService : IMapService
     private readonly IPlayerService _playerService;
     private readonly IImageService _imageService;
     private static List<LocationType> _burgTypes = new();
+    private List<LocationType> _cellTypes = new();
 
     public MapService(IPlayerService playerService, IImageService imageService)
     {
@@ -87,10 +88,21 @@ public class MapService : IMapService
             { Type = x, Name = x.Type, Rarity = x.Rarity }));
         AnsiConsole.MarkupLine("City of Light established as [yellow]{0}[/]", cityOfLight.name);
 
-        ctx.Status("Adjusting burgs' population...");
+        ctx.Status("Provisioning cells...");
         ctx.Refresh();
 
-        var maxPop = map.Collections.burgs.Max(x => x.population);
+        _cellTypes = LocationTypes.Types.Where(x => !x.IsBurgLocation).ToList();
+
+        foreach (var cell in map.Collections.cells)
+        {
+            ctx.Status($"Setting up cell: {cell.i}...");
+            ctx.Refresh();
+            cell.locations.AddRange(ProvisionCellLocations(cell));
+        }
+
+        ctx.Status("Provisioning burgs...");
+        ctx.Refresh();
+
         var minPop = map.Collections.burgs.Min(x => x.population);
 
         _burgTypes = LocationTypes.Types.Where(x => x is
@@ -98,7 +110,7 @@ public class MapService : IMapService
 
         foreach (var burg in map.Collections.burgs)
         {
-            ctx.Status($"Adjusting {burg.name}...");
+            ctx.Status($"Setting up burg: {burg.name}...");
             ctx.Refresh();
             AdjustBurgSize(burg, minPop);
             burg.locations.AddRange(ProvisionBurgLocations(burg));
@@ -115,6 +127,79 @@ public class MapService : IMapService
         _imageService.ProcessSvg();
 
         AnsiConsole.MarkupLine("Player position set to [yellow]{0}[/]", cityOfLight.name);
+    }
+
+    private IEnumerable<Location> ProvisionCellLocations(Cell cell)
+    {
+        var locations = new List<Location>();
+
+        var wilderness = _cellTypes.Where(x => x.isWild).ToList();
+        var nonWilderness = _cellTypes.Where(x => !x.isWild).ToList();
+
+        int wildCells;
+        int nonWildCells;
+
+        switch (cell)
+        {
+            case { CellSize: CellSize.small, PopDensity: PopDensity.wild }:
+
+                nonWildCells = 1;
+                wildCells = 4;
+                break;
+            case { CellSize: CellSize.small, PopDensity: PopDensity.rural }:
+                nonWildCells = 2;
+                wildCells = 3;
+                break;
+            case { CellSize: CellSize.small, PopDensity: PopDensity.urban }:
+                nonWildCells = 3;
+                wildCells = 2;
+                break;
+            case { CellSize: CellSize.large, PopDensity: PopDensity.wild }:
+                nonWildCells = 2;
+                wildCells = 6;
+                break;
+            case { CellSize: CellSize.large, PopDensity: PopDensity.rural }:
+                nonWildCells = 3;
+                wildCells = 5;
+                break;
+            case { CellSize: CellSize.large, PopDensity: PopDensity.urban }:
+                nonWildCells = 5;
+                wildCells = 3;
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+
+        var random = new Random();
+        var i = 0;
+        while (i < nonWildCells)
+        {
+            var index = random.Next(nonWilderness.Count);
+            var location = nonWilderness[index];
+            if (!location.AllowMultiple && locations.Any(x => x.Type == location))
+            {
+                continue;
+            }
+
+            locations.Add(new Location { Type = location, Name = location.Type, Rarity = location.Rarity });
+            i++;
+        }
+
+        i = 0;
+        while (i < wildCells)
+        {
+            var index = random.Next(wilderness.Count);
+            var location = wilderness[index];
+            if (!location.AllowMultiple && locations.Any(x => x.Type == location))
+            {
+                continue;
+            }
+
+            locations.Add(new Location { Type = location, Name = location.Type, Rarity = location.Rarity });
+            i++;
+        }
+
+        return locations;
     }
 
     public static void AdjustBurgSize(Burg burg, double minPop)
