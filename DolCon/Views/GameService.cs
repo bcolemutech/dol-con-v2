@@ -48,7 +48,7 @@ public partial class GameService : IGameService
         {
             _ctx = ctx;
             
-            RenderScreen(' ');
+            RenderScreen();
 
             await ProcessKey(token);
         });
@@ -71,7 +71,7 @@ public partial class GameService : IGameService
             }
             else
             {
-                RenderScreen(key.KeyChar);
+                RenderScreen(key);
             }
 
         } while (token.IsCancellationRequested == false && _screen != Screen.Exit);
@@ -89,9 +89,9 @@ public partial class GameService : IGameService
         }
     }
 
-    private void RenderScreen(char? keyChar = null)
+    private void RenderScreen(ConsoleKeyInfo? keyChar = null)
     {
-        var value = keyChar ?? ' ';
+        var value = keyChar ?? new ConsoleKeyInfo();
         switch (_screen)
         {
             case Screen.Home:
