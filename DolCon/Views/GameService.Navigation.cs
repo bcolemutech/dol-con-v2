@@ -1,5 +1,6 @@
 ﻿namespace DolCon.Views;
 
+using Models;
 using Models.BaseTypes;
 using Services;
 using Spectre.Console;
@@ -38,9 +39,14 @@ public partial class GameService
 
         currentCell = SaveGameService.CurrentCell;
         var burg = SaveGameService.CurrentBurg;
+        var location = SaveGameService.CurrentLocation;
         localBurg = currentCell.burg > 0 ? SaveGameService.GetBurg(currentCell.burg) : null;
 
-        if (burg != null)
+        if (location != null)
+        {
+            RenderLocationNavigation(location);
+        }
+        else if (burg != null)
         {
             RenderBurgNavigation(burg);
         }
@@ -79,6 +85,18 @@ public partial class GameService
                         VerticalAlignment.Middle))
                 .Expand());
         _ctx.Refresh();
+    }
+
+    private void RenderLocationNavigation(Location location)
+    {
+        _display.Update(
+            new Panel(
+                Align.Center(
+                    new Rows(
+                        new Markup($"Current Location: [green bold]{location.Name}[/]"),
+                        new Markup("[red bold]Location navigation is not currently implemented[/]"),
+                        new Markup("To leave location press [green bold]L[/]")
+                    ))));
     }
 
     private void RenderBurgNavigation(Burg burg)
