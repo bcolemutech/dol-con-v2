@@ -181,7 +181,7 @@ public class MapService : IMapService
                 continue;
             }
 
-            locations.Add(new Location { Type = location, Name = location.Type, Rarity = location.Rarity });
+            locations.Add(new Location { Id = Guid.NewGuid(), Type = location, Name = location.Type, Rarity = location.Rarity });
             i++;
         }
 
@@ -195,7 +195,7 @@ public class MapService : IMapService
                 continue;
             }
 
-            locations.Add(new Location { Type = location, Name = location.Type, Rarity = location.Rarity });
+            locations.Add(new Location { Id = Guid.NewGuid(), Type = location, Name = location.Type, Rarity = location.Rarity });
             i++;
         }
 
@@ -250,20 +250,20 @@ public class MapService : IMapService
             {
                 case BurgSize.Village:
                     var pier = LocationTypes.Types.First(x => x.Type == "pier");
-                    locations.Add(new Location { Type = pier, Name = "Pier", Rarity = pier.Rarity });
+                    locations.Add(new Location { Id = Guid.NewGuid(), Type = pier, Name = "Pier", Rarity = pier.Rarity });
                     break;
                 case BurgSize.Town:
                     var dock = LocationTypes.Types.First(x => x.Type == "dock");
-                    locations.Add(new Location { Type = dock, Name = $"{burg.name} Docks", Rarity = dock.Rarity });
+                    locations.Add(new Location { Id = Guid.NewGuid(), Type = dock, Name = $"{burg.name} Docks", Rarity = dock.Rarity });
                     break;
                 case BurgSize.City:
                     var harbor = LocationTypes.Types.First(x => x.Type == "harbor");
-                    locations.Add(new Location { Type = harbor, Name = $"{burg.name} Harbor", Rarity = harbor.Rarity });
+                    locations.Add(new Location { Id = Guid.NewGuid(), Type = harbor, Name = $"{burg.name} Harbor", Rarity = harbor.Rarity });
                     break;
                 case BurgSize.Metropolis:
                 case BurgSize.Megalopolis:
                     var port = LocationTypes.Types.First(x => x.Type == "port");
-                    locations.Add(new Location { Type = port, Name = $"{burg.name} Port", Rarity = port.Rarity });
+                    locations.Add(new Location { Id = Guid.NewGuid(), Type = port, Name = $"{burg.name} Port", Rarity = port.Rarity });
                     break;
             }
         }
@@ -275,17 +275,17 @@ public class MapService : IMapService
                 case BurgSize.Village:
                 case BurgSize.Town:
                     var shrine = LocationTypes.Types.First(x => x.Type == "shrine");
-                    locations.Add(new Location { Type = shrine, Name = $"{burg.name} Shrine", Rarity = shrine.Rarity });
+                    locations.Add(new Location { Id = Guid.NewGuid(), Type = shrine, Name = $"{burg.name} Shrine", Rarity = shrine.Rarity });
                     break;
                 case BurgSize.City:
                 case BurgSize.Metropolis:
                     var temple = LocationTypes.Types.First(x => x.Type == "temple");
-                    locations.Add(new Location { Type = temple, Name = $"{burg.name} Temple", Rarity = temple.Rarity });
+                    locations.Add(new Location { Id = Guid.NewGuid(), Type = temple, Name = $"{burg.name} Temple", Rarity = temple.Rarity });
                     break;
                 case BurgSize.Megalopolis:
                     var basilica = LocationTypes.Types.First(x => x.Type == "basilica");
                     locations.Add(new Location
-                        { Type = basilica, Name = $"{burg.name} Basilica", Rarity = basilica.Rarity });
+                        { Id = Guid.NewGuid(), Type = basilica, Name = $"{burg.name} Basilica", Rarity = basilica.Rarity });
                     break;
             }
         }
@@ -297,21 +297,21 @@ public class MapService : IMapService
                 case BurgSize.Village:
                 case BurgSize.Town:
                     var manor = LocationTypes.Types.First(x => x.Type == "manor");
-                    locations.Add(new Location { Type = manor, Name = $"{burg.name} Manor", Rarity = manor.Rarity });
+                    locations.Add(new Location { Id = Guid.NewGuid(), Type = manor, Name = $"{burg.name} Manor", Rarity = manor.Rarity });
                     break;
                 case BurgSize.City:
                     var castle = LocationTypes.Types.First(x => x.Type == "castle");
-                    locations.Add(new Location { Type = castle, Name = $"{burg.name} Castle", Rarity = castle.Rarity });
+                    locations.Add(new Location { Id = Guid.NewGuid(), Type = castle, Name = $"{burg.name} Castle", Rarity = castle.Rarity });
                     break;
                 case BurgSize.Metropolis:
                     var fortress = LocationTypes.Types.First(x => x.Type == "fortress");
                     locations.Add(new Location
-                        { Type = fortress, Name = $"{burg.name} Fortress", Rarity = fortress.Rarity });
+                        { Id = Guid.NewGuid(), Type = fortress, Name = $"{burg.name} Fortress", Rarity = fortress.Rarity });
                     break;
                 case BurgSize.Megalopolis:
                     var citadel = LocationTypes.Types.First(x => x.Type == "citadel");
                     locations.Add(new Location
-                        { Type = citadel, Name = $"{burg.name} Citadel", Rarity = citadel.Rarity });
+                        { Id = Guid.NewGuid(), Type = citadel, Name = $"{burg.name} Citadel", Rarity = citadel.Rarity });
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -351,6 +351,7 @@ public class MapService : IMapService
 
                 var location = new Location
                 {
+                    Id = Guid.NewGuid(),
                     Type = locationType,
                     Name = $"{burg.name} {locationType.Type}",
                     Rarity = rarity
@@ -363,7 +364,7 @@ public class MapService : IMapService
         if (locations.Count == 0)
         {
             var tavern = LocationTypes.Types.First(x => x.Type == "tavern");
-            locations.Add(new Location { Type = tavern, Name = $"{burg.name} Tavern", Rarity = tavern.Rarity });
+            locations.Add(new Location { Id = Guid.NewGuid(), Type = tavern, Name = $"{burg.name} Tavern", Rarity = tavern.Rarity });
         }
 
         return locations;

@@ -14,6 +14,15 @@ public interface ISaveGameService
 
 public class SaveGameService : ISaveGameService
 {
+    public static Location? CurrentLocation =>
+        Party switch
+        {
+            { Location: not null, Burg: not null } => CurrentMap.Collections.burgs[Party.Burg.Value]
+                .locations.First(x => x.Id == Party.Location.Value),
+            { Location: not null } => CurrentMap.Collections.cells[Party.Cell]
+                .locations.First(x => x.Id == Party.Location.Value),
+            _ => null
+        };
     public static Map CurrentMap { get; set; } = new();
     public static Party Party { get; set; } = new();
     public static Guid CurrentPlayerId { get; set; } = Guid.NewGuid();

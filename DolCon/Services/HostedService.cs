@@ -57,6 +57,6 @@ public class HostedService : IHostedService
         
         var saveService = _serviceProvider.GetService<ISaveGameService>();
 
-        if (saveService != null) await saveService.SaveGame();
+        if (saveService != null && SaveGameService.CurrentMap.info is not null) await saveService.SaveGame();
     }
 }

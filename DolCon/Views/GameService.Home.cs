@@ -11,6 +11,7 @@ public partial class GameService
     {
         var currentCell = SaveGameService.CurrentCell;
         var burg = SaveGameService.CurrentBurg;
+        var currentLocation = SaveGameService.CurrentLocation;
         var biome = SaveGameService.CurrentBiome;
         var province = SaveGameService.CurrentProvince;
         var state = SaveGameService.CurrentState;
@@ -43,7 +44,7 @@ public partial class GameService
         var areaRows = new Rows(
             areaLines.ToArray()
         );
-        
+
         var areaPanel = new Panel(Align.Center(areaRows));
 
         homePanels.Add(areaPanel);
@@ -98,13 +99,35 @@ public partial class GameService
                     ))));
         }
 
-        homePanels.Add(new Panel(
-            Align.Center(
-                new Rows(
-                    new Markup("[bold]Current Location[/]"),
-                    new Markup("[green]None[/]")
-                ))));
+        if (currentLocation is not null)
+        {
+            var locationLines = new List<IRenderable>
+            {
+                new Markup($"[bold]Current Location[/]"),
+                new Markup($"Name: [green]{currentLocation.Name}[/]"),
+                new Markup($"Type: [green]{currentLocation.Type.Type}[/]"),
+                new Markup($"Rarity: [green]{currentLocation.Rarity}[/]"),
+                new Markup($"Size: [green]{currentLocation.Type.Size}[/]")
+            };
 
+            var locationRows = new Rows(
+                locationLines.ToArray()
+            );
+
+            var locationPanel = new Panel(Align.Center(locationRows));
+
+            homePanels.Add(locationPanel);
+        }
+        else
+        {
+            homePanels.Add(new Panel(
+                Align.Center(
+                    new Rows(
+                        new Markup("[bold]Current Location[/]"),
+                        new Markup("[green]None[/]")
+                    ))));
+        }
+        
         var grid = new Grid();
         grid.AddColumn();
         grid.AddColumn();
