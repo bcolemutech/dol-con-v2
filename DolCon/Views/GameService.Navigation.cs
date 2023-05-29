@@ -26,20 +26,28 @@ public partial class GameService
         {
             SaveGameService.Party.Burg = localBurg.i;
         }
-        else if ((value.Modifiers == ConsoleModifiers.Control || SaveGameService.CurrentBurg is not null) &&
-                 int.TryParse(value.KeyChar.ToString(), out var selection))
+        else
         {
-            SaveGameService.Party.Location = _locationOptions[selection];
-        }
-        else if (int.TryParse(value.KeyChar.ToString(), out var direction))
-        {
-            SaveGameService.Party.Cell = _directionOptions[direction];
-            _imageService.ProcessSvg();
+            var thisChar = value.KeyChar.ToString();
+            var cleanChar = thisChar.First().ToString();
+            var tryParse = int.TryParse(cleanChar, out var selection);
+            selection = value.Modifiers == ConsoleModifiers.Alt ? selection + 10 : selection;
+            if (tryParse && _directionOptions.TryGetValue(selection, out var option))
+            {
+                SaveGameService.Party.Cell = option;
+                _imageService.ProcessSvg();
+            }
+            else if (tryParse && _locationOptions.TryGetValue(selection, out var locationId))
+            {
+                SaveGameService.Party.Location = locationId;
+            }
         }
 
         currentCell = SaveGameService.CurrentCell;
         var burg = SaveGameService.CurrentBurg;
         var location = SaveGameService.CurrentLocation;
+        _locationOptions = new Dictionary<int, Guid>();
+        _directionOptions = new Dictionary<int, int>();
         localBurg = currentCell.burg > 0 ? SaveGameService.GetBurg(currentCell.burg) : null;
 
         if (location != null)
@@ -120,19 +128,17 @@ public partial class GameService
         locationsTable.AddColumn(new TableColumn("Rarity"));
         _ctx.Refresh();
 
-        _locationOptions = new Dictionary<int, Guid>();
-
         var i = 0;
 
         foreach (var location in burg.locations)
         {
-            _locationOptions.Add(i, location.Id);
+            var key = i++;
+            _locationOptions.Add(key, location.Id);
             locationsTable.AddRow(
-                $"{i}",
+                key < 10 ? $"{key}" : $"Alt+{key - 10}",
                 location.Name,
                 location.Type.Type,
                 location.Rarity.ToString());
-            i++;
             _ctx.Refresh();
         }
     }
@@ -149,7 +155,13 @@ public partial class GameService
                         new Markup(
                             $"Local Burg: [green bold]{(localBurg != null ? localBurg.name : "None")}[/]")),
                     Align.Center(
+                        new Markup("Select from the table below to move to a new cell.")
+                    ),
+                    Align.Center(
                         cellsTable
+                    ),
+                    Align.Center(
+                        new Markup("Select from the table below to move to a new location.")
                     ),
                     Align.Center(
                         locationsTable
@@ -163,8 +175,6 @@ public partial class GameService
         cellsTable.AddColumn(new TableColumn("Biome"));
         cellsTable.AddColumn(new TableColumn("Burg"));
         _ctx.Refresh();
-
-        _directionOptions = new Dictionary<int, int>();
 
         var i = 0;
 
@@ -191,14 +201,11 @@ public partial class GameService
         locationsTable.AddColumn(new TableColumn("Rarity"));
         _ctx.Refresh();
 
-        _locationOptions = new Dictionary<int, Guid>();
-
-        i = 0;
 
         foreach (var location in currentCell.locations)
         {
             var key = i++;
-            var keyString = $"Ctrl+{key}";
+            var keyString = key < 10 ? $"{key}" : $"Alt+{key - 10}";
             _locationOptions.Add(key, location.Id);
 
             locationsTable.AddRow(keyString, location.Name, location.Type.Type, location.Rarity.ToString());
