@@ -202,7 +202,7 @@ public partial class GameService
         _ctx.Refresh();
 
 
-        foreach (var location in currentCell.locations)
+        foreach (var location in currentCell.locations.Where(x => x.Discovered))
         {
             var key = i++;
             var keyString = key < 10 ? $"{key}" : $"Alt+{key - 10}";

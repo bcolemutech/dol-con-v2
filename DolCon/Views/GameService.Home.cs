@@ -31,11 +31,11 @@ public partial class GameService
             new Markup($"Size: [green]{currentCell.CellSize}[/]"),
             new Markup($"Pop Density: [green]{currentCell.PopDensity}[/]"),
         };
-        if (currentCell.locations.Any())
+        if (currentCell.locations.Any(x => x.Discovered))
         {
             areaLines.Add(new Markup($"[green bold]Locations[/]"));
             areaLines.AddRange(
-                currentCell.locations
+                currentCell.locations.Where(x => x.Discovered)
                     .OrderByDescending(x => x.Rarity)
                     .Select(x => new Markup($"[green]{x.Name}[/]"))
             );
