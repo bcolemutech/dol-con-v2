@@ -48,7 +48,7 @@ public partial class GameService
 
         if (location != null)
         {
-            if (location.Type.Size != LocationSize.unexplorable || location.ExploredPercent < 1)
+            if (location.Type.Size != LocationSize.unexplorable && location.ExploredPercent < 1)
             {
                 controlLines.Add(new Markup("To explore the location press [green bold]E[/]"));
             }
@@ -69,6 +69,11 @@ public partial class GameService
             if (localBurg != null)
             {
                 controlLines.Add(new Markup("To enter burg press [green bold]B[/]"));
+            }
+
+            if (currentCell.ExploredPercent < 1)
+            {
+                controlLines.Add(new Markup("To explore the area press [green bold]E[/]"));
             }
 
             controlLines.Add(
@@ -99,9 +104,10 @@ public partial class GameService
             case 'b' when SaveGameService.CurrentBurg is null && localBurg != null:
                 SaveGameService.Party.Burg = localBurg.i;
                 break;
-            case 'e' when SaveGameService.CurrentLocation != null &&
-                          SaveGameService.CurrentLocation.Type.Size != LocationSize.unexplorable &&
-                          SaveGameService.CurrentLocation.ExploredPercent < 1:
+            case 'e' when (SaveGameService.CurrentLocation != null &&
+                           SaveGameService.CurrentLocation.Type.Size != LocationSize.unexplorable &&
+                           SaveGameService.CurrentLocation.ExploredPercent < 1) ||
+                          SaveGameService.CurrentCell.ExploredPercent < 1:
                 ProcessExploration();
                 break;
             default:
@@ -136,45 +142,55 @@ public partial class GameService
         if (inBurg)
         {
             locationExplorationSize = (int)currentBurg.size * 100;
+            explored = currentLocation.ExploredPercent * locationExplorationSize;
+
+            explored += defaultExploration;
+
+            currentLocation.ExploredPercent = explored / locationExplorationSize;
         }
         else
         {
             var currentCell = SaveGameService.CurrentCell;
 
             locationExplorationSize = currentCell.CellSize == CellSize.small ? 300 : 500;
-        }
 
-        explored = currentLocation.ExploredPercent * locationExplorationSize;
+            explored = currentCell.ExploredPercent * locationExplorationSize;
+            explored += defaultExploration;
+            currentCell.ExploredPercent = explored / locationExplorationSize;
 
-        explored += defaultExploration;
+            if (Math.Abs(currentCell.ExploredPercent - 1) < .01)
+            {
+                currentCell.ExploredPercent = 1;
+                currentCell.locations.ForEach(x => x.Discovered = true);
+                return;
+            }
 
-        currentLocation.ExploredPercent = explored / locationExplorationSize;
+            var chance = new Chance();
+            var dice = chance.Dice(20);
+            if (dice > 5)
+            {
+                var random1 = new Random();
+                var pick1 = random1.Next(0, currentCell.locations.Count(x => !x.Discovered));
+                var location1 = currentCell.locations.Where(x => !x.Discovered).Skip(pick1)
+                    .Take(1).First();
+                location1.Discovered = true;
+            }
 
-        if (inBurg || !SaveGameService.CurrentCell.locations.Any(x => !x.Discovered)) return;
+            if (dice < 18) return;
 
-        var chance = new Chance();
-        var dice = chance.Dice(20);
-        if (dice > 10)
-        {
-            var random1 = new Random();
-            var pick1 = random1.Next(0, SaveGameService.CurrentCell.locations.Count(x => !x.Discovered));
-            var location1 = SaveGameService.CurrentCell.locations.Where(x => !x.Discovered).Skip(pick1)
+            var random2 = new Random();
+            var pick2 = random2.Next(0, currentCell.locations.Count(x => !x.Discovered));
+            var location2 = currentCell.locations.Where(x => !x.Discovered).Skip(pick2)
                 .Take(1).First();
-            location1.Discovered = true;
+            location2.Discovered = true;
         }
-
-        if (dice != 20) return;
-
-        var random2 = new Random();
-        var pick2 = random2.Next(0, SaveGameService.CurrentCell.locations.Count(x => !x.Discovered));
-        var location2 = SaveGameService.CurrentCell.locations.Where(x => !x.Discovered).Skip(pick2)
-            .Take(1).First();
-        location2.Discovered = true;
     }
 
     private void RenderLocationNavigation(Location location)
     {
-        var explorationString = location.ExploredPercent < 1 ? $"[green bold]{location.ExploredPercent * 100}%[/] explored" : "[green bold]Fully explored[/]";
+        var explorationString = location.ExploredPercent < 1 && location.Type.Size != LocationSize.unexplorable
+            ? $"[green bold]{location.ExploredPercent * 100}%[/] explored"
+            : "[green bold]Fully explored[/]";
         _display.Update(
             new Panel(
                 Align.Center(
@@ -227,12 +243,19 @@ public partial class GameService
         var cellsTable = new Table();
         var locationsTable = new Table();
 
+        var explorationString = currentCell.ExploredPercent < 1
+            ? $"[green bold]{currentCell.ExploredPercent * 100}%[/] explored"
+            : "[green bold]Fully explored[/]";
+
         _display.Update(
             new Panel(
                 new Rows(
                     Align.Center(
                         new Markup(
                             $"Local Burg: [green bold]{(localBurg != null ? localBurg.name : "None")}[/]")),
+                    Align.Center(
+                        new Markup(explorationString)
+                    ),
                     Align.Center(
                         new Markup("Select from the table below to move to a new cell.")
                     ),
