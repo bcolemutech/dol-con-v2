@@ -26,9 +26,10 @@ public class Cell
     public int road { get; set; }
     public int crossroad { get; set; }
     public int state { get; set; }
-    public int religion { get; set; }
     public int province { get; set; }
     public List<Location> locations { get; set; } = new();
+    
+    public double ExploredPercent { get; set; }
 
     public PopDensity PopDensity =>
         (this.pop * 1000) switch

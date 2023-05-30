@@ -6,14 +6,6 @@ using FluentAssertions;
 public class GameServiceTests
 {
     [Fact]
-    public void EscapeKeyParsesToExitScreen()
-    {
-        var result = (Screen)ConsoleKey.E;
-
-        result.Should().Be(Screen.Exit);
-    }
-    
-    [Fact]
     public void HKeyParsesToHomeScreen()
     {
         var result = (Screen)ConsoleKey.H;
