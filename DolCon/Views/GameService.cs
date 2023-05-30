@@ -15,6 +15,7 @@ public partial class GameService : IGameService
     private Layout _controls;
     private Screen _screen;
     private LiveDisplayContext _ctx;
+    private bool exiting;
     
     private readonly IImageService _imageService;
 
@@ -59,8 +60,11 @@ public partial class GameService : IGameService
         do
         {
             var key = Console.ReadKey(true);
-            
-            if (Enum.IsDefined((Screen)key.Key))
+            if(key is { Key: ConsoleKey.E, Modifiers: ConsoleModifiers.Alt })
+            {
+                exiting = true;
+            }
+            else if (Enum.IsDefined((Screen)key.Key))
             {
                 _screen = (Screen)key.Key;
                 RenderScreen();
@@ -74,7 +78,7 @@ public partial class GameService : IGameService
                 RenderScreen(key);
             }
 
-        } while (token.IsCancellationRequested == false && _screen != Screen.Exit);
+        } while (token.IsCancellationRequested == false && !exiting);
     }
 
     private void ProcessHotKey(HotKeys hotKey)
@@ -108,8 +112,6 @@ public partial class GameService : IGameService
                 break;
             case Screen.Quests:
                 RenderNotReady();
-                break;
-            case Screen.Exit:
                 break;
             default:
                 RenderNotReady();
