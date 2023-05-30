@@ -6,6 +6,5 @@ public enum Screen
     Navigation = 78,
     Inventory = 73,
     Character = 67,
-    Quests = 81,
-    Exit = 69
+    Quests = 81
 }

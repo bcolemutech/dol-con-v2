@@ -142,7 +142,7 @@ public partial class GameService
                     Align.Center(
                         new Rows(
                             new Markup(
-                                "[bold]Standard controls[/]: ([green bold]H[/])ome | ([green bold]N[/])avigation | ([Red bold]E[/])xit")
+                                "[bold]Standard controls[/]: ([green bold]H[/])ome | ([green bold]N[/])avigation | ([Red bold]Alt+E[/])xit")
                         ),
                         VerticalAlignment.Middle))
                 .Expand());
