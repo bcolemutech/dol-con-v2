@@ -14,6 +14,7 @@ using var host = Host.CreateDefaultBuilder(args)
         services.AddSingleton<IPlayerService, PlayerService>();
         services.AddSingleton<IGameService, GameService>();
         services.AddSingleton<IImageService, ImageService>();
+        services.AddSingleton<IMoveService, MoveService>();
         services.AddHostedService<HostedService>();
     })
     .Build();
