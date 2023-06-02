@@ -9,6 +9,7 @@ public interface IMoveService
     bool MoveToCell(int cellId);
     bool MoveToLocation(Guid locationId);
     bool MoveToBurg(int burg);
+    void Camp();
 }
 
 public class MoveService : IMoveService
@@ -114,5 +115,17 @@ public class MoveService : IMoveService
         party.Burg = burg;
 
         return true;
+    }
+
+    public void Camp()
+    {
+        var party = SaveGameService.Party;
+
+        party.Stamina += .5;
+        
+        if (party.Stamina > 1)
+        {
+            party.Stamina = 1;
+        }
     }
 }
