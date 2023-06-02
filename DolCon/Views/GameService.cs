@@ -45,7 +45,7 @@ public partial class GameService : IGameService
         _controls = layout["Controls"];
         _message = layout["Message"];
         
-        _display.Ratio = 4;
+        _display.Ratio = 5;
         _screen = Screen.Home;
         
         AnsiConsole.Clear();
@@ -113,9 +113,6 @@ public partial class GameService : IGameService
                 RenderNavigation(value);
                 break;
             case Screen.Inventory:
-                RenderNotReady();
-                break;
-            case Screen.Character:
                 RenderNotReady();
                 break;
             case Screen.Quests:
