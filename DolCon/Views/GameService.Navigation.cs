@@ -199,6 +199,7 @@ public partial class GameService
         locationsTable.AddColumn(new TableColumn("Location"));
         locationsTable.AddColumn(new TableColumn("Type"));
         locationsTable.AddColumn(new TableColumn("Rarity"));
+        locationsTable.AddColumn(new TableColumn("Explored"));
         _ctx.Refresh();
 
         var i = 0;
@@ -207,11 +208,15 @@ public partial class GameService
         {
             var key = i++;
             _locationOptions.Add(key, location.Id);
+            var exploredString=  location.ExploredPercent < 1 && location.Type.Size != LocationSize.unexplorable
+                ? $"[green bold]{location.ExploredPercent:P}[/] explored"
+                : "[green bold]Fully explored[/]";
             locationsTable.AddRow(
                 key < 10 ? $"{key}" : $"Alt+{key - 10}",
                 location.Name,
                 location.Type.Type,
-                location.Rarity.ToString());
+                location.Rarity.ToString(),
+                exploredString);
             _ctx.Refresh();
         }
     }
@@ -282,6 +287,7 @@ public partial class GameService
         locationsTable.AddColumn(new TableColumn("Location"));
         locationsTable.AddColumn(new TableColumn("Type"));
         locationsTable.AddColumn(new TableColumn("Rarity"));
+        locationsTable.AddColumn(new TableColumn("Explored"));
         _ctx.Refresh();
 
 
@@ -290,8 +296,12 @@ public partial class GameService
             var key = i++;
             var keyString = key < 10 ? $"{key}" : $"Alt+{key - 10}";
             _locationOptions.Add(key, location.Id);
+            
+            var exploredString = location.ExploredPercent < 1 && location.Type.Size != LocationSize.unexplorable
+                ? $"[green bold]{location.ExploredPercent:P}[/] explored"
+                : "[green bold]Fully explored[/]";
 
-            locationsTable.AddRow(keyString, location.Name, location.Type.Type, location.Rarity.ToString());
+            locationsTable.AddRow(keyString, location.Name, location.Type.Type, location.Rarity.ToString(), exploredString);
             _ctx.Refresh();
         }
     }
