@@ -7,4 +7,15 @@ public class Party
     public int? Burg { get; set; }
     public Guid? Location { get; set; }
     public double Stamina { get; set; }
+    
+    public bool TryMove(double cost)
+    {
+        if (Stamina < cost)
+        {
+            return false;
+        }
+
+        Stamina -= cost;
+        return true;
+    }
 }
