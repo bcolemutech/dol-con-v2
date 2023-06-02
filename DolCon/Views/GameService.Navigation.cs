@@ -1,6 +1,5 @@
 ﻿namespace DolCon.Views;
 
-using ChanceNET;
 using Enums;
 using Models.BaseTypes;
 using Services;
@@ -111,6 +110,22 @@ public partial class GameService
                           SaveGameService.CurrentCell.ExploredPercent < 1:
                 moveSuccess = _moveService.ProcessExploration();
                 break;
+            case 'c':
+                if (SaveGameService.CurrentLocation != null || SaveGameService.CurrentBurg != null)
+                {
+                    SetMessage(MessageType.Error, "You cannot camp here.");
+                }
+                else if (Math.Abs(SaveGameService.Party.Stamina - 1) < .01)
+                {
+                    SetMessage(MessageType.Info, "You are already at fully rested.");
+                }
+                else
+                {
+                    _moveService.Camp();
+                    SetMessage(MessageType.Success, "You have camped and recovered your stamina.");
+                }
+
+                break;
             default:
             {
                 var thisChar = value.KeyChar.ToString();
@@ -155,6 +170,7 @@ public partial class GameService
                 Align.Center(
                     new Rows(
                         new Markup($"Current Location: [green bold]{location.Name}[/]"),
+                        new Markup($"Stamina: [green bold]{SaveGameService.Party.Stamina:P}[/]"),
                         new Markup("[red bold]Location navigation is not currently implemented[/]"),
                         new Markup(explorationString),
                         new Markup("To leave location press [green bold]L[/]")
@@ -171,6 +187,9 @@ public partial class GameService
                     Align.Center(
                         new Markup(
                             $"Current Burg: [green bold]{burg.name}[/]")),
+                    Align.Center(
+                        new Markup(
+                            $"Stamina: [green bold]{SaveGameService.Party.Stamina:P}[/]")),
                     Align.Center(
                         locationsTable
                     ))));
@@ -212,6 +231,9 @@ public partial class GameService
                     Align.Center(
                         new Markup(
                             $"Local Burg: [green bold]{(localBurg != null ? localBurg.name : "None")}[/]")),
+                    Align.Center(
+                        new Markup($"Stamina: [green bold]{SaveGameService.Party.Stamina:P}[/]")
+                    ),
                     Align.Center(
                         new Markup(explorationString)
                     ),
