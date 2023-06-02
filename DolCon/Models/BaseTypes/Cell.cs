@@ -44,4 +44,6 @@ public class Cell
         < 100 => CellSize.small,
         _ => CellSize.large
     };
+    
+    public Biome Biome => (Biome)this.biome;
 }
