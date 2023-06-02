@@ -64,7 +64,7 @@ public class MoveService : IMoveService
 
         var chance = new Chance();
         var dice = chance.Dice(20);
-        if (dice > 5)
+        if (dice > 0)
         {
             var random1 = new Random();
             var pick1 = random1.Next(0, currentCell.locations.Count(x => !x.Discovered));
@@ -73,7 +73,7 @@ public class MoveService : IMoveService
             location1.Discovered = true;
         }
 
-        if (dice < 18) return true;
+        if (dice < 12) return true;
 
         var random2 = new Random();
         var pick2 = random2.Next(0, currentCell.locations.Count(x => !x.Discovered));
