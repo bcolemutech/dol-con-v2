@@ -262,6 +262,7 @@ public partial class GameService
         cellsTable.AddColumn(new TableColumn("State"));
         cellsTable.AddColumn(new TableColumn("Biome"));
         cellsTable.AddColumn(new TableColumn("Burg"));
+        cellsTable.AddColumn(new TableColumn("Explored"));
         _ctx.Refresh();
 
         var i = 0;
@@ -276,9 +277,13 @@ public partial class GameService
             var cellDirection = MapService.GetDirection(currentCell.p[0], currentCell.p[1], cell.p[0], cell.p[1]);
             var key = i++;
             _directionOptions.Add(key, cellId);
+            
+            var exploredString = cell.ExploredPercent < 1
+                ? $"[green bold]{cell.ExploredPercent:P}[/] explored"
+                : "[green bold]Fully explored[/]";
 
             cellsTable.AddRow(key.ToString(), cellDirection.ToString(), cellProvince.fullName,
-                cellState.fullName ?? string.Empty, cellBiome, cellBurg?.name ?? "None");
+                cellState.fullName ?? string.Empty, cellBiome, cellBurg?.name ?? "None", exploredString);
 
             _ctx.Refresh();
         }
