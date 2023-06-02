@@ -13,15 +13,18 @@ public partial class GameService : IGameService
 {
     private Layout _display;
     private Layout _controls;
+    private Layout _message;
     private Screen _screen;
     private LiveDisplayContext _ctx;
     private bool exiting;
     
     private readonly IImageService _imageService;
+    private readonly IMoveService _moveService;
 
-    public GameService(IImageService imageService)
+    public GameService(IImageService imageService, IMoveService moveService)
     {
         _imageService = imageService;
+        _moveService = moveService;
     }
 
     public async Task Start(CancellationToken token)
@@ -34,11 +37,13 @@ public partial class GameService : IGameService
         
         var layout = new Layout("Root")
             .SplitRows(
+                new Layout("Message"),
                 new Layout("Display"),
                 new Layout("Controls"));
 
         _display = layout["Display"];
         _controls = layout["Controls"];
+        _message = layout["Message"];
         
         _display.Ratio = 4;
         _screen = Screen.Home;
@@ -49,6 +54,8 @@ public partial class GameService : IGameService
         {
             _ctx = ctx;
             
+            SetMessage(MessageType.Info, "Welcome to Dominion of Light");
+
             RenderScreen();
 
             await ProcessKey(token);
@@ -57,6 +64,7 @@ public partial class GameService : IGameService
 
     private async Task ProcessKey(CancellationToken token)
     {
+        SetMessage(MessageType.Info, "Welcome to Dominion of Light");
         do
         {
             var key = Console.ReadKey(true);
@@ -117,5 +125,19 @@ public partial class GameService : IGameService
                 RenderNotReady();
                 break;
         }
+    }
+    
+    private void SetMessage(MessageType type ,string message)
+    {
+        var markup = type switch
+        {
+            MessageType.Success => new Markup($"[green]{message}[/]"),
+            MessageType.Error => new Markup($"[red bold]{message}[/]"),
+            MessageType.Info => new Markup($"{message}"),
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+        };
+
+        _message.Update(new Panel(markup).Collapse());
+        _ctx.Refresh();
     }
 }
