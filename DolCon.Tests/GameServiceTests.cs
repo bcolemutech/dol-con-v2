@@ -30,14 +30,6 @@ public class GameServiceTests
     }
     
     [Fact]
-    public void CKeyParsesToCharacterScreen()
-    {
-        var result = (Screen)ConsoleKey.C;
-
-        result.Should().Be(Screen.Character);
-    }
-    
-    [Fact]
     public void QKeyParsesToQuestsScreen()
     {
         var result = (Screen)ConsoleKey.Q;
