@@ -94,6 +94,7 @@ public partial class GameService
 
     private void ProcessKey(ConsoleKeyInfo value, Burg? localBurg)
     {
+        bool? moveSuccess = null;
         switch (char.ToLower(value.KeyChar))
         {
             case 'l' when
@@ -102,13 +103,13 @@ public partial class GameService
                 SaveGameService.Party.Location = null;
                 break;
             case 'b' when SaveGameService.CurrentBurg is null && localBurg != null:
-                SaveGameService.Party.Burg = localBurg.i;
+                moveSuccess = _moveService.MoveToBurg(localBurg.i.Value);
                 break;
             case 'e' when (SaveGameService.CurrentLocation != null &&
                            SaveGameService.CurrentLocation.Type.Size != LocationSize.unexplorable &&
                            SaveGameService.CurrentLocation.ExploredPercent < 1) ||
                           SaveGameService.CurrentCell.ExploredPercent < 1:
-                ProcessExploration();
+                moveSuccess = _moveService.ProcessExploration();
                 break;
             default:
             {
@@ -116,73 +117,31 @@ public partial class GameService
                 var cleanChar = thisChar.First().ToString();
                 var tryParse = int.TryParse(cleanChar, out var selection);
                 selection = value.Modifiers == ConsoleModifiers.Alt ? selection + 10 : selection;
-                if (tryParse && _directionOptions.TryGetValue(selection, out var option))
+                moveSuccess = tryParse switch
                 {
-                    SaveGameService.Party.Cell = option;
-                    _imageService.ProcessSvg();
-                }
-                else if (tryParse && _locationOptions.TryGetValue(selection, out var locationId))
-                {
-                    SaveGameService.Party.Location = locationId;
-                }
+                    true when _directionOptions.TryGetValue(selection, out var option) => _moveService.MoveToCell(
+                        option),
+                    true when _locationOptions.TryGetValue(selection, out var locationId) =>
+                        _moveService.MoveToLocation(locationId),
+                    _ => null
+                };
+
 
                 break;
             }
         }
-    }
 
-    private void ProcessExploration()
-    {
-        var defaultExploration = 100;
-        var currentLocation = SaveGameService.CurrentLocation;
-        var locationExplorationSize = 0;
-        double explored = 0;
-        var currentBurg = SaveGameService.CurrentBurg;
-        var inBurg = currentBurg is not null;
-        if (inBurg)
+        if (moveSuccess.HasValue && moveSuccess.Value)
         {
-            locationExplorationSize = (int)currentBurg.size * 100;
-            explored = currentLocation.ExploredPercent * locationExplorationSize;
-
-            explored += defaultExploration;
-
-            currentLocation.ExploredPercent = explored / locationExplorationSize;
+            SetMessage(MessageType.Success, "You successfully moved.");
+        }
+        else if (moveSuccess.HasValue && !moveSuccess.Value)
+        {
+            SetMessage(MessageType.Error, "You do not have enough stamina to make that move.");
         }
         else
         {
-            var currentCell = SaveGameService.CurrentCell;
-
-            locationExplorationSize = currentCell.CellSize == CellSize.small ? 300 : 500;
-
-            explored = currentCell.ExploredPercent * locationExplorationSize;
-            explored += defaultExploration;
-            currentCell.ExploredPercent = explored / locationExplorationSize;
-
-            if (Math.Abs(currentCell.ExploredPercent - 1) < .01)
-            {
-                currentCell.ExploredPercent = 1;
-                currentCell.locations.ForEach(x => x.Discovered = true);
-                return;
-            }
-
-            var chance = new Chance();
-            var dice = chance.Dice(20);
-            if (dice > 5)
-            {
-                var random1 = new Random();
-                var pick1 = random1.Next(0, currentCell.locations.Count(x => !x.Discovered));
-                var location1 = currentCell.locations.Where(x => !x.Discovered).Skip(pick1)
-                    .Take(1).First();
-                location1.Discovered = true;
-            }
-
-            if (dice < 18) return;
-
-            var random2 = new Random();
-            var pick2 = random2.Next(0, currentCell.locations.Count(x => !x.Discovered));
-            var location2 = currentCell.locations.Where(x => !x.Discovered).Skip(pick2)
-                .Take(1).First();
-            location2.Discovered = true;
+            SetMessage(MessageType.Info, "Make a move.");
         }
     }
 
