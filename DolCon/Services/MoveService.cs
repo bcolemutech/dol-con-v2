@@ -86,8 +86,61 @@ public class MoveService : IMoveService
     public bool MoveToCell(int cellId)
     {
         var party = SaveGameService.Party;
+        var cell = SaveGameService.CurrentMap.Collections.cells[cellId];
 
-        if (!party.TryMove(.1)) return false;
+        double baseMoveCost;
+
+        switch (cell.Biome)
+        {
+            case Biome.Marine:
+                return false;
+            case Biome.HotDesert:
+                baseMoveCost = .3;
+                break;
+            case Biome.ColdDesert:
+                baseMoveCost = .25;
+                break;
+            case Biome.Savanna:
+                baseMoveCost = .1;
+                break;
+            case Biome.Grassland:
+                baseMoveCost = .05;
+                break;
+            case Biome.TropicalSeasonalForest:
+                baseMoveCost = .2;
+                break;
+            case Biome.TemperateDeciduousForest:
+                baseMoveCost = .2;
+                break;
+            case Biome.TropicalRainForest:
+                baseMoveCost = .3;
+                break;
+            case Biome.TemperateRainForest:
+                baseMoveCost = .25;
+                break;
+            case Biome.Taiga:
+                baseMoveCost = .2;
+                break;
+            case Biome.Tundra:
+                baseMoveCost = .15;
+                break;
+            case Biome.Glacier:
+                baseMoveCost = .5;
+                break;
+            case Biome.Wetland:
+                baseMoveCost = .4;
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+
+        var divisor = cell.CellSize == CellSize.large ? 2 : 4;
+        
+        var moveCost = (1 - cell.ExploredPercent) / divisor;
+        
+        moveCost = moveCost < baseMoveCost ? baseMoveCost : moveCost;
+
+        if (!party.TryMove(moveCost)) return false;
 
         party.Cell = cellId;
         _imageService.ProcessSvg();
