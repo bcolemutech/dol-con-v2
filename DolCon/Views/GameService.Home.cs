@@ -9,130 +9,15 @@ public partial class GameService
 {
     private void RenderHome()
     {
-        var currentCell = SaveGameService.CurrentCell;
-        var burg = SaveGameService.CurrentBurg;
-        var currentLocation = SaveGameService.CurrentLocation;
-        var biome = SaveGameService.CurrentBiome;
-        var province = SaveGameService.CurrentProvince;
-        var state = SaveGameService.CurrentState;
-        var availableBurg = currentCell.burg > 0
-            ? $"[green]{SaveGameService.GetBurg(currentCell.burg)?.name}"
-            : "[red]None";
-        var homePanels = new List<IRenderable>();
-
-        var areaLines = new List<IRenderable>
-        {
-            new Markup($"[bold]Current Area[/]"),
-            new Markup($"Biome: [green]{biome}[/]"),
-            new Markup($"Rural Population: [green]{Convert.ToInt32(currentCell.pop * 1000)}[/]"),
-            new Markup($"Province: [green]{province.fullName}[/]"),
-            new Markup($"State: [green]{state.fullName}[/]"),
-            new Markup($"Burg: {availableBurg}[/]"),
-            new Markup($"Size: [green]{currentCell.CellSize}[/]"),
-            new Markup($"Pop Density: [green]{currentCell.PopDensity}[/]"),
-        };
-        if (currentCell.locations.Any(x => x.Discovered))
-        {
-            areaLines.Add(new Markup($"[green bold]Locations[/]"));
-            areaLines.AddRange(
-                currentCell.locations.Where(x => x.Discovered)
-                    .OrderByDescending(x => x.Rarity)
-                    .Select(x => new Markup($"[green]{x.Name}[/]"))
-            );
-        }
-
-        var areaRows = new Rows(
-            areaLines.ToArray()
-        );
-
-        var areaPanel = new Panel(Align.Center(areaRows));
-
-        homePanels.Add(areaPanel);
-
-        if (burg != null)
-        {
-            var cityTitle = burg.isCityOfLight
-                ? $"[rapidblink yellow Underline]The City of Light - {burg.name}[/]"
-                : $"[bold]Current Burg: {burg.name}[/]";
-            var features = new List<string>
-            {
-                $"{(burg.capital == 1 ? "Capitol" : string.Empty)}",
-                $"{(burg.port == 1 ? "Port" : string.Empty)}",
-                $"{(burg.citadel == 1 ? "Castle" : string.Empty)}",
-                $"{(burg.walls == 1 ? "Walls" : string.Empty)}",
-                $"{(burg.plaza == 1 ? "Marketplace" : string.Empty)}",
-                $"{(burg.temple == 1 ? "Temple" : string.Empty)}",
-                $"{(burg.shanty == 1 ? "Shanty Town" : string.Empty)}"
-            };
-            var featuresString = string.Join(" | ", features.Where(x => !string.IsNullOrEmpty(x)));
-
-            var rows = new List<IRenderable>
-            {
-                new Markup(cityTitle),
-                new Markup($"Population: [green]{Convert.ToInt32(burg.population * 1000)}[/]"),
-                new Markup(featuresString)
-            };
-            rows.AddRange(from location in burg.locations.OrderByDescending(x => x.Rarity)
-                let color = location.Rarity switch
-                {
-                    Rarity.uncommon => "green",
-                    Rarity.rare => "blue",
-                    Rarity.epic => "purple",
-                    Rarity.legendary => "yellow",
-                    _ => "white"
-                }
-                select new Markup($"[{color}]{location.Name}[/]"));
-
-            homePanels.Add(new Panel(
-                Align.Center(
-                    new Rows(
-                        rows.ToArray()
-                    ))));
-        }
-        else
-        {
-            homePanels.Add(new Panel(
-                Align.Center(
-                    new Rows(
-                        new Markup("[bold]Current Burg[/]"),
-                        new Markup("[green]None[/]")
-                    ))));
-        }
-
-        if (currentLocation is not null)
-        {
-            var locationLines = new List<IRenderable>
-            {
-                new Markup($"[bold]Current Location[/]"),
-                new Markup($"Name: [green]{currentLocation.Name}[/]"),
-                new Markup($"Type: [green]{currentLocation.Type.Type}[/]"),
-                new Markup($"Rarity: [green]{currentLocation.Rarity}[/]"),
-                new Markup($"Size: [green]{currentLocation.Type.Size}[/]")
-            };
-
-            var locationRows = new Rows(
-                locationLines.ToArray()
-            );
-
-            var locationPanel = new Panel(Align.Center(locationRows));
-
-            homePanels.Add(locationPanel);
-        }
-        else
-        {
-            homePanels.Add(new Panel(
-                Align.Center(
-                    new Rows(
-                        new Markup("[bold]Current Location[/]"),
-                        new Markup("[green]None[/]")
-                    ))));
-        }
-        
         var grid = new Grid();
         grid.AddColumn();
         grid.AddColumn();
         grid.AddColumn();
-        grid.AddRow(homePanels.ToArray());
+        grid.AddRow(
+            AreaPanel(),
+            LocationPanel(),
+            PlayerPanel()
+        );
 
         _display.Update(grid);
         _ctx.Refresh();
@@ -147,5 +32,115 @@ public partial class GameService
                         VerticalAlignment.Middle))
                 .Expand());
         _ctx.Refresh();
+    }
+
+    private static Panel PlayerPanel()
+    {
+        var party = SaveGameService.Party;
+        var player = party.Players.First();
+
+        var playerLines = new List<IRenderable>
+        {
+            new Markup($"[bold]Player Details[/]"),
+            new Markup($"Name: [green]{player.Name}[/]"),
+            new Markup($"Stamina: [green]{party.Stamina:P}[/]"),
+            new Markup(
+                $"Coin: [bold gold1]{player.gold}[/]|[bold silver]{player.silver}[/]|[bold tan]{player.copper}[/]"),
+            new Markup($"Inventory Count: [green]{player.Inventory.Count}[/]")
+        };
+
+        var playerRows = new Rows(
+            playerLines.ToArray()
+        );
+
+        return new Panel(Align.Center(playerRows));
+    }
+
+    private static Panel LocationPanel()
+    {
+        var rows = new List<IRenderable>();
+        var location = SaveGameService.CurrentLocation;
+        var burg = SaveGameService.CurrentBurg;
+
+        if (burg is null)
+        {
+            rows.Add(new Markup("[bold]In the wild[/]"));
+        }
+        else
+        {
+            var cityTitle = burg.isCityOfLight
+                ? $"[yellow Underline]The City of Light - {burg.name}[/]"
+                : $"[bold]Current Burg: {burg.name}[/]";
+
+            rows.Add(new Markup(cityTitle));
+            rows.Add(new Markup($"Population: [green]{Convert.ToInt32(burg.population * 1000)}[/]"));
+            rows.Add(new Markup($"Size: [green]{burg.size}[/]"));
+            rows.Add(new Markup($"Locations: [green]{burg.locations.Count}[/]"));
+        }
+        
+        if (location is not null)
+        {
+            rows.Add(new Markup($"Location: [green]{location.Name}[/]"));
+            rows.Add(new Markup($"Type: [green]{location.Type.Type}[/]"));
+            rows.Add(new Markup($"Rarity: [green]{location.Rarity}[/]"));
+            if (location.Type.Size == LocationSize.unexplorable)
+            {
+                rows.Add(new Markup($"[red]This location is not explorable[/]"));
+                if (location.Type.Services.Any())
+                {
+                    rows.Add(new Markup($"Services: [green]{string.Join(", ", location.Type.Services)}[/]"));
+                }
+                if (location.Type.Goods.Any())
+                {
+                    rows.Add(new Markup($"Shops: [green]{string.Join(", ", location.Type.Goods.Select(x => x.Name))}[/]"));
+                }
+            }
+            else
+            {
+                rows.Add(new Markup($"[bold green]{location.ExploredPercent:P}[/] Explored"));
+            }
+        }
+        else
+        {
+            rows.Add(new Markup($"Location: [red]None[/]"));
+        }
+
+        return new Panel(
+            Align.Center(
+                new Rows(
+                    rows.ToArray()
+                )));
+    }
+
+    private static Panel AreaPanel()
+    {
+        var currentCell = SaveGameService.CurrentCell;
+        var biome = SaveGameService.CurrentBiome;
+        var province = SaveGameService.CurrentProvince;
+        var state = SaveGameService.CurrentState;
+        
+        var availableBurg = currentCell.burg > 0
+            ? $"[green]{SaveGameService.GetBurg(currentCell.burg)?.name}"
+            : "[red]None";
+        var areaLines = new List<IRenderable>
+        {
+            new Markup($"[bold]Current Area[/]"),
+            new Markup($"Biome: [green]{biome}[/]"),
+            new Markup($"Rural Population: [green]{Convert.ToInt32(currentCell.pop * 1000)}[/]"),
+            new Markup($"Province: [green]{province.fullName}[/]"),
+            new Markup($"State: [green]{state.fullName}[/]"),
+            new Markup($"Burg: {availableBurg}[/]"),
+            new Markup($"Size: [green]{currentCell.CellSize}[/]"),
+            new Markup($"Pop Density: [green]{currentCell.PopDensity}[/]"),
+            new Markup($"Locations Count: [green]{currentCell.locations.Count(x => x.Discovered)}[/]")
+        };
+
+        var areaRows = new Rows(
+            areaLines.ToArray()
+        );
+
+        var areaPanel = new Panel(Align.Center(areaRows));
+
+        return areaPanel;
     }
 }
