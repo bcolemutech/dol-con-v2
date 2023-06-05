@@ -116,7 +116,7 @@ public partial class GameService
                     var totalCoin = 0;
                     foreach (var player in SaveGameService.Party.Players)
                     {
-                        var random = new Chance();
+                        var random = new Chance().New();
                         var playerCoin = random.Dice(100) * 10;
                         player.coin = playerCoin;
                         totalCoin += playerCoin;
