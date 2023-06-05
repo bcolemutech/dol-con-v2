@@ -15,6 +15,7 @@ public class PlayerTests
     [InlineData(1100, 0, 10, 1)]
     [InlineData(1110, 0, 11, 1)]
     [InlineData(1111, 1, 11, 1)]
+    [InlineData(760, 0, 76, 0)]
     public void GivenANumberOfCoinCalculateTheCorrectAmountOfEachCurrency(int coin, int copper, int silver, int gold)
     {
         var player = new Player { coin = coin };
