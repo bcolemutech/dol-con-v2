@@ -118,7 +118,7 @@ public partial class GameService
                     {
                         var random = new Chance().New();
                         var playerCoin = random.Dice(100) * 10;
-                        player.coin = playerCoin;
+                        player.coin += playerCoin;
                         totalCoin += playerCoin;
                     }
 
