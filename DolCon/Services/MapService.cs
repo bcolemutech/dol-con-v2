@@ -120,7 +120,6 @@ public class MapService : IMapService
         ctx.Refresh();
 
         var player = _playerService.SetPlayer("Player 1", false);
-        SaveGameService.Party.Players.Add(player);
         SaveGameService.CurrentPlayerId = player.Id;
         SaveGameService.Party.Cell = cityOfLight.cell;
         SaveGameService.Party.Burg = cityOfLight.i;
