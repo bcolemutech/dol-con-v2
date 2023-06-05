@@ -13,8 +13,7 @@ public class Player
     public int coin { get; set; }
     public List<Item> Inventory { get; set; } = new();
 
-    public int copper => coin;
-    public int silver => coin / 10;
-    public int gold => coin / 100;
-    public int platinum => coin / 1000;
+    public int copper => coin % 10;
+    public int silver => coin / 10 % 100;
+    public int gold => coin / 1000 % 10;
 }
