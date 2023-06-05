@@ -1,5 +1,6 @@
 ﻿namespace DolCon.Views;
 
+using ChanceNET;
 using Enums;
 using Models.BaseTypes;
 using Services;
@@ -94,6 +95,7 @@ public partial class GameService
     private void ProcessKey(ConsoleKeyInfo value, Burg? localBurg)
     {
         bool? moveSuccess = null;
+        var message = string.Empty;
         switch (char.ToLower(value.KeyChar))
         {
             case 'l' when
@@ -109,6 +111,20 @@ public partial class GameService
                            SaveGameService.CurrentLocation.ExploredPercent < 1) ||
                           SaveGameService.CurrentCell.ExploredPercent < 1:
                 moveSuccess = _moveService.ProcessExploration();
+                if (moveSuccess.HasValue && moveSuccess.Value)
+                {
+                    var totalCoin = 0;
+                    foreach (var player in SaveGameService.Party.Players)
+                    {
+                        var random = new Chance().New();
+                        var playerCoin = random.Dice(100) * 10;
+                        player.coin += playerCoin;
+                        totalCoin += playerCoin;
+                    }
+
+                    message = "You have explored the area. You have found " + totalCoin + " coin.";
+                }
+
                 break;
             case 'c':
                 if (SaveGameService.CurrentLocation != null || SaveGameService.CurrentBurg != null)
@@ -117,7 +133,7 @@ public partial class GameService
                 }
                 else if (Math.Abs(SaveGameService.Party.Stamina - 1) < .01)
                 {
-                    SetMessage(MessageType.Info, "You are already at fully rested.");
+                    SetMessage(MessageType.Info, "You are already fully rested.");
                 }
                 else
                 {
@@ -148,15 +164,18 @@ public partial class GameService
 
         if (moveSuccess.HasValue && moveSuccess.Value)
         {
-            SetMessage(MessageType.Success, "You successfully moved.");
+            message = message == string.Empty ? "You successfully moved." : message;
+            SetMessage(MessageType.Success, message);
         }
         else if (moveSuccess.HasValue && !moveSuccess.Value)
         {
-            SetMessage(MessageType.Error, "You do not have enough stamina to make that move.");
+            message = message == string.Empty ? "You do not have enough stamina to make that move." : message;
+            SetMessage(MessageType.Error, message);
         }
         else
         {
-            SetMessage(MessageType.Info, "Make a move.");
+            message = message == string.Empty ? "Make a move." : message;
+            SetMessage(MessageType.Info, message);
         }
     }
 
@@ -208,7 +227,7 @@ public partial class GameService
         {
             var key = i++;
             _locationOptions.Add(key, location.Id);
-            var exploredString=  location.ExploredPercent < 1 && location.Type.Size != LocationSize.unexplorable
+            var exploredString = location.ExploredPercent < 1 && location.Type.Size != LocationSize.unexplorable
                 ? $"[green bold]{location.ExploredPercent:P}[/] explored"
                 : "[green bold]Fully explored[/]";
             locationsTable.AddRow(
@@ -277,7 +296,7 @@ public partial class GameService
             var cellDirection = MapService.GetDirection(currentCell.p[0], currentCell.p[1], cell.p[0], cell.p[1]);
             var key = i++;
             _directionOptions.Add(key, cellId);
-            
+
             var exploredString = cell.ExploredPercent < 1
                 ? $"[green bold]{cell.ExploredPercent:P}[/] explored"
                 : "[green bold]Fully explored[/]";
@@ -301,12 +320,13 @@ public partial class GameService
             var key = i++;
             var keyString = key < 10 ? $"{key}" : $"Alt+{key - 10}";
             _locationOptions.Add(key, location.Id);
-            
+
             var exploredString = location.ExploredPercent < 1 && location.Type.Size != LocationSize.unexplorable
                 ? $"[green bold]{location.ExploredPercent:P}[/] explored"
                 : "[green bold]Fully explored[/]";
 
-            locationsTable.AddRow(keyString, location.Name, location.Type.Type, location.Rarity.ToString(), exploredString);
+            locationsTable.AddRow(keyString, location.Name, location.Type.Type, location.Rarity.ToString(),
+                exploredString);
             _ctx.Refresh();
         }
     }
