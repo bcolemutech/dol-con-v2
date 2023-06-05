@@ -15,8 +15,16 @@ public class PlayerTests
     [InlineData(1100, 0, 10, 1)]
     [InlineData(1110, 0, 11, 1)]
     [InlineData(1111, 1, 11, 1)]
-    [InlineData(760, 0, 76, 0)]
-    public void GivenANumberOfCoinCalculateTheCorrectAmountOfEachCurrency(int coin, int copper, int silver, int gold)
+    [InlineData(10000, 0, 0, 10)]
+    [InlineData(100000, 0, 0, 100)]
+    [InlineData(1000000, 0, 0, 1000)]
+    [InlineData(10000000, 0, 0, 10000)]
+    [InlineData(100000000, 0, 0, 100000)]
+    [InlineData(1000000000, 0, 0, 1000000)]
+    [InlineData(10000000000, 0, 0, 10000000)]
+    [InlineData(100000000000, 0, 0, 100000000)]
+    [InlineData(1000000000000, 0, 0, 1000000000)]
+    public void GivenANumberOfCoinCalculateTheCorrectAmountOfEachCurrency(long coin, long copper, long silver, long gold)
     {
         var player = new Player { coin = coin };
 
