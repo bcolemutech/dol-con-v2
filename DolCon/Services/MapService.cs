@@ -40,6 +40,8 @@ public class MapService : IMapService
 
         AnsiConsole.WriteLine("Creating maps directory...");
         Directory.CreateDirectory(_mapsPath);
+        AnsiConsole.WriteLine("Loading pre-built maps...");
+        Directory.Move(Environment.CurrentDirectory + "/PrebuiltMaps", _mapsPath);
     }
 
     public IEnumerable<FileInfo> GetMaps()
