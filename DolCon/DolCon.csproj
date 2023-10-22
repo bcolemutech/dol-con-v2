@@ -15,4 +15,10 @@
       <PackageReference Include="Spectre.Console" Version="0.46.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="PrebuiltMaps\Ouvia Full 2023-07-08-13-04.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>

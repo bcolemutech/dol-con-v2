@@ -34,12 +34,15 @@ public class MapService : IMapService
     {
         _playerService = playerService;
         _imageService = imageService;
+        var mainPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DolCon");
         _mapsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DolCon",
             "Maps");
         if (Directory.Exists(_mapsPath)) return;
 
-        AnsiConsole.WriteLine("Creating maps directory...");
-        Directory.CreateDirectory(_mapsPath);
+        AnsiConsole.WriteLine("Creating main directory...");
+        Directory.CreateDirectory(mainPath);
+        AnsiConsole.WriteLine("Loading pre-built maps...");
+        Directory.Move(Environment.CurrentDirectory + "/PrebuiltMaps", _mapsPath);
     }
 
     public IEnumerable<FileInfo> GetMaps()
