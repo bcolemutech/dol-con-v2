@@ -17,7 +17,7 @@
 
     <ItemGroup>
       <None Update="PrebuiltMaps\Ouvia Full 2023-07-08-13-04.json">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
     </ItemGroup>
 
