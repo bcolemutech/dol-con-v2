@@ -2,10 +2,10 @@
 
 public class Coords
 {
-    public int latT { get; set; }
-    public int latN { get; set; }
-    public int latS { get; set; }
-    public int lonT { get; set; }
-    public int lonW { get; set; }
-    public int lonE { get; set; }
+    public double latT { get; set; }
+    public double latN { get; set; }
+    public double latS { get; set; }
+    public double lonT { get; set; }
+    public double lonW { get; set; }
+    public double lonE { get; set; }
 }
