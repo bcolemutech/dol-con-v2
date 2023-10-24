@@ -108,10 +108,7 @@ public partial class GameService
             case 'b' when SaveGameService.CurrentBurg is null && localBurg != null:
                 moveStatus = _moveService.MoveToBurg(localBurg.i.Value) ? MoveStatus.Success : MoveStatus.Failure;
                 break;
-            case 'e' when (SaveGameService.CurrentLocation != null &&
-                           SaveGameService.CurrentLocation.Type.Size != LocationSize.unexplorable &&
-                           SaveGameService.CurrentLocation.ExploredPercent < 1) ||
-                          SaveGameService.CurrentCell.ExploredPercent < 1:
+            case 'e' when SaveGameService.CurrentLocation != null || SaveGameService.CurrentCell.ExploredPercent < 1:
                 moveStatus = _moveService.ProcessExploration();
                 if (moveStatus == MoveStatus.Success)
                 {
