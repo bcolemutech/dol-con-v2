@@ -75,6 +75,8 @@ public partial class GameService
             {
                 controlLines.Add(new Markup("To explore the area press [green bold]E[/]"));
             }
+            
+            controlLines.Add(new Markup("To camp press [green bold]C[/]"));
 
             controlLines.Add(
                 new Markup("Using the table above, press the number of the direction or location you want to go to."));
@@ -94,7 +96,7 @@ public partial class GameService
 
     private void ProcessKey(ConsoleKeyInfo value, Burg? localBurg)
     {
-        bool? moveSuccess = null;
+        var moveStatus = MoveStatus.None;
         var message = string.Empty;
         switch (char.ToLower(value.KeyChar))
         {
@@ -104,14 +106,14 @@ public partial class GameService
                 SaveGameService.Party.Location = null;
                 break;
             case 'b' when SaveGameService.CurrentBurg is null && localBurg != null:
-                moveSuccess = _moveService.MoveToBurg(localBurg.i.Value);
+                moveStatus = _moveService.MoveToBurg(localBurg.i.Value) ? MoveStatus.Success : MoveStatus.Failure;
                 break;
             case 'e' when (SaveGameService.CurrentLocation != null &&
                            SaveGameService.CurrentLocation.Type.Size != LocationSize.unexplorable &&
                            SaveGameService.CurrentLocation.ExploredPercent < 1) ||
                           SaveGameService.CurrentCell.ExploredPercent < 1:
-                moveSuccess = _moveService.ProcessExploration();
-                if (moveSuccess.HasValue && moveSuccess.Value)
+                moveStatus = _moveService.ProcessExploration();
+                if (moveStatus == MoveStatus.Success)
                 {
                     var totalCoin = 0;
                     foreach (var player in SaveGameService.Party.Players)
@@ -140,6 +142,8 @@ public partial class GameService
                     _moveService.Camp();
                     SetMessage(MessageType.Success, "You have camped and recovered your stamina.");
                 }
+                
+                moveStatus = MoveStatus.Hold;
 
                 break;
             default:
@@ -148,13 +152,12 @@ public partial class GameService
                 var cleanChar = thisChar.First().ToString();
                 var tryParse = int.TryParse(cleanChar, out var selection);
                 selection = value.Modifiers == ConsoleModifiers.Alt ? selection + 10 : selection;
-                moveSuccess = tryParse switch
+                moveStatus = tryParse switch
                 {
-                    true when _directionOptions.TryGetValue(selection, out var option) => _moveService.MoveToCell(
-                        option),
+                    true when _directionOptions.TryGetValue(selection, out var option) => _moveService.MoveToCell(option),
                     true when _locationOptions.TryGetValue(selection, out var locationId) =>
-                        _moveService.MoveToLocation(locationId),
-                    _ => null
+                        _moveService.MoveToLocation(locationId) ? MoveStatus.Success : MoveStatus.Failure,
+                    _ => MoveStatus.None
                 };
 
 
@@ -162,20 +165,28 @@ public partial class GameService
             }
         }
 
-        if (moveSuccess.HasValue && moveSuccess.Value)
+        switch (moveStatus)
         {
-            message = message == string.Empty ? "You successfully moved." : message;
-            SetMessage(MessageType.Success, message);
-        }
-        else if (moveSuccess.HasValue && !moveSuccess.Value)
-        {
-            message = message == string.Empty ? "You do not have enough stamina to make that move." : message;
-            SetMessage(MessageType.Error, message);
-        }
-        else
-        {
-            message = message == string.Empty ? "Make a move." : message;
-            SetMessage(MessageType.Info, message);
+            case MoveStatus.Success:
+                message = message == string.Empty ? "You successfully moved." : message;
+                SetMessage(MessageType.Success, message);
+                break;
+            case MoveStatus.Failure:
+                message = message == string.Empty ? "You do not have enough stamina to make that move." : message;
+                SetMessage(MessageType.Error, message);
+                break;
+            case MoveStatus.None:
+                message = message == string.Empty ? "Make a move." : message;
+                SetMessage(MessageType.Info, message);
+                break;
+            case MoveStatus.Blocked:
+                message = message == string.Empty ? "You cannot move in that direction." : message;
+                SetMessage(MessageType.Error, message);
+                break;
+            case MoveStatus.Hold:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(moveStatus), moveStatus, "Invalid move status.");
         }
     }
 
