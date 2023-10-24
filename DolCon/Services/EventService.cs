@@ -14,40 +14,46 @@ public class EventService : IEventService
     public Scene ProcessEvent(Event thisEvent)
     {
         var scene = new Scene();
-        if (thisEvent.Location is { Type.Size: LocationSize.unexplorable })
+        switch (thisEvent.Location)
         {
-            scene.Message = "You cannot explore this area.";
-            scene.MoveStatus = MoveStatus.Hold;
-            return scene;
-        }
-
-        if (thisEvent.Location is { ExploredPercent: < 1 } || (thisEvent.Location is null && thisEvent.Area is { ExploredPercent: < 1 }))
-        {
-            scene.MoveStatus = ProcessExploration();
-            if (scene.MoveStatus == MoveStatus.Success)
+            case { Type.Size: LocationSize.unexplorable }:
+                return ProcessServices(thisEvent, scene);
+            case { ExploredPercent: < 1 }:
+            case null when thisEvent.Area is { ExploredPercent: < 1 }:
             {
-                var totalCoin = 0;
-                foreach (var player in SaveGameService.Party.Players)
+                scene.MoveStatus = ProcessExploration();
+                if (scene.MoveStatus == MoveStatus.Success)
                 {
-                    var random = new Chance().New();
-                    var playerCoin = random.Dice(100) * 10;
-                    player.coin += playerCoin;
-                    totalCoin += playerCoin;
+                    var totalCoin = 0;
+                    foreach (var player in SaveGameService.Party.Players)
+                    {
+                        var random = new Chance().New();
+                        var playerCoin = random.Dice(100) * 10;
+                        player.coin += playerCoin;
+                        totalCoin += playerCoin;
+                    }
+
+                    scene.Message = "You have explored the area. You have found " + totalCoin + " coin.";
+                }
+                else
+                {
+                    scene.Message = "You are not in a location or area.";
                 }
 
-                scene.Message = "You have explored the area. You have found " + totalCoin + " coin.";
+                return scene;
             }
-            else
-            {
-                scene.Message = "You are not in a location or area.";
-            }
-
-            return scene;
         }
 
         scene.Message = "You have already explored this area.";
         scene.MoveStatus = MoveStatus.Hold;
 
+        return scene;
+    }
+
+    private static Scene ProcessServices(Event thisEvent, Scene scene)
+    {
+        scene.Message = "Feature not implemented for Services: " + string.Join(", ", thisEvent.Location.Type.Services);
+        scene.MoveStatus = MoveStatus.None;
         return scene;
     }
 
