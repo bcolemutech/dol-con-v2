@@ -1,6 +1,7 @@
 ﻿namespace DolCon.Views;
 
-using DolCon.Enums;
+using Models;
+using Enums;
 using Services;
 using Spectre.Console;
 
@@ -21,6 +22,7 @@ public partial class GameService : IGameService
     private readonly IImageService _imageService;
     private readonly IMoveService _moveService;
     private readonly IEventService _eventService;
+    private Scene _scene;
 
     public GameService(IImageService imageService, IMoveService moveService, IEventService eventService)
     {
@@ -74,6 +76,11 @@ public partial class GameService : IGameService
             {
                 _exiting = true;
             }
+            else if (!_scene.IsCompleted)
+            {
+                _screen = Screen.Scene;
+                RenderScreen();
+            }
             else if (Enum.IsDefined((Screen)key.Key))
             {
                 _screen = (Screen)key.Key;
@@ -114,6 +121,9 @@ public partial class GameService : IGameService
             case Screen.Navigation:
                 RenderNavigation(value);
                 break;
+            case Screen.Scene:
+                RenderScene(value);
+                break;
             case Screen.Inventory:
                 RenderNotReady();
                 break;
@@ -125,7 +135,7 @@ public partial class GameService : IGameService
                 break;
         }
     }
-    
+
     private void SetMessage(MessageType type ,string message)
     {
         var markup = type switch

@@ -149,8 +149,7 @@ public partial class GameService
                         _moveService.MoveToLocation(locationId) ? MoveStatus.Success : MoveStatus.Failure,
                     _ => MoveStatus.None
                 };
-
-
+                
                 break;
             }
         }
