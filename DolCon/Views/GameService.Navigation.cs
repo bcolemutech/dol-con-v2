@@ -1,6 +1,7 @@
 ﻿namespace DolCon.Views;
 
 using ChanceNET;
+using Models;
 using Enums;
 using Models.BaseTypes;
 using Services;
@@ -109,20 +110,26 @@ public partial class GameService
                 moveStatus = _moveService.MoveToBurg(localBurg.i.Value) ? MoveStatus.Success : MoveStatus.Failure;
                 break;
             case 'e' when SaveGameService.CurrentLocation != null || SaveGameService.CurrentCell.ExploredPercent < 1:
-                moveStatus = _moveService.ProcessExploration();
-                if (moveStatus == MoveStatus.Success)
-                {
-                    var totalCoin = 0;
-                    foreach (var player in SaveGameService.Party.Players)
-                    {
-                        var random = new Chance().New();
-                        var playerCoin = random.Dice(100) * 10;
-                        player.coin += playerCoin;
-                        totalCoin += playerCoin;
-                    }
+                var thisEvent = new Event(SaveGameService.CurrentLocation, SaveGameService.CurrentCell);
+                
+                var scene = _eventService.ProcessEvent(thisEvent);
 
-                    message = "You have explored the area. You have found " + totalCoin + " coin.";
-                }
+                // moveStatus = _moveService.ProcessExploration();
+                moveStatus = scene.MoveStatus;
+                message = scene.Message;
+                // if (moveStatus == MoveStatus.Success)
+                // {
+                //     var totalCoin = 0;
+                //     foreach (var player in SaveGameService.Party.Players)
+                //     {
+                //         var random = new Chance().New();
+                //         var playerCoin = random.Dice(100) * 10;
+                //         player.coin += playerCoin;
+                //         totalCoin += playerCoin;
+                //     }
+                //
+                //     message = "You have explored the area. You have found " + totalCoin + " coin.";
+                // }
 
                 break;
             case 'c':
