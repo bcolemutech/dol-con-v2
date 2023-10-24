@@ -5,8 +5,8 @@ using Enums;
 
 public interface IMoveService
 {
-    bool? ProcessExploration();
-    bool MoveToCell(int cellId);
+    MoveStatus ProcessExploration();
+    MoveStatus MoveToCell(int cellId);
     bool MoveToLocation(Guid locationId);
     bool MoveToBurg(int burg);
     void Camp();
@@ -21,7 +21,7 @@ public class MoveService : IMoveService
         _imageService = imageService;
     }
 
-    public bool? ProcessExploration()
+    public MoveStatus ProcessExploration()
     {
         var party = SaveGameService.Party;
         const int defaultExploration = 100;
@@ -31,7 +31,7 @@ public class MoveService : IMoveService
         var currentBurg = SaveGameService.CurrentBurg;
         if (currentLocation is not null)
         {
-            if (!party.TryMove(.005)) return false;
+            if (!party.TryMove(.005)) return MoveStatus.Failure;
 
             locationExplorationSize = (int)currentLocation.Type.Size * 100;
             explored = currentLocation.ExploredPercent * locationExplorationSize;
@@ -40,12 +40,12 @@ public class MoveService : IMoveService
 
             currentLocation.ExploredPercent = explored / locationExplorationSize;
 
-            return true;
+            return MoveStatus.Success;
         }
 
-        if (currentBurg is not null) return null;
+        if (currentBurg is not null) return MoveStatus.None;
 
-        if (!party.TryMove(.05)) return false;
+        if (!party.TryMove(.05)) return MoveStatus.Failure;
 
         var currentCell = SaveGameService.CurrentCell;
 
@@ -59,7 +59,7 @@ public class MoveService : IMoveService
         {
             currentCell.ExploredPercent = 1;
             currentCell.locations.ForEach(x => x.Discovered = true);
-            return true;
+            return MoveStatus.Success;
         }
 
         var chance = new Chance();
@@ -73,17 +73,17 @@ public class MoveService : IMoveService
             location1.Discovered = true;
         }
 
-        if (dice < 12) return true;
+        if (dice < 12) return MoveStatus.Success;
 
         var random2 = new Random();
         var pick2 = random2.Next(0, currentCell.locations.Count(x => !x.Discovered));
         var location2 = currentCell.locations.Where(x => !x.Discovered).Skip(pick2)
             .Take(1).First();
         location2.Discovered = true;
-        return true;
+        return MoveStatus.Success;
     }
 
-    public bool MoveToCell(int cellId)
+    public MoveStatus MoveToCell(int cellId)
     {
         var party = SaveGameService.Party;
         var cell = SaveGameService.CurrentMap.Collections.cells[cellId];
@@ -93,7 +93,7 @@ public class MoveService : IMoveService
         switch (cell.Biome)
         {
             case Biome.Marine:
-                return false;
+                return MoveStatus.Blocked;
             case Biome.HotDesert:
                 baseMoveCost = .3;
                 break;
@@ -140,12 +140,12 @@ public class MoveService : IMoveService
         
         moveCost = moveCost < baseMoveCost ? baseMoveCost : moveCost;
 
-        if (!party.TryMove(moveCost)) return false;
+        if (!party.TryMove(moveCost)) return MoveStatus.Failure;
 
         party.Cell = cellId;
         _imageService.ProcessSvg();
 
-        return true;
+        return MoveStatus.Success;
     }
 
     public bool MoveToLocation(Guid locationId)
