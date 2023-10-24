@@ -16,15 +16,17 @@ public partial class GameService : IGameService
     private Layout _message;
     private Screen _screen;
     private LiveDisplayContext _ctx;
-    private bool exiting;
+    private bool _exiting;
     
     private readonly IImageService _imageService;
     private readonly IMoveService _moveService;
+    private readonly IEventService _eventService;
 
-    public GameService(IImageService imageService, IMoveService moveService)
+    public GameService(IImageService imageService, IMoveService moveService, IEventService eventService)
     {
         _imageService = imageService;
         _moveService = moveService;
+        _eventService = eventService;
     }
 
     public async Task Start(CancellationToken token)
@@ -32,7 +34,7 @@ public partial class GameService : IGameService
         token.Register(() =>
         {
             AnsiConsole.MarkupLine("[red]Game cancelled[/]");
-            System.Environment.Exit(0);
+            Environment.Exit(0);
         });
         
         var layout = new Layout("Root")
@@ -70,7 +72,7 @@ public partial class GameService : IGameService
             var key = Console.ReadKey(true);
             if(key is { Key: ConsoleKey.E, Modifiers: ConsoleModifiers.Alt })
             {
-                exiting = true;
+                _exiting = true;
             }
             else if (Enum.IsDefined((Screen)key.Key))
             {
@@ -86,7 +88,7 @@ public partial class GameService : IGameService
                 RenderScreen(key);
             }
 
-        } while (token.IsCancellationRequested == false && !exiting);
+        } while (token.IsCancellationRequested == false && !_exiting);
     }
 
     private void ProcessHotKey(HotKeys hotKey)
