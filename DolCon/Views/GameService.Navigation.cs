@@ -114,22 +114,8 @@ public partial class GameService
                 
                 var scene = _eventService.ProcessEvent(thisEvent);
 
-                // moveStatus = _moveService.ProcessExploration();
                 moveStatus = scene.MoveStatus;
                 message = scene.Message;
-                // if (moveStatus == MoveStatus.Success)
-                // {
-                //     var totalCoin = 0;
-                //     foreach (var player in SaveGameService.Party.Players)
-                //     {
-                //         var random = new Chance().New();
-                //         var playerCoin = random.Dice(100) * 10;
-                //         player.coin += playerCoin;
-                //         totalCoin += playerCoin;
-                //     }
-                //
-                //     message = "You have explored the area. You have found " + totalCoin + " coin.";
-                // }
 
                 break;
             case 'c':
@@ -180,14 +166,13 @@ public partial class GameService
                 SetMessage(MessageType.Error, message);
                 break;
             case MoveStatus.None:
+            case MoveStatus.Hold:
                 message = message == string.Empty ? "Make a move." : message;
                 SetMessage(MessageType.Info, message);
                 break;
             case MoveStatus.Blocked:
                 message = message == string.Empty ? "You cannot move in that direction." : message;
                 SetMessage(MessageType.Error, message);
-                break;
-            case MoveStatus.Hold:
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(moveStatus), moveStatus, "Invalid move status.");
