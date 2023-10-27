@@ -18,14 +18,15 @@ public partial class GameService : IGameService
     private Screen _screen;
     private LiveDisplayContext _ctx;
     private bool _exiting;
-    
+
     private readonly IImageService _imageService;
     private readonly IMoveService _moveService;
     private readonly IEventService _eventService;
-    private Scene _scene;
+    private Scene _scene = new();
     private readonly IShopService _shopService;
 
-    public GameService(IImageService imageService, IMoveService moveService, IEventService eventService, IShopService shopService)
+    public GameService(IImageService imageService, IMoveService moveService, IEventService eventService,
+        IShopService shopService)
     {
         _imageService = imageService;
         _moveService = moveService;
@@ -40,7 +41,7 @@ public partial class GameService : IGameService
             AnsiConsole.MarkupLine("[red]Game cancelled[/]");
             Environment.Exit(0);
         });
-        
+
         var layout = new Layout("Root")
             .SplitRows(
                 new Layout("Message"),
@@ -50,19 +51,17 @@ public partial class GameService : IGameService
         _display = layout["Display"];
         _controls = layout["Controls"];
         _message = layout["Message"];
-        
+
         _display.Ratio = 5;
         _screen = Screen.Home;
-        
+
         AnsiConsole.Clear();
-        
+
         await AnsiConsole.Live(layout).StartAsync(async ctx =>
         {
             _ctx = ctx;
-            
-            SetMessage(MessageType.Info, "Welcome to Dominion of Light");
 
-            RenderScreen();
+            SetMessage(MessageType.Info, "Welcome to Dominion of Light");
 
             await ProcessKey(token);
         });
@@ -71,10 +70,14 @@ public partial class GameService : IGameService
     private async Task ProcessKey(CancellationToken token)
     {
         SetMessage(MessageType.Info, "Welcome to Dominion of Light");
+        ConsoleKeyInfo? key = null;
         do
         {
-            var key = Console.ReadKey(true);
-            if(key is { Key: ConsoleKey.E, Modifiers: ConsoleModifiers.Alt })
+            if (key is null)
+            {
+                RenderScreen();
+            }
+            else if (key.Value is { Key: ConsoleKey.E, Modifiers: ConsoleModifiers.Alt })
             {
                 _exiting = true;
             }
@@ -83,20 +86,21 @@ public partial class GameService : IGameService
                 _screen = Screen.Scene;
                 RenderScreen();
             }
-            else if (Enum.IsDefined((Screen)key.Key))
+            else if (Enum.IsDefined((Screen)key.Value.Key))
             {
-                _screen = (Screen)key.Key;
+                _screen = (Screen)key.Value.Key;
                 RenderScreen();
             }
-            else if (Enum.IsDefined((HotKeys)key.Key))
+            else if (Enum.IsDefined((HotKeys)key.Value.Key))
             {
-                ProcessHotKey((HotKeys)key.Key);
+                ProcessHotKey((HotKeys)key.Value.Key);
             }
             else
             {
                 RenderScreen(key);
             }
 
+            key = Console.ReadKey(true);
         } while (token.IsCancellationRequested == false && !_exiting);
     }
 
@@ -138,7 +142,7 @@ public partial class GameService : IGameService
         }
     }
 
-    private void SetMessage(MessageType type ,string message)
+    private void SetMessage(MessageType type, string message)
     {
         var markup = type switch
         {
