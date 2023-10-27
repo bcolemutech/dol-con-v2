@@ -21,6 +21,11 @@ public partial class GameService
 
         ProcessKey(value, localBurg);
 
+        if (!_scene.IsCompleted)
+        { 
+            RenderScene(value);
+        }
+
         currentCell = SaveGameService.CurrentCell;
         var burg = SaveGameService.CurrentBurg;
         var location = SaveGameService.CurrentLocation;
@@ -113,6 +118,9 @@ public partial class GameService
                 var thisEvent = new Event(SaveGameService.CurrentLocation, SaveGameService.CurrentCell);
                 
                 var scene = _eventService.ProcessEvent(thisEvent);
+                
+                _scene = scene;
+                _screen = Screen.Scene;
 
                 moveStatus = scene.MoveStatus;
                 message = scene.Message;
