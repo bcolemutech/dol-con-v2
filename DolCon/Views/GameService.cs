@@ -78,7 +78,7 @@ public partial class GameService : IGameService
             {
                 _exiting = true;
             }
-            else if (!_scene.IsCompleted)
+            else if (_scene is not null && !_scene.IsCompleted)
             {
                 _screen = Screen.Scene;
                 RenderScreen();
