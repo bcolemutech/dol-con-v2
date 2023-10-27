@@ -1,5 +1,4 @@
-﻿using DolCon;
-using DolCon.Services;
+﻿using DolCon.Services;
 using DolCon.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -15,6 +14,8 @@ using var host = Host.CreateDefaultBuilder(args)
         services.AddSingleton<IGameService, GameService>();
         services.AddSingleton<IImageService, ImageService>();
         services.AddSingleton<IMoveService, MoveService>();
+        services.AddSingleton<IEventService, EventService>();
+        services.AddSingleton<IShopService, ShopService>();
         services.AddHostedService<HostedService>();
     })
     .Build();

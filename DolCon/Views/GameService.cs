@@ -1,6 +1,7 @@
 ﻿namespace DolCon.Views;
 
-using DolCon.Enums;
+using Models;
+using Enums;
 using Services;
 using Spectre.Console;
 
@@ -16,15 +17,21 @@ public partial class GameService : IGameService
     private Layout _message;
     private Screen _screen;
     private LiveDisplayContext _ctx;
-    private bool exiting;
-    
+    private bool _exiting;
+
     private readonly IImageService _imageService;
     private readonly IMoveService _moveService;
+    private readonly IEventService _eventService;
+    private Scene _scene = new();
+    private readonly IShopService _shopService;
 
-    public GameService(IImageService imageService, IMoveService moveService)
+    public GameService(IImageService imageService, IMoveService moveService, IEventService eventService,
+        IShopService shopService)
     {
         _imageService = imageService;
         _moveService = moveService;
+        _eventService = eventService;
+        _shopService = shopService;
     }
 
     public async Task Start(CancellationToken token)
@@ -32,9 +39,9 @@ public partial class GameService : IGameService
         token.Register(() =>
         {
             AnsiConsole.MarkupLine("[red]Game cancelled[/]");
-            System.Environment.Exit(0);
+            Environment.Exit(0);
         });
-        
+
         var layout = new Layout("Root")
             .SplitRows(
                 new Layout("Message"),
@@ -44,19 +51,17 @@ public partial class GameService : IGameService
         _display = layout["Display"];
         _controls = layout["Controls"];
         _message = layout["Message"];
-        
+
         _display.Ratio = 5;
         _screen = Screen.Home;
-        
+
         AnsiConsole.Clear();
-        
+
         await AnsiConsole.Live(layout).StartAsync(async ctx =>
         {
             _ctx = ctx;
-            
-            SetMessage(MessageType.Info, "Welcome to Dominion of Light");
 
-            RenderScreen();
+            SetMessage(MessageType.Info, "Welcome to Dominion of Light");
 
             await ProcessKey(token);
         });
@@ -65,28 +70,38 @@ public partial class GameService : IGameService
     private async Task ProcessKey(CancellationToken token)
     {
         SetMessage(MessageType.Info, "Welcome to Dominion of Light");
+        ConsoleKeyInfo? key = null;
         do
         {
-            var key = Console.ReadKey(true);
-            if(key is { Key: ConsoleKey.E, Modifiers: ConsoleModifiers.Alt })
+            if (key is null)
             {
-                exiting = true;
-            }
-            else if (Enum.IsDefined((Screen)key.Key))
-            {
-                _screen = (Screen)key.Key;
                 RenderScreen();
             }
-            else if (Enum.IsDefined((HotKeys)key.Key))
+            else if (key.Value is { Key: ConsoleKey.E, Modifiers: ConsoleModifiers.Alt })
             {
-                ProcessHotKey((HotKeys)key.Key);
+                _exiting = true;
+            }
+            else if (_scene is not null && !_scene.IsCompleted)
+            {
+                _screen = Screen.Scene;
+                RenderScreen();
+            }
+            else if (Enum.IsDefined((Screen)key.Value.Key))
+            {
+                _screen = (Screen)key.Value.Key;
+                RenderScreen();
+            }
+            else if (Enum.IsDefined((HotKeys)key.Value.Key))
+            {
+                ProcessHotKey((HotKeys)key.Value.Key);
             }
             else
             {
                 RenderScreen(key);
             }
 
-        } while (token.IsCancellationRequested == false && !exiting);
+            key = Console.ReadKey(true);
+        } while (token.IsCancellationRequested == false && !_exiting);
     }
 
     private void ProcessHotKey(HotKeys hotKey)
@@ -112,6 +127,9 @@ public partial class GameService : IGameService
             case Screen.Navigation:
                 RenderNavigation(value);
                 break;
+            case Screen.Scene:
+                RenderScene(value);
+                break;
             case Screen.Inventory:
                 RenderNotReady();
                 break;
@@ -123,8 +141,8 @@ public partial class GameService : IGameService
                 break;
         }
     }
-    
-    private void SetMessage(MessageType type ,string message)
+
+    private void SetMessage(MessageType type, string message)
     {
         var markup = type switch
         {

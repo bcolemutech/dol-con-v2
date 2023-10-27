@@ -1,6 +1,7 @@
 ﻿namespace DolCon.Views;
 
 using ChanceNET;
+using Models;
 using Enums;
 using Models.BaseTypes;
 using Services;
@@ -19,6 +20,11 @@ public partial class GameService
         var localBurg = currentCell.burg > 0 ? SaveGameService.GetBurg(currentCell.burg) : null;
 
         ProcessKey(value, localBurg);
+
+        if (!_scene.IsCompleted)
+        { 
+            RenderScene(value);
+        }
 
         currentCell = SaveGameService.CurrentCell;
         var burg = SaveGameService.CurrentBurg;
@@ -108,24 +114,16 @@ public partial class GameService
             case 'b' when SaveGameService.CurrentBurg is null && localBurg != null:
                 moveStatus = _moveService.MoveToBurg(localBurg.i.Value) ? MoveStatus.Success : MoveStatus.Failure;
                 break;
-            case 'e' when (SaveGameService.CurrentLocation != null &&
-                           SaveGameService.CurrentLocation.Type.Size != LocationSize.unexplorable &&
-                           SaveGameService.CurrentLocation.ExploredPercent < 1) ||
-                          SaveGameService.CurrentCell.ExploredPercent < 1:
-                moveStatus = _moveService.ProcessExploration();
-                if (moveStatus == MoveStatus.Success)
-                {
-                    var totalCoin = 0;
-                    foreach (var player in SaveGameService.Party.Players)
-                    {
-                        var random = new Chance().New();
-                        var playerCoin = random.Dice(100) * 10;
-                        player.coin += playerCoin;
-                        totalCoin += playerCoin;
-                    }
+            case 'e' when SaveGameService.CurrentLocation != null || SaveGameService.CurrentCell.ExploredPercent < 1:
+                var thisEvent = new Event(SaveGameService.CurrentLocation, SaveGameService.CurrentCell);
+                
+                var scene = _eventService.ProcessEvent(thisEvent);
+                
+                _scene = scene;
+                _screen = Screen.Scene;
 
-                    message = "You have explored the area. You have found " + totalCoin + " coin.";
-                }
+                moveStatus = scene.MoveStatus;
+                message = scene.Message;
 
                 break;
             case 'c':
@@ -159,8 +157,7 @@ public partial class GameService
                         _moveService.MoveToLocation(locationId) ? MoveStatus.Success : MoveStatus.Failure,
                     _ => MoveStatus.None
                 };
-
-
+                
                 break;
             }
         }
@@ -176,14 +173,13 @@ public partial class GameService
                 SetMessage(MessageType.Error, message);
                 break;
             case MoveStatus.None:
+            case MoveStatus.Hold:
                 message = message == string.Empty ? "Make a move." : message;
                 SetMessage(MessageType.Info, message);
                 break;
             case MoveStatus.Blocked:
                 message = message == string.Empty ? "You cannot move in that direction." : message;
                 SetMessage(MessageType.Error, message);
-                break;
-            case MoveStatus.Hold:
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(moveStatus), moveStatus, "Invalid move status.");
