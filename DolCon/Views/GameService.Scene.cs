@@ -1,5 +1,4 @@
-﻿using DolCon.Services;
-using Spectre.Console;
+﻿using Spectre.Console;
 
 namespace DolCon.Views;
 
@@ -9,14 +8,6 @@ public partial class GameService
 {
     private void RenderScene(ConsoleKeyInfo value)
     {
-        _controls.Update(
-            new Panel(
-                    Align.Center(
-                        new Markup("Select an option above."),
-                        VerticalAlignment.Middle))
-                .Expand());
-        _ctx.Refresh();
-        
         switch (_scene.Type)
         {
             case SceneType.Dialogue:
@@ -34,8 +25,6 @@ public partial class GameService
                 RenderNotReady();
                 break;
         }
-        
-        _screen = Screen.Navigation;
     }
 
     private void RenderShop(ConsoleKeyInfo value)
@@ -45,14 +34,23 @@ public partial class GameService
             var selectionTable = new Table();
             selectionTable.AddColumn("Key");
             selectionTable.AddColumn("Selection");
-            selectionTable.AddColumn("Price");
-            
-            foreach (var (key, selection) in _scene.Selections)
+            if (_scene.SelectedService is not null)
             {
-                var product = selection.Split('|');
-                selectionTable.AddRow(key.ToString(), product[0], product[1]);
+                selectionTable.AddColumn("Price");
+                foreach (var (key, selection) in _scene.Selections)
+                {
+                    var product = selection.Split('|');
+                    selectionTable.AddRow(key.ToString(), product[0], product[1]);
+                }
             }
-            
+            else
+            {
+                foreach (var (key, selection) in _scene.Selections)
+                {
+                    selectionTable.AddRow(key.ToString(), selection);
+                }
+            }
+
             _display.Update(
                 new Panel(
                     new Rows(
@@ -65,6 +63,13 @@ public partial class GameService
                         )
                     )));
             _ctx.Refresh();
+            _controls.Update(
+                new Panel(
+                        Align.Center(
+                            new Markup(_scene.Message),
+                            VerticalAlignment.Middle))
+                    .Expand());
+            _ctx.Refresh();
             var click = Console.ReadKey(true);
             var thisChar = click.KeyChar.ToString();
             var cleanChar = thisChar.First().ToString();
@@ -74,6 +79,8 @@ public partial class GameService
             _scene.Selection = choice;
             _scene = _shopService.ProcessShop(_scene);
         }
+        _screen = Screen.Navigation;
+        _scene.Reset();
     }
 
     private void RenderBattle(ConsoleKeyInfo value)
