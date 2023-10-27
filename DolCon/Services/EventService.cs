@@ -11,6 +11,13 @@ public interface IEventService
 
 public class EventService : IEventService
 {
+    private readonly IShopService _shopService;
+
+    public EventService(IShopService shopService)
+    {
+        _shopService = shopService;
+    }
+
     public Scene ProcessEvent(Event thisEvent)
     {
         var scene = new Scene();
@@ -50,10 +57,11 @@ public class EventService : IEventService
         return scene;
     }
 
-    private static Scene ProcessServices(Event thisEvent, Scene scene)
+    private Scene ProcessServices(Event thisEvent, Scene scene)
     {
-        scene.Message = "Feature not implemented for Services: " + string.Join(", ", thisEvent.Location.Type.Services);
-        scene.MoveStatus = MoveStatus.None;
+        scene.Type = SceneType.Shop;
+        scene.Location = thisEvent.Location;
+        scene = _shopService.ProcessShop(scene);
         return scene;
     }
 
