@@ -37,7 +37,7 @@ public class EventService : IEventService
                 }
                 else
                 {
-                    scene.Message = "You are not in a location or area.";
+                    scene.Message = "You do not have enough stamina to explore the area.";
                 }
 
                 return scene;
