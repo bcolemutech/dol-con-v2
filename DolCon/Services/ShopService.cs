@@ -22,35 +22,32 @@ public class ShopService : IShopService
 
         if (scene.Selections.Count == 0)
         {
+            scene.IsCompleted = false;
             scene.Title = $"[bold black on white]Welcome to {scene.Location?.Name}[/]";
             scene.Description = "Select a service.";
             scene.Selections = new Dictionary<int, string>();
             var i = 1;
             var typeServices = scene.Location?.Type.Services;
-            if (typeServices == null)
-            {
-                scene.Message = "Invalid location.";
-                return scene;
-            }
+
             foreach (var s in typeServices)
             {
                 scene.Selections.Add(i, s.ToString());
                 i++;
             }
+            
+            scene.Selections.Add(i, "Leave");
+            scene.Message = "Select an option from the menu.";
+            return scene;
         }
         
-        if (selection == scene.Selections.Count + 1)
+        if (selection == scene.Selections.Count)
         {
             scene.IsCompleted = true;
+            scene.Message = "You left the shop.";
+            scene.Reset();
             return scene;
         }
         
-        if(selection <= 0 || !scene.Selections.ContainsKey(selection))
-        {
-            scene.Message = "Invalid selection.";
-            return scene;
-        }
-
         if (service == null)
         {
             scene.SelectedService = Enum.Parse<Service>(scene.Selections[selection]);
@@ -61,6 +58,7 @@ public class ShopService : IShopService
             // TODO: Add items to selection
             scene.Selections.Add(i, "Leave|0");
             scene.Selection = 0;
+            scene.Message = "Select an option from the menu.";
             return scene;
         }
         
