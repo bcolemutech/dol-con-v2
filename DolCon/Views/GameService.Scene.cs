@@ -9,7 +9,14 @@ public partial class GameService
 {
     private void RenderScene(ConsoleKeyInfo value)
     {
-        ProcessScene(value);
+        _controls.Update(
+            new Panel(
+                    Align.Center(
+                        new Markup("Select an option above."),
+                        VerticalAlignment.Middle))
+                .Expand());
+        _ctx.Refresh();
+        
         switch (_scene.Type)
         {
             case SceneType.Dialogue:
@@ -27,55 +34,45 @@ public partial class GameService
                 RenderNotReady();
                 break;
         }
-
-        _controls.Update(
-            new Panel(
-                    Align.Center(
-                        new Markup("Select an option above."),
-                        VerticalAlignment.Middle))
-                .Expand());
-        _ctx.Refresh();
+        
+        _screen = Screen.Navigation;
     }
 
     private void RenderShop(ConsoleKeyInfo value)
     {
-        var thisChar = value.KeyChar.ToString();
-        var cleanChar = thisChar.First().ToString();
-        var tryParse = int.TryParse(cleanChar, out var selection);
-
-        if (tryParse)
+        while (!_scene.IsCompleted)
         {
-            _scene.SelectedService = (Service)selection;
-        }
-        
-        if (_scene.SelectedService == null)
-        {
-            var location = SaveGameService.CurrentLocation;
-            var serviceTable = new Table();
+            var selectionTable = new Table();
+            selectionTable.AddColumn("Key");
+            selectionTable.AddColumn("Selection");
+            selectionTable.AddColumn("Price");
+            
+            foreach (var (key, selection) in _scene.Selections)
+            {
+                var product = selection.Split('|');
+                selectionTable.AddRow(key.ToString(), product[0], product[1]);
+            }
+            
             _display.Update(
                 new Panel(
                     new Rows(
                         Align.Center(
-                            new Markup($"[bold]Select a service to continue.[/]")
-                        ),
+                            new Markup($"[bold black on white]{_scene.Title}[/]")),
                         Align.Center(
-                            serviceTable
+                            new Markup($"[bold]{_scene.Description}[/]")),
+                        Align.Center(
+                            selectionTable
                         )
                     )));
             _ctx.Refresh();
-            
-            serviceTable.AddColumn("Key");
-            serviceTable.AddColumn("Service");
-
-            var services = location.Type.Services;
-            foreach (var service in services)
-            {
-                serviceTable.AddRow(((int)service).ToString(), Enum.GetName(service));
-            }
-        }
-        else
-        {
-            //TODO: Implement shop
+            var click = Console.ReadKey(true);
+            var thisChar = click.KeyChar.ToString();
+            var cleanChar = thisChar.First().ToString();
+            var tryParse = int.TryParse(cleanChar, out var choice);
+            if (!tryParse) continue;
+            choice = value.Modifiers == ConsoleModifiers.Alt ? choice + 10 : choice;
+            _scene.Selection = choice;
+            _scene = _shopService.ProcessShop(_scene);
         }
     }
 
@@ -87,12 +84,5 @@ public partial class GameService
     private void RenderDialog(ConsoleKeyInfo value)
     {
         throw new NotImplementedException();
-    }
-
-    private void ProcessScene(ConsoleKeyInfo value)
-    {
-        var thisChar = value.KeyChar.ToString();
-        var cleanChar = thisChar.First().ToString();
-        var tryParse = int.TryParse(cleanChar, out var selection);
     }
 }
