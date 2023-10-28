@@ -121,7 +121,7 @@ public partial class GameService
                 var scene = _eventService.ProcessEvent(thisEvent);
                 
                 _scene = scene;
-                _flow.Screen = Screen.Scene;
+                _flow.Screen = _scene.IsCompleted ? Screen.Navigation : Screen.Scene;
 
                 moveStatus = scene.MoveStatus;
                 message = scene.Message;
