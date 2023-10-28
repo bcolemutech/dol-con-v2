@@ -129,7 +129,7 @@ public partial class GameService : IGameService
                 RenderNavigation(value);
                 break;
             case Screen.Scene:
-                RenderScene(value);
+                RenderScene();
                 break;
             case Screen.Inventory:
                 RenderNotReady();

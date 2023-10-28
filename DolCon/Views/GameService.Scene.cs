@@ -6,18 +6,18 @@ using Enums;
 
 public partial class GameService
 {
-    private void RenderScene(ConsoleKeyInfo value)
+    private void RenderScene()
     {
         switch (_scene.Type)
         {
             case SceneType.Dialogue:
-                RenderDialog(value);
+                RenderDialog();
                 break;
             case SceneType.Battle:
-                RenderBattle(value);
+                RenderBattle();
                 break;
             case SceneType.Shop:
-                RenderShop(value);
+                RenderShop();
                 break;
             case SceneType.None:
             default:
@@ -27,7 +27,7 @@ public partial class GameService
         }
     }
 
-    private void RenderShop(ConsoleKeyInfo value)
+    private void RenderShop()
     {
         while (!_scene.IsCompleted)
         {
