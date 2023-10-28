@@ -21,8 +21,10 @@ public partial class GameService
                 break;
             case SceneType.None:
             default:
+                SetMessage(MessageType.Error, "Bad redirect!!!");
                 _scene.IsCompleted = true;
-                RenderNotReady();
+                _flow.Screen = Screen.Navigation;
+                _flow.Redirect = true;
                 break;
         }
     }
