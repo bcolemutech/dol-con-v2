@@ -6,89 +6,99 @@ using Enums;
 
 public partial class GameService
 {
-    private void RenderScene(ConsoleKeyInfo value)
+    private void RenderScene()
     {
         switch (_scene.Type)
         {
             case SceneType.Dialogue:
-                RenderDialog(value);
+                RenderDialog();
                 break;
             case SceneType.Battle:
-                RenderBattle(value);
+                RenderBattle();
                 break;
             case SceneType.Shop:
-                RenderShop(value);
+                RenderShop();
                 break;
             case SceneType.None:
             default:
+                SetMessage(MessageType.Error, "Bad redirect!!!");
                 _scene.IsCompleted = true;
-                RenderNotReady();
+                _flow.Screen = Screen.Navigation;
+                _flow.Redirect = true;
                 break;
         }
     }
 
-    private void RenderShop(ConsoleKeyInfo value)
+    private void RenderShop()
     {
-        while (!_scene.IsCompleted)
+        if (_flow.Key.HasValue)
         {
-            var selectionTable = new Table();
-            selectionTable.AddColumn("Key");
-            selectionTable.AddColumn("Selection");
-            if (_scene.SelectedService is not null)
-            {
-                selectionTable.AddColumn("Price");
-                foreach (var (key, selection) in _scene.Selections)
-                {
-                    var product = selection.Split('|');
-                    selectionTable.AddRow(key.ToString(), product[0], product[1]);
-                }
-            }
-            else
-            {
-                foreach (var (key, selection) in _scene.Selections)
-                {
-                    selectionTable.AddRow(key.ToString(), selection);
-                }
-            }
-
-            _display.Update(
-                new Panel(
-                    new Rows(
-                        Align.Center(
-                            new Markup($"[bold black on white]{_scene.Title}[/]")),
-                        Align.Center(
-                            new Markup($"[bold]{_scene.Description}[/]")),
-                        Align.Center(
-                            selectionTable
-                        )
-                    )));
-            _ctx.Refresh();
-            _controls.Update(
-                new Panel(
-                        Align.Center(
-                            new Markup(_scene.Message),
-                            VerticalAlignment.Middle))
-                    .Expand());
-            _ctx.Refresh();
-            var click = Console.ReadKey(true);
+            var click = _flow.Key.Value;
             var thisChar = click.KeyChar.ToString();
             var cleanChar = thisChar.First().ToString();
-            var tryParse = int.TryParse(cleanChar, out var choice);
-            if (!tryParse) continue;
-            choice = value.Modifiers == ConsoleModifiers.Alt ? choice + 10 : choice;
-            _scene.Selection = choice;
-            _scene = _shopService.ProcessShop(_scene);
+            if (int.TryParse(cleanChar, out var choice))
+            {
+                choice = _flow.Key.Value.Modifiers == ConsoleModifiers.Alt ? choice + 10 : choice;
+                _scene.Selection = choice;
+                _scene = _shopService.ProcessShop(_scene);
+            }
         }
-        _screen = Screen.Navigation;
-        _scene.Reset();
+
+        if (_scene.IsCompleted)
+        {
+            _flow.Screen = Screen.Navigation;
+            _flow.Redirect = true;
+            _scene.Reset();
+            return;
+        }
+
+        var selectionTable = new Table();
+        selectionTable.AddColumn("Key");
+        selectionTable.AddColumn("Selection");
+        if (_scene.SelectedService is not null)
+        {
+            selectionTable.AddColumn("Price");
+            foreach (var (key, selection) in _scene.Selections)
+            {
+                var product = selection.Split('|');
+                selectionTable.AddRow(key.ToString(), product[0], product[1]);
+            }
+        }
+        else
+        {
+            foreach (var (key, selection) in _scene.Selections)
+            {
+                selectionTable.AddRow(key.ToString(), selection);
+            }
+        }
+
+        _display.Update(
+            new Panel(
+                new Rows(
+                    Align.Center(
+                        new Markup($"[bold black on white]{_scene.Title}[/]")),
+                    Align.Center(
+                        new Markup($"[bold]{_scene.Description}[/]")),
+                    Align.Center(
+                        selectionTable
+                    )
+                )));
+        _ctx.Refresh();
+        _controls.Update(
+            new Panel(
+                    Align.Center(
+                        new Markup(_scene.Message),
+                        VerticalAlignment.Middle))
+                .Expand());
+        _ctx.Refresh();
     }
 
-    private void RenderBattle(ConsoleKeyInfo value)
+    private void RenderBattle()
     {
         throw new NotImplementedException();
     }
 
-    private void RenderDialog(ConsoleKeyInfo value)
+    private void RenderDialog()
     {
         throw new NotImplementedException();
     }
