@@ -9,7 +9,7 @@ public class Burg
     public double? x { get; set; }
     public double? y { get; set; }
     public int? state { get; set; }
-    public int? i { get; set; }
+    public int i { get; set; }
     public int? culture { get; set; }
     public string name { get; set; }
     public int? feature { get; set; }

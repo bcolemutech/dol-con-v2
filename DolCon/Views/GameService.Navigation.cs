@@ -1,6 +1,5 @@
 ﻿namespace DolCon.Views;
 
-using ChanceNET;
 using Models;
 using Enums;
 using Models.BaseTypes;
@@ -23,7 +22,8 @@ public partial class GameService
 
         if (!_scene.IsCompleted)
         { 
-            RenderScene(value);
+            _flow.Redirect = true;
+            return;
         }
 
         currentCell = SaveGameService.CurrentCell;
@@ -112,7 +112,7 @@ public partial class GameService
                 SaveGameService.Party.Location = null;
                 break;
             case 'b' when SaveGameService.CurrentBurg is null && localBurg != null:
-                moveStatus = _moveService.MoveToBurg(localBurg.i.Value) ? MoveStatus.Success : MoveStatus.Failure;
+                moveStatus = _moveService.MoveToBurg(localBurg.i) ? MoveStatus.Success : MoveStatus.Failure;
                 break;
             case 'e' when SaveGameService.CurrentLocation != null || SaveGameService.CurrentCell.ExploredPercent < 1:
                 var thisEvent = new Event(SaveGameService.CurrentLocation, SaveGameService.CurrentCell);
