@@ -112,7 +112,8 @@ public partial class GameService
                 SaveGameService.Party.Location = null;
                 break;
             case 'b' when SaveGameService.CurrentBurg is null && localBurg != null:
-                moveStatus = _moveService.MoveToBurg(localBurg.i) ? MoveStatus.Success : MoveStatus.Failure;
+                var localBurgId = localBurg.i ?? 0;
+                moveStatus = _moveService.MoveToBurg(localBurgId) ? MoveStatus.Success : MoveStatus.Failure;
                 break;
             case 'e' when SaveGameService.CurrentLocation != null || SaveGameService.CurrentCell.ExploredPercent < 1:
                 var thisEvent = new Event(SaveGameService.CurrentLocation, SaveGameService.CurrentCell);
