@@ -10,7 +10,7 @@ public partial class GameService
             new Panel(
                 Align.Center(
                     new Rows(
-                        new Markup($"[bold]{_screen.ToString()} screen is not ready!!![/]")
+                        new Markup($"[bold]{_flow.Screen.ToString()} screen is not ready!!![/]")
                     ),
                     VerticalAlignment.Middle)));
         _ctx.Refresh();
