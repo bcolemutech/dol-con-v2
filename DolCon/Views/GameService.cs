@@ -15,8 +15,8 @@ public partial class GameService : IGameService
     private Layout _display;
     private Layout _controls;
     private Layout _message;
-    private Screen _screen;
     private LiveDisplayContext _ctx;
+    private readonly Flow _flow = new();
     private bool _exiting;
 
     private readonly IImageService _imageService;
@@ -53,7 +53,6 @@ public partial class GameService : IGameService
         _message = layout["Message"];
 
         _display.Ratio = 5;
-        _screen = Screen.Home;
 
         AnsiConsole.Clear();
 
@@ -70,37 +69,39 @@ public partial class GameService : IGameService
     private async Task ProcessKey(CancellationToken token)
     {
         SetMessage(MessageType.Info, "Welcome to Dominion of Light");
-        ConsoleKeyInfo? key = null;
+        
         do
         {
-            if (key is null)
+            if (_flow.Key is null)
             {
                 RenderScreen();
             }
-            else if (key.Value is { Key: ConsoleKey.E, Modifiers: ConsoleModifiers.Alt })
+            else if (_flow.Key.Value is { Key: ConsoleKey.E, Modifiers: ConsoleModifiers.Alt })
             {
                 _exiting = true;
             }
-            else if (_scene is not null && !_scene.IsCompleted)
+            else if (Enum.IsDefined((Screen)_flow.Key.Value.Key))
             {
-                _screen = Screen.Scene;
+                _flow.Screen = (Screen)_flow.Key.Value.Key;
                 RenderScreen();
             }
-            else if (Enum.IsDefined((Screen)key.Value.Key))
+            else if (Enum.IsDefined((HotKeys)_flow.Key.Value.Key))
             {
-                _screen = (Screen)key.Value.Key;
-                RenderScreen();
-            }
-            else if (Enum.IsDefined((HotKeys)key.Value.Key))
-            {
-                ProcessHotKey((HotKeys)key.Value.Key);
+                ProcessHotKey((HotKeys)_flow.Key.Value.Key);
             }
             else
             {
-                RenderScreen(key);
+                RenderScreen();
             }
 
-            key = Console.ReadKey(true);
+            if (_flow.Redirect)
+            {
+                _flow.Redirect = false;
+            }
+            else
+            {
+                _flow.Key = Console.ReadKey(true);
+            }
         } while (token.IsCancellationRequested == false && !_exiting);
     }
 
@@ -116,10 +117,10 @@ public partial class GameService : IGameService
         }
     }
 
-    private void RenderScreen(ConsoleKeyInfo? keyChar = null)
+    private void RenderScreen()
     {
-        var value = keyChar ?? new ConsoleKeyInfo();
-        switch (_screen)
+        var value = _flow.Key ?? new ConsoleKeyInfo();
+        switch (_flow.Screen)
         {
             case Screen.Home:
                 RenderHome();
@@ -128,7 +129,7 @@ public partial class GameService : IGameService
                 RenderNavigation(value);
                 break;
             case Screen.Scene:
-                RenderScene(value);
+                RenderScene();
                 break;
             case Screen.Inventory:
                 RenderNotReady();
