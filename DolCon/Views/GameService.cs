@@ -69,30 +69,25 @@ public partial class GameService : IGameService
     private async Task ProcessKey(CancellationToken token)
     {
         SetMessage(MessageType.Info, "Welcome to Dominion of Light");
-        var flow = new Flow();
+        
         do
         {
-            if (flow.Key is null)
+            if (_flow.Key is null)
             {
                 RenderScreen();
             }
-            else if (flow.Key.Value is { Key: ConsoleKey.E, Modifiers: ConsoleModifiers.Alt })
+            else if (_flow.Key.Value is { Key: ConsoleKey.E, Modifiers: ConsoleModifiers.Alt })
             {
                 _exiting = true;
             }
-            else if (_scene is not null && !_scene.IsCompleted)
+            else if (Enum.IsDefined((Screen)_flow.Key.Value.Key))
             {
-                _flow.Screen = Screen.Scene;
+                _flow.Screen = (Screen)_flow.Key.Value.Key;
                 RenderScreen();
             }
-            else if (Enum.IsDefined((Screen)flow.Key.Value.Key))
+            else if (Enum.IsDefined((HotKeys)_flow.Key.Value.Key))
             {
-                _flow.Screen = (Screen)flow.Key.Value.Key;
-                RenderScreen();
-            }
-            else if (Enum.IsDefined((HotKeys)flow.Key.Value.Key))
-            {
-                ProcessHotKey((HotKeys)flow.Key.Value.Key);
+                ProcessHotKey((HotKeys)_flow.Key.Value.Key);
             }
             else
             {
@@ -105,7 +100,7 @@ public partial class GameService : IGameService
             }
             else
             {
-                flow.Key = Console.ReadKey(true);
+                _flow.Key = Console.ReadKey(true);
             }
         } while (token.IsCancellationRequested == false && !_exiting);
     }
