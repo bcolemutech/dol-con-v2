@@ -99,7 +99,14 @@ public partial class GameService : IGameService
                 RenderScreen();
             }
 
-            key = Console.ReadKey(true);
+            if (_flow.Redirect)
+            {
+                _flow.Redirect = false;
+            }
+            else
+            {
+                flow.Key = Console.ReadKey(true);
+            }
         } while (token.IsCancellationRequested == false && !_exiting);
     }
 
