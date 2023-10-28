@@ -79,7 +79,7 @@ public partial class GameService
             _scene.Selection = choice;
             _scene = _shopService.ProcessShop(_scene);
         }
-        _screen = Screen.Navigation;
+        _flow.Screen = Screen.Navigation;
         _scene.Reset();
     }
 

@@ -120,7 +120,7 @@ public partial class GameService
                 var scene = _eventService.ProcessEvent(thisEvent);
                 
                 _scene = scene;
-                _screen = Screen.Scene;
+                _flow.Screen = Screen.Scene;
 
                 moveStatus = scene.MoveStatus;
                 message = scene.Message;
