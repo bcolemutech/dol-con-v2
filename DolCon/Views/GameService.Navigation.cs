@@ -21,7 +21,7 @@ public partial class GameService
         ProcessKey(value, localBurg);
 
         if (!_scene.IsCompleted)
-        { 
+        {
             _flow.Redirect = true;
             return;
         }
@@ -81,7 +81,7 @@ public partial class GameService
             {
                 controlLines.Add(new Markup("To explore the area press [green bold]E[/]"));
             }
-            
+
             controlLines.Add(new Markup("To camp press [green bold]C[/]"));
 
             controlLines.Add(
@@ -117,9 +117,9 @@ public partial class GameService
                 break;
             case 'e' when SaveGameService.CurrentLocation != null || SaveGameService.CurrentCell.ExploredPercent < 1:
                 var thisEvent = new Event(SaveGameService.CurrentLocation, SaveGameService.CurrentCell);
-                
+
                 var scene = _eventService.ProcessEvent(thisEvent);
-                
+
                 _scene = scene;
                 _flow.Screen = _scene.IsCompleted ? Screen.Navigation : Screen.Scene;
 
@@ -130,19 +130,19 @@ public partial class GameService
             case 'c':
                 if (SaveGameService.CurrentLocation != null || SaveGameService.CurrentBurg != null)
                 {
-                    SetMessage(MessageType.Error, "You cannot camp here.");
+                    message = "You cannot camp here.";
+                    moveStatus = MoveStatus.Failure;
                 }
-                
-                if (_moveService.Sleep())
+                else if (_moveService.Sleep())
                 {
-                    SetMessage(MessageType.Success, "You have camped and recovered your stamina.");
+                    message = "You have camped and recovered your stamina.";
+                    moveStatus = MoveStatus.Success;
                 }
                 else
                 {
-                    SetMessage(MessageType.Info, "Camping only goes so far. You must be below 50% stamina to camp.");
+                    message = "Camping only goes so far. You must be below 50% stamina to camp.";
+                    moveStatus = MoveStatus.Hold;
                 }
-                
-                moveStatus = MoveStatus.Hold;
 
                 break;
             default:
@@ -153,12 +153,13 @@ public partial class GameService
                 selection = value.Modifiers == ConsoleModifiers.Alt ? selection + 10 : selection;
                 moveStatus = tryParse switch
                 {
-                    true when _directionOptions.TryGetValue(selection, out var option) => _moveService.MoveToCell(option),
+                    true when _directionOptions.TryGetValue(selection, out var option) => _moveService.MoveToCell(
+                        option),
                     true when _locationOptions.TryGetValue(selection, out var locationId) =>
                         _moveService.MoveToLocation(locationId) ? MoveStatus.Success : MoveStatus.Failure,
                     _ => MoveStatus.None
                 };
-                
+
                 break;
             }
         }
