@@ -11,10 +11,12 @@ public interface IShopService
 public class ShopService : IShopService
 {
     private readonly IServicesService _servicesService;
+    private readonly IMoveService _moveService;
 
-    public ShopService(IServicesService servicesService)
+    public ShopService(IServicesService servicesService, IMoveService moveService)
     {
         _servicesService = servicesService;
+        _moveService = moveService;
     }
 
     public Scene ProcessShop(Scene scene)
@@ -85,12 +87,24 @@ public class ShopService : IShopService
         return scene;
     }
 
-    private static string ProcessPurchase(Scene scene, int price, ShopSelection selection)
+    private string ProcessPurchase(Scene scene, int price, ShopSelection selection)
     {
         var playerMoney = SaveGameService.Party.Players[0].coin;
+        var locationRarity = scene.Location?.Rarity ?? Rarity.Common;
+        var subMessage = "";
         if (playerMoney < price)
         {
             return "[red]You don't have enough money.[/]";
+        }
+
+        if (scene.SelectedService == ServiceType.Lodging)
+        {
+            var services = _servicesService.GetServices(ServiceType.Lodging, locationRarity);
+            var service = services.FirstOrDefault(s => s.Name == selection.Name);
+            if (service == null) return "Something went wrong.";
+            var slept = _moveService.Sleep(service.Rarity);
+            if (!slept) return "You are not tired enough to sleep here.";
+            subMessage = $"You slept at {scene.Location?.Name} at {service.Rarity} quality.";
         }
         
         SaveGameService.Party.Players[0].coin -= price;
@@ -99,9 +113,7 @@ public class ShopService : IShopService
         var silver = price / 10 % 100;
         var gold = price / 1000;
         
-        // TODO: Evaluate effect of purchase
-        
-        return $"You bought a {selection.Name} for {gold} gold, {silver} silver, and {copper} copper.";
+        return $"You bought a {selection.Name} for {gold} gold, {silver} silver, and {copper} copper.\n{subMessage}";
     }
 
     private Dictionary<int,ShopSelection> GetServiceSelections(Scene scene)
