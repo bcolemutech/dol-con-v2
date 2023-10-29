@@ -96,8 +96,8 @@ public class ShopService : IShopService
         SaveGameService.Party.Players[0].coin -= price;
         // Calculate money break down
         var copper = price % 10;
-        var silver = (price / 10) % 10;
-        var gold = (price / 100) % 10;
+        var silver = price / 10 % 100;
+        var gold = price / 1000;
         
         // TODO: Evaluate effect of purchase
         
