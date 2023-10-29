@@ -60,15 +60,14 @@ public partial class GameService
             selectionTable.AddColumn("Price");
             foreach (var (key, selection) in _scene.Selections)
             {
-                var product = selection.Split('|');
-                selectionTable.AddRow(key.ToString(), product[0], product[1]);
+                selectionTable.AddRow(key.ToString(), selection.Name, selection.Price.ToString());
             }
         }
         else
         {
             foreach (var (key, selection) in _scene.Selections)
             {
-                selectionTable.AddRow(key.ToString(), selection);
+                selectionTable.AddRow(key.ToString(), selection.Name);
             }
         }
 
