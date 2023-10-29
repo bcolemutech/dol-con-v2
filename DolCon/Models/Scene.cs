@@ -11,7 +11,7 @@ public class Scene
     public string? Title { get; set; }
     public string? Description { get; set; }
     public Dictionary<int, string> Selections { get; set; } = new();
-    public Service? SelectedService { get; set; }
+    public ServiceType? SelectedService { get; set; }
     public int Selection { get; set; }
     public Location? Location { get; set; }
 
