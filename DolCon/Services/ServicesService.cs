@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Reflection;
+using System.Text.Json;
 using DolCon.Enums;
 using DolCon.Models;
 
@@ -15,8 +16,11 @@ public class ServicesService : IServicesService
 
     public ServicesService()
     {
-        var servicesPath = Path.Combine(AppContext.BaseDirectory, "Resources", "Services.json");
-        var json = File.ReadAllText(servicesPath);
+        const string servicesResourceName = "DolCon.Resources.Services.json";
+        var executingAssembly = Assembly.GetExecutingAssembly();
+        var jsonStream = executingAssembly.GetManifestResourceStream(servicesResourceName);
+        using var reader = new StreamReader(jsonStream ?? throw new InvalidOperationException());
+        var json = reader.ReadToEnd();
         _services = JsonSerializer.Deserialize<List<Service>>(json) ?? new List<Service>();
     }
 
