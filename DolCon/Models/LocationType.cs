@@ -19,7 +19,7 @@ public record LocationType(
     bool NeedsCityOfLight,
     bool isWild,
     Tag[] Goods,
-    Service[] Services
+    ServiceType[] Services
 );
 
 public static class LocationTypes
@@ -43,7 +43,7 @@ public static class LocationTypes
             false,
             true,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "abandoned temple",
@@ -62,7 +62,7 @@ public static class LocationTypes
             false,
             true,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "abandoned wizard tower",
@@ -81,7 +81,7 @@ public static class LocationTypes
             false,
             true,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "ancient battlefield",
@@ -100,7 +100,7 @@ public static class LocationTypes
             false,
             true,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "ruins",
@@ -119,7 +119,7 @@ public static class LocationTypes
             false,
             true,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "ancient tomb",
@@ -138,7 +138,7 @@ public static class LocationTypes
             false,
             true,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "arena",
@@ -157,7 +157,7 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.combat, Service.entertainment }
+            new[] { ServiceType.Combat, ServiceType.Entertainment }
         ),
         new LocationType(
             "armory",
@@ -177,16 +177,16 @@ public static class LocationTypes
             false,
             new[]
             {
-                new Tag("Light Armor", TagType.armor),
-                new Tag("Medium Armor", TagType.armor),
-                new Tag("Heavy Armor", TagType.armor),
-                new Tag("Shield", TagType.armor),
-                new Tag("Light Weapon", TagType.weapon),
-                new Tag("Medium Weapon", TagType.weapon),
-                new Tag("Heavy Weapon", TagType.weapon),
-                new Tag("Ammunition", TagType.weapon),
+                new Tag("Light Armor", TagType.Armor),
+                new Tag("Medium Armor", TagType.Armor),
+                new Tag("Heavy Armor", TagType.Armor),
+                new Tag("Shield", TagType.Armor),
+                new Tag("Light Weapon", TagType.Weapon),
+                new Tag("Medium Weapon", TagType.Weapon),
+                new Tag("Heavy Weapon", TagType.Weapon),
+                new Tag("Ammunition", TagType.Weapon),
             },
-            new[] { Service.repair }
+            new[] { ServiceType.Repair }
         ),
         new LocationType(
             "bandit camp",
@@ -205,7 +205,7 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "tavern",
@@ -225,11 +225,11 @@ public static class LocationTypes
             false,
             new[]
             {
-                new Tag("Snack", TagType.food),
-                new Tag("Meal", TagType.food),
-                new Tag("Spirits", TagType.food)
+                new Tag("Snack", TagType.Food),
+                new Tag("Meal", TagType.Food),
+                new Tag("Spirits", TagType.Food)
             },
-            new[] { Service.drinks, Service.food }
+            new[] { ServiceType.Drinks, ServiceType.Food }
         ),
         new LocationType(
             "blacksmith",
@@ -248,7 +248,7 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.repair, Service.upgrade }
+            new[] { ServiceType.Repair, ServiceType.Upgrade }
         ),
         new LocationType(
             "manor",
@@ -267,7 +267,7 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "castle",
@@ -286,7 +286,7 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "fortress",
@@ -305,7 +305,7 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "citadel",
@@ -324,7 +324,7 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "cave",
@@ -343,7 +343,7 @@ public static class LocationTypes
             false,
             true,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "cemetery",
@@ -362,7 +362,7 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "colosseum",
@@ -381,7 +381,7 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.combat, Service.entertainment }
+            new[] { ServiceType.Combat, ServiceType.Entertainment }
         ),
         new LocationType(
             "crypt",
@@ -400,7 +400,7 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "dungeon",
@@ -419,7 +419,7 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "farm",
@@ -439,9 +439,9 @@ public static class LocationTypes
             false,
             new[]
             {
-                new Tag("Snack", TagType.food),
+                new Tag("Snack", TagType.Food),
             },
-            new[] { Service.food }
+            new[] { ServiceType.Food }
         ),
         new LocationType(
             "fort",
@@ -460,7 +460,7 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.food, Service.combat, Service.lodging, Service.repair }
+            new[] { ServiceType.Food, ServiceType.Combat, ServiceType.Lodging, ServiceType.Repair }
         ),
         new LocationType(
             "garden",
@@ -480,10 +480,10 @@ public static class LocationTypes
             false,
             new[]
             {
-                new Tag("Snack", TagType.food),
-                new Tag("Meal", TagType.food),
+                new Tag("Snack", TagType.Food),
+                new Tag("Meal", TagType.Food),
             },
-            new[] { Service.food }
+            new[] { ServiceType.Food }
         ),
         new LocationType(
             "general store",
@@ -503,14 +503,14 @@ public static class LocationTypes
             false,
             new[]
             {
-                new Tag("Snack", TagType.food),
-                new Tag("Light Armor", TagType.armor),
-                new Tag("Light Weapon", TagType.weapon),
-                new Tag("Ammunition", TagType.weapon),
-                new Tag("Adventure Gear", TagType.generalGoods),
-                new Tag("Tools", TagType.generalGoods),
+                new Tag("Snack", TagType.Food),
+                new Tag("Light Armor", TagType.Armor),
+                new Tag("Light Weapon", TagType.Weapon),
+                new Tag("Ammunition", TagType.Weapon),
+                new Tag("Adventure Gear", TagType.GeneralGoods),
+                new Tag("Tools", TagType.GeneralGoods),
             },
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "inn",
@@ -530,11 +530,11 @@ public static class LocationTypes
             false,
             new[]
             {
-                new Tag("Snack", TagType.food),
-                new Tag("Meal", TagType.food),
-                new Tag("Spirits", TagType.food)
+                new Tag("Snack", TagType.Food),
+                new Tag("Meal", TagType.Food),
+                new Tag("Spirits", TagType.Food)
             },
-            new[] { Service.food, Service.lodging }
+            new[] { ServiceType.Food, ServiceType.Lodging }
         ),
         new LocationType(
             "library",
@@ -553,7 +553,7 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "mine",
@@ -572,7 +572,7 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "pier",
@@ -591,7 +591,7 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.ships }
+            new[] { ServiceType.Ships }
         ),
         new LocationType(
             "dock",
@@ -610,7 +610,7 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.ships }
+            new[] { ServiceType.Ships }
         ),
         new LocationType(
             "harbor",
@@ -629,7 +629,7 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.ships }
+            new[] { ServiceType.Ships }
         ),
         new LocationType(
             "port",
@@ -648,7 +648,7 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.ships }
+            new[] { ServiceType.Ships }
         ),
         new LocationType(
             "sewer",
@@ -667,7 +667,7 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "shrine",
@@ -686,7 +686,7 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.healing }
+            new[] { ServiceType.Healing }
         ),
         new LocationType(
             "temple",
@@ -705,7 +705,7 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.healing }
+            new[] { ServiceType.Healing }
         ),
         new LocationType(
             "basilica",
@@ -724,7 +724,7 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.healing, Service.lodging }
+            new[] { ServiceType.Healing, ServiceType.Lodging }
         ),
         new LocationType(
             "The Citadel of Eternity",
@@ -743,7 +743,7 @@ public static class LocationTypes
             true,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.healing }
+            new[] { ServiceType.Healing }
         ),
         new LocationType(
             "The Cave of Life",
@@ -762,7 +762,7 @@ public static class LocationTypes
             true,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "The Conclave's Tower",
@@ -781,7 +781,7 @@ public static class LocationTypes
             true,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "The University",
@@ -800,7 +800,7 @@ public static class LocationTypes
             true,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "The Knight's Barracks",
@@ -819,7 +819,7 @@ public static class LocationTypes
             true,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.lodging, Service.food, Service.combat }
+            new[] { ServiceType.Lodging, ServiceType.Food, ServiceType.Combat }
         ),
         new LocationType(
             "The Paladin's Fortress",
@@ -838,7 +838,7 @@ public static class LocationTypes
             true,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.lodging, Service.healing, Service.food, Service.drinks, Service.combat }
+            new[] { ServiceType.Lodging, ServiceType.Healing, ServiceType.Food, ServiceType.Drinks, ServiceType.Combat }
         ),
         new LocationType(
             "The Paladin's Forge",
@@ -858,16 +858,16 @@ public static class LocationTypes
             false,
             new[]
             {
-                new Tag("Light Armor", TagType.armor),
-                new Tag("Medium Armor", TagType.armor),
-                new Tag("Heavy Armor", TagType.armor),
-                new Tag("Shield", TagType.armor),
-                new Tag("Light Weapon", TagType.weapon),
-                new Tag("Medium Weapon", TagType.weapon),
-                new Tag("Heavy Weapon", TagType.weapon),
-                new Tag("Ammunition", TagType.weapon)
+                new Tag("Light Armor", TagType.Armor),
+                new Tag("Medium Armor", TagType.Armor),
+                new Tag("Heavy Armor", TagType.Armor),
+                new Tag("Shield", TagType.Armor),
+                new Tag("Light Weapon", TagType.Weapon),
+                new Tag("Medium Weapon", TagType.Weapon),
+                new Tag("Heavy Weapon", TagType.Weapon),
+                new Tag("Ammunition", TagType.Weapon)
             },
-            new[] { Service.repair, Service.upgrade }
+            new[] { ServiceType.Repair, ServiceType.Upgrade }
         ),
         new LocationType(
             "The Judicator's Court",
@@ -886,7 +886,7 @@ public static class LocationTypes
             true,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "The Hall of Penitence",
@@ -905,7 +905,7 @@ public static class LocationTypes
             true,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "The Sky Temple",
@@ -924,7 +924,7 @@ public static class LocationTypes
             true,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "hamlet with a shrine",
@@ -943,7 +943,7 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.healing }
+            new[] { ServiceType.Healing }
         ),
         new LocationType(
             "hamlet",
@@ -962,7 +962,7 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "hamlet with a tavern",
@@ -981,7 +981,7 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.food, Service.drinks }
+            new[] { ServiceType.Food, ServiceType.Drinks }
         ),
         new LocationType(
             "roadhouse",
@@ -1000,7 +1000,7 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.food, Service.drinks, Service.lodging }
+            new[] { ServiceType.Food, ServiceType.Drinks, ServiceType.Lodging }
         )
     };
 }
