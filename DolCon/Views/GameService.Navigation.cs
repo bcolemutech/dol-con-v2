@@ -132,14 +132,14 @@ public partial class GameService
                 {
                     SetMessage(MessageType.Error, "You cannot camp here.");
                 }
-                else if (Math.Abs(SaveGameService.Party.Stamina - 1) < .01)
+                
+                if (_moveService.Sleep())
                 {
-                    SetMessage(MessageType.Info, "You are already fully rested.");
+                    SetMessage(MessageType.Success, "You have camped and recovered your stamina.");
                 }
                 else
                 {
-                    _moveService.Camp();
-                    SetMessage(MessageType.Success, "You have camped and recovered your stamina.");
+                    SetMessage(MessageType.Info, "Camping only goes so far. You must be below 50% stamina to camp.");
                 }
                 
                 moveStatus = MoveStatus.Hold;
