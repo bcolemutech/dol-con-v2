@@ -2,8 +2,8 @@
 
 public enum TagType
 {
-    generalGoods,
-    armor,
-    food,
-    weapon
+    GeneralGoods,
+    Armor,
+    Food,
+    Weapon,
 }

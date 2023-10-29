@@ -2,9 +2,9 @@
 
 public enum Rarity
 {
-    common,
-    uncommon,
-    rare,
-    epic,
-    legendary
+    Common,
+    Uncommon,
+    Rare,
+    Epic,
+    Legendary
 }

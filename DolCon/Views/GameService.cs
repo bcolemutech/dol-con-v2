@@ -17,7 +17,7 @@ public partial class GameService : IGameService
     private Layout _message;
     private LiveDisplayContext _ctx;
     private readonly Flow _flow = new();
-    private bool _exiting;
+    
 
     private readonly IImageService _imageService;
     private readonly IMoveService _moveService;
@@ -78,7 +78,7 @@ public partial class GameService : IGameService
             }
             else if (_flow.Key.Value is { Key: ConsoleKey.E, Modifiers: ConsoleModifiers.Alt })
             {
-                _exiting = true;
+                break;
             }
             else if (Enum.IsDefined((Screen)_flow.Key.Value.Key))
             {
@@ -102,7 +102,7 @@ public partial class GameService : IGameService
             {
                 _flow.Key = Console.ReadKey(true);
             }
-        } while (token.IsCancellationRequested == false && !_exiting);
+        } while (token.IsCancellationRequested == false);
     }
 
     private void ProcessHotKey(HotKeys hotKey)
