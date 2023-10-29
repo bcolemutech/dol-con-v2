@@ -16,6 +16,7 @@ using var host = Host.CreateDefaultBuilder(args)
         services.AddSingleton<IMoveService, MoveService>();
         services.AddSingleton<IEventService, EventService>();
         services.AddSingleton<IShopService, ShopService>();
+        services.AddSingleton<IServicesService, ServicesService>();
         services.AddHostedService<HostedService>();
     })
     .Build();

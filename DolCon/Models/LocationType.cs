@@ -19,7 +19,7 @@ public record LocationType(
     bool NeedsCityOfLight,
     bool isWild,
     Tag[] Goods,
-    Service[] Services
+    ServiceType[] Services
 );
 
 public static class LocationTypes
@@ -28,8 +28,8 @@ public static class LocationTypes
     {
         new LocationType(
             "abandoned mine",
-            Rarity.uncommon,
-            Rarity.uncommon,
+            Rarity.Uncommon,
+            Rarity.Uncommon,
             null,
             false,
             LocationSize.medium,
@@ -43,12 +43,12 @@ public static class LocationTypes
             false,
             true,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "abandoned temple",
-            Rarity.rare,
-            Rarity.rare,
+            Rarity.Rare,
+            Rarity.Rare,
             null,
             false,
             LocationSize.small,
@@ -62,12 +62,12 @@ public static class LocationTypes
             false,
             true,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "abandoned wizard tower",
-            Rarity.epic,
-            Rarity.epic,
+            Rarity.Epic,
+            Rarity.Epic,
             null,
             false,
             LocationSize.medium,
@@ -81,12 +81,12 @@ public static class LocationTypes
             false,
             true,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "ancient battlefield",
-            Rarity.epic,
-            Rarity.epic,
+            Rarity.Epic,
+            Rarity.Epic,
             null,
             false,
             LocationSize.medium,
@@ -100,12 +100,12 @@ public static class LocationTypes
             false,
             true,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "ruins",
-            Rarity.uncommon,
-            Rarity.uncommon,
+            Rarity.Uncommon,
+            Rarity.Uncommon,
             null,
             false,
             LocationSize.medium,
@@ -119,12 +119,12 @@ public static class LocationTypes
             false,
             true,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "ancient tomb",
-            Rarity.rare,
-            Rarity.rare,
+            Rarity.Rare,
+            Rarity.Rare,
             null,
             false,
             LocationSize.medium,
@@ -138,12 +138,12 @@ public static class LocationTypes
             false,
             true,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "arena",
-            Rarity.uncommon,
-            Rarity.uncommon,
+            Rarity.Uncommon,
+            Rarity.Uncommon,
             null,
             true,
             LocationSize.unexplorable,
@@ -157,12 +157,12 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.combat, Service.entertainment }
+            new[] { ServiceType.Combat, ServiceType.Entertainment }
         ),
         new LocationType(
             "armory",
-            Rarity.uncommon,
-            Rarity.epic,
+            Rarity.Uncommon,
+            Rarity.Epic,
             null,
             true,
             LocationSize.unexplorable,
@@ -177,21 +177,21 @@ public static class LocationTypes
             false,
             new[]
             {
-                new Tag("Light Armor", TagType.armor),
-                new Tag("Medium Armor", TagType.armor),
-                new Tag("Heavy Armor", TagType.armor),
-                new Tag("Shield", TagType.armor),
-                new Tag("Light Weapon", TagType.weapon),
-                new Tag("Medium Weapon", TagType.weapon),
-                new Tag("Heavy Weapon", TagType.weapon),
-                new Tag("Ammunition", TagType.weapon),
+                new Tag("Light Armor", TagType.Armor),
+                new Tag("Medium Armor", TagType.Armor),
+                new Tag("Heavy Armor", TagType.Armor),
+                new Tag("Shield", TagType.Armor),
+                new Tag("Light Weapon", TagType.Weapon),
+                new Tag("Medium Weapon", TagType.Weapon),
+                new Tag("Heavy Weapon", TagType.Weapon),
+                new Tag("Ammunition", TagType.Weapon),
             },
-            new[] { Service.repair }
+            new[] { ServiceType.Repair }
         ),
         new LocationType(
             "bandit camp",
-            Rarity.rare,
-            Rarity.rare,
+            Rarity.Rare,
+            Rarity.Rare,
             null,
             false,
             LocationSize.small,
@@ -205,12 +205,12 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "tavern",
-            Rarity.common,
-            Rarity.rare,
+            Rarity.Common,
+            Rarity.Rare,
             null,
             true,
             LocationSize.unexplorable,
@@ -225,16 +225,16 @@ public static class LocationTypes
             false,
             new[]
             {
-                new Tag("Snack", TagType.food),
-                new Tag("Meal", TagType.food),
-                new Tag("Spirits", TagType.food)
+                new Tag("Snack", TagType.Food),
+                new Tag("Meal", TagType.Food),
+                new Tag("Spirits", TagType.Food)
             },
-            new[] { Service.drinks, Service.food }
+            new[] { ServiceType.Drinks, ServiceType.Food }
         ),
         new LocationType(
             "blacksmith",
-            Rarity.uncommon,
-            Rarity.legendary,
+            Rarity.Uncommon,
+            Rarity.Legendary,
             null,
             true,
             LocationSize.unexplorable,
@@ -248,12 +248,12 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.repair, Service.upgrade }
+            new[] { ServiceType.Repair, ServiceType.Upgrade }
         ),
         new LocationType(
             "manor",
-            Rarity.rare,
-            Rarity.rare,
+            Rarity.Rare,
+            Rarity.Rare,
             null,
             true,
             LocationSize.small,
@@ -267,12 +267,12 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "castle",
-            Rarity.rare,
-            Rarity.rare,
+            Rarity.Rare,
+            Rarity.Rare,
             null,
             true,
             LocationSize.medium,
@@ -286,12 +286,12 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "fortress",
-            Rarity.epic,
-            Rarity.epic,
+            Rarity.Epic,
+            Rarity.Epic,
             null,
             true,
             LocationSize.large,
@@ -305,12 +305,12 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "citadel",
-            Rarity.legendary,
-            Rarity.legendary,
+            Rarity.Legendary,
+            Rarity.Legendary,
             null,
             true,
             LocationSize.huge,
@@ -324,12 +324,12 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "cave",
-            Rarity.uncommon,
-            Rarity.uncommon,
+            Rarity.Uncommon,
+            Rarity.Uncommon,
             null,
             false,
             LocationSize.large,
@@ -343,12 +343,12 @@ public static class LocationTypes
             false,
             true,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "cemetery",
-            Rarity.uncommon,
-            Rarity.uncommon,
+            Rarity.Uncommon,
+            Rarity.Uncommon,
             null,
             true,
             LocationSize.medium,
@@ -362,12 +362,12 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "colosseum",
-            Rarity.epic,
-            Rarity.epic,
+            Rarity.Epic,
+            Rarity.Epic,
             null,
             true,
             LocationSize.unexplorable,
@@ -381,12 +381,12 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.combat, Service.entertainment }
+            new[] { ServiceType.Combat, ServiceType.Entertainment }
         ),
         new LocationType(
             "crypt",
-            Rarity.rare,
-            Rarity.rare,
+            Rarity.Rare,
+            Rarity.Rare,
             null,
             false,
             LocationSize.large,
@@ -400,12 +400,12 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "dungeon",
-            Rarity.rare,
-            Rarity.rare,
+            Rarity.Rare,
+            Rarity.Rare,
             null,
             true,
             LocationSize.large,
@@ -419,12 +419,12 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "farm",
-            Rarity.common,
-            Rarity.common,
+            Rarity.Common,
+            Rarity.Common,
             null,
             false,
             LocationSize.unexplorable,
@@ -439,14 +439,14 @@ public static class LocationTypes
             false,
             new[]
             {
-                new Tag("Snack", TagType.food),
+                new Tag("Snack", TagType.Food),
             },
-            new[] { Service.food }
+            new[] { ServiceType.Food }
         ),
         new LocationType(
             "fort",
-            Rarity.rare,
-            Rarity.rare,
+            Rarity.Rare,
+            Rarity.Rare,
             null,
             false,
             LocationSize.medium,
@@ -460,12 +460,12 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.food, Service.combat, Service.lodging, Service.repair }
+            new[] { ServiceType.Food, ServiceType.Combat, ServiceType.Lodging, ServiceType.Repair }
         ),
         new LocationType(
             "garden",
-            Rarity.uncommon,
-            Rarity.rare,
+            Rarity.Uncommon,
+            Rarity.Rare,
             null,
             true,
             LocationSize.small,
@@ -480,15 +480,15 @@ public static class LocationTypes
             false,
             new[]
             {
-                new Tag("Snack", TagType.food),
-                new Tag("Meal", TagType.food),
+                new Tag("Snack", TagType.Food),
+                new Tag("Meal", TagType.Food),
             },
-            new[] { Service.food }
+            new[] { ServiceType.Food }
         ),
         new LocationType(
             "general store",
-            Rarity.common,
-            Rarity.rare,
+            Rarity.Common,
+            Rarity.Rare,
             null,
             true,
             LocationSize.unexplorable,
@@ -503,19 +503,19 @@ public static class LocationTypes
             false,
             new[]
             {
-                new Tag("Snack", TagType.food),
-                new Tag("Light Armor", TagType.armor),
-                new Tag("Light Weapon", TagType.weapon),
-                new Tag("Ammunition", TagType.weapon),
-                new Tag("Adventure Gear", TagType.generalGoods),
-                new Tag("Tools", TagType.generalGoods),
+                new Tag("Snack", TagType.Food),
+                new Tag("Light Armor", TagType.Armor),
+                new Tag("Light Weapon", TagType.Weapon),
+                new Tag("Ammunition", TagType.Weapon),
+                new Tag("Adventure Gear", TagType.GeneralGoods),
+                new Tag("Tools", TagType.GeneralGoods),
             },
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "inn",
-            Rarity.uncommon,
-            Rarity.epic,
+            Rarity.Uncommon,
+            Rarity.Epic,
             null,
             true,
             LocationSize.unexplorable,
@@ -530,16 +530,16 @@ public static class LocationTypes
             false,
             new[]
             {
-                new Tag("Snack", TagType.food),
-                new Tag("Meal", TagType.food),
-                new Tag("Spirits", TagType.food)
+                new Tag("Snack", TagType.Food),
+                new Tag("Meal", TagType.Food),
+                new Tag("Spirits", TagType.Food)
             },
-            new[] { Service.food, Service.lodging }
+            new[] { ServiceType.Food, ServiceType.Lodging }
         ),
         new LocationType(
             "library",
-            Rarity.rare,
-            Rarity.legendary,
+            Rarity.Rare,
+            Rarity.Legendary,
             null,
             true,
             LocationSize.small,
@@ -553,12 +553,12 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "mine",
-            Rarity.uncommon,
-            Rarity.uncommon,
+            Rarity.Uncommon,
+            Rarity.Uncommon,
             null,
             false,
             LocationSize.large,
@@ -572,12 +572,12 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "pier",
-            Rarity.common,
-            Rarity.common,
+            Rarity.Common,
+            Rarity.Common,
             null,
             true,
             LocationSize.unexplorable,
@@ -591,12 +591,12 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.ships }
+            new[] { ServiceType.Ships }
         ),
         new LocationType(
             "dock",
-            Rarity.uncommon,
-            Rarity.uncommon,
+            Rarity.Uncommon,
+            Rarity.Uncommon,
             null,
             true,
             LocationSize.unexplorable,
@@ -610,12 +610,12 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.ships }
+            new[] { ServiceType.Ships }
         ),
         new LocationType(
             "harbor",
-            Rarity.rare,
-            Rarity.rare,
+            Rarity.Rare,
+            Rarity.Rare,
             null,
             true,
             LocationSize.unexplorable,
@@ -629,12 +629,12 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.ships }
+            new[] { ServiceType.Ships }
         ),
         new LocationType(
             "port",
-            Rarity.epic,
-            Rarity.epic,
+            Rarity.Epic,
+            Rarity.Epic,
             null,
             true,
             LocationSize.unexplorable,
@@ -648,12 +648,12 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.ships }
+            new[] { ServiceType.Ships }
         ),
         new LocationType(
             "sewer",
-            Rarity.rare,
-            Rarity.rare,
+            Rarity.Rare,
+            Rarity.Rare,
             null,
             true,
             LocationSize.large,
@@ -667,12 +667,12 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "shrine",
-            Rarity.uncommon,
-            Rarity.uncommon,
+            Rarity.Uncommon,
+            Rarity.Uncommon,
             null,
             true,
             LocationSize.unexplorable,
@@ -686,12 +686,12 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.healing }
+            new[] { ServiceType.Healing }
         ),
         new LocationType(
             "temple",
-            Rarity.rare,
-            Rarity.rare,
+            Rarity.Rare,
+            Rarity.Rare,
             null,
             true,
             LocationSize.unexplorable,
@@ -705,12 +705,12 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.healing }
+            new[] { ServiceType.Healing }
         ),
         new LocationType(
             "basilica",
-            Rarity.epic,
-            Rarity.epic,
+            Rarity.Epic,
+            Rarity.Epic,
             null,
             true,
             LocationSize.unexplorable,
@@ -724,12 +724,12 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.healing, Service.lodging }
+            new[] { ServiceType.Healing, ServiceType.Lodging }
         ),
         new LocationType(
             "The Citadel of Eternity",
-            Rarity.legendary,
-            Rarity.legendary,
+            Rarity.Legendary,
+            Rarity.Legendary,
             null,
             true,
             LocationSize.unexplorable,
@@ -743,12 +743,12 @@ public static class LocationTypes
             true,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.healing }
+            new[] { ServiceType.Healing }
         ),
         new LocationType(
             "The Cave of Life",
-            Rarity.legendary,
-            Rarity.legendary,
+            Rarity.Legendary,
+            Rarity.Legendary,
             null,
             true,
             LocationSize.unexplorable,
@@ -762,12 +762,12 @@ public static class LocationTypes
             true,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "The Conclave's Tower",
-            Rarity.legendary,
-            Rarity.legendary,
+            Rarity.Legendary,
+            Rarity.Legendary,
             null,
             true,
             LocationSize.unexplorable,
@@ -781,12 +781,12 @@ public static class LocationTypes
             true,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "The University",
-            Rarity.legendary,
-            Rarity.legendary,
+            Rarity.Legendary,
+            Rarity.Legendary,
             null,
             true,
             LocationSize.unexplorable,
@@ -800,12 +800,12 @@ public static class LocationTypes
             true,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "The Knight's Barracks",
-            Rarity.legendary,
-            Rarity.legendary,
+            Rarity.Legendary,
+            Rarity.Legendary,
             null,
             true,
             LocationSize.unexplorable,
@@ -819,12 +819,12 @@ public static class LocationTypes
             true,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.lodging, Service.food, Service.combat }
+            new[] { ServiceType.Lodging, ServiceType.Food, ServiceType.Combat }
         ),
         new LocationType(
             "The Paladin's Fortress",
-            Rarity.legendary,
-            Rarity.legendary,
+            Rarity.Legendary,
+            Rarity.Legendary,
             null,
             true,
             LocationSize.unexplorable,
@@ -838,12 +838,12 @@ public static class LocationTypes
             true,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.lodging, Service.healing, Service.food, Service.drinks, Service.combat }
+            new[] { ServiceType.Lodging, ServiceType.Healing, ServiceType.Food, ServiceType.Drinks, ServiceType.Combat }
         ),
         new LocationType(
             "The Paladin's Forge",
-            Rarity.legendary,
-            Rarity.legendary,
+            Rarity.Legendary,
+            Rarity.Legendary,
             null,
             true,
             LocationSize.unexplorable,
@@ -858,21 +858,21 @@ public static class LocationTypes
             false,
             new[]
             {
-                new Tag("Light Armor", TagType.armor),
-                new Tag("Medium Armor", TagType.armor),
-                new Tag("Heavy Armor", TagType.armor),
-                new Tag("Shield", TagType.armor),
-                new Tag("Light Weapon", TagType.weapon),
-                new Tag("Medium Weapon", TagType.weapon),
-                new Tag("Heavy Weapon", TagType.weapon),
-                new Tag("Ammunition", TagType.weapon)
+                new Tag("Light Armor", TagType.Armor),
+                new Tag("Medium Armor", TagType.Armor),
+                new Tag("Heavy Armor", TagType.Armor),
+                new Tag("Shield", TagType.Armor),
+                new Tag("Light Weapon", TagType.Weapon),
+                new Tag("Medium Weapon", TagType.Weapon),
+                new Tag("Heavy Weapon", TagType.Weapon),
+                new Tag("Ammunition", TagType.Weapon)
             },
-            new[] { Service.repair, Service.upgrade }
+            new[] { ServiceType.Repair, ServiceType.Upgrade }
         ),
         new LocationType(
             "The Judicator's Court",
-            Rarity.legendary,
-            Rarity.legendary,
+            Rarity.Legendary,
+            Rarity.Legendary,
             null,
             true,
             LocationSize.unexplorable,
@@ -886,12 +886,12 @@ public static class LocationTypes
             true,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "The Hall of Penitence",
-            Rarity.legendary,
-            Rarity.legendary,
+            Rarity.Legendary,
+            Rarity.Legendary,
             null,
             true,
             LocationSize.large,
@@ -905,12 +905,12 @@ public static class LocationTypes
             true,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "The Sky Temple",
-            Rarity.legendary,
-            Rarity.legendary,
+            Rarity.Legendary,
+            Rarity.Legendary,
             null,
             true,
             LocationSize.unexplorable,
@@ -924,12 +924,12 @@ public static class LocationTypes
             true,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "hamlet with a shrine",
-            Rarity.uncommon,
-            Rarity.uncommon,
+            Rarity.Uncommon,
+            Rarity.Uncommon,
             null,
             false,
             LocationSize.unexplorable,
@@ -943,12 +943,12 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.healing }
+            new[] { ServiceType.Healing }
         ),
         new LocationType(
             "hamlet",
-            Rarity.common,
-            Rarity.common,
+            Rarity.Common,
+            Rarity.Common,
             null,
             false,
             LocationSize.unexplorable,
@@ -962,12 +962,12 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            Array.Empty<Service>()
+            Array.Empty<ServiceType>()
         ),
         new LocationType(
             "hamlet with a tavern",
-            Rarity.common,
-            Rarity.common,
+            Rarity.Common,
+            Rarity.Common,
             null,
             false,
             LocationSize.unexplorable,
@@ -981,12 +981,12 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.food, Service.drinks }
+            new[] { ServiceType.Food, ServiceType.Drinks }
         ),
         new LocationType(
             "roadhouse",
-            Rarity.rare,
-            Rarity.rare,
+            Rarity.Rare,
+            Rarity.Rare,
             null,
             false,
             LocationSize.unexplorable,
@@ -1000,7 +1000,7 @@ public static class LocationTypes
             false,
             false,
             Array.Empty<Tag>(),
-            new[] { Service.food, Service.drinks, Service.lodging }
+            new[] { ServiceType.Food, ServiceType.Drinks, ServiceType.Lodging }
         )
     };
 }

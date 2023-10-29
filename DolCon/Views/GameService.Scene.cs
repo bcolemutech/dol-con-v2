@@ -60,15 +60,16 @@ public partial class GameService
             selectionTable.AddColumn("Price");
             foreach (var (key, selection) in _scene.Selections)
             {
-                var product = selection.Split('|');
-                selectionTable.AddRow(key.ToString(), product[0], product[1]);
+                var color = selection.Afford ? "white" : "grey";
+                selectionTable.AddRow(ColorWrap(key.ToString(), color), ColorWrap(selection.Name, color),
+                    ColorWrap(selection.Price.ToString(), color));
             }
         }
         else
         {
             foreach (var (key, selection) in _scene.Selections)
             {
-                selectionTable.AddRow(key.ToString(), selection);
+                selectionTable.AddRow(key.ToString(), selection.Name);
             }
         }
 
@@ -91,6 +92,11 @@ public partial class GameService
                         VerticalAlignment.Middle))
                 .Expand());
         _ctx.Refresh();
+    }
+
+    private static string ColorWrap(string text, string color)
+    {
+        return $"[{color}]{text}[/]";
     }
 
     private void RenderBattle()

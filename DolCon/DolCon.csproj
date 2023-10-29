@@ -21,4 +21,13 @@
       </None>
     </ItemGroup>
 
+    <ItemGroup>
+      <EmbeddedResource Include="Resources\Items.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </EmbeddedResource>
+      <EmbeddedResource Include="Resources\Services.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </EmbeddedResource>
+    </ItemGroup>
+
 </Project>
