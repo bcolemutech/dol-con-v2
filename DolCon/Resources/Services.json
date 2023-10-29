@@ -1,0 +1,37 @@
+﻿[
+  {
+    "Type": 3,
+    "Rarity": 0,
+    "Name": "Common Room",
+    "Description": "A basic room with a bed and a chest for storage. It beats sleeping on the ground.",
+    "Price": 10
+  },
+  {
+    "Type": 3,
+    "Rarity": 1,
+    "Name": "Private Room",
+    "Description": "A room with a bed, a chest for storage, and a table with chairs. It's not much, but it's home.",
+    "Price": 50
+  },
+  {
+    "Type": 3,
+    "Rarity": 2,
+    "Name": "Deluxe Room",
+    "Description": "A spacious room with a large bed, a chest for storage, a table with chairs, and a fireplace. It's a nice place to relax.",
+    "Price": 200
+  },
+  {
+    "Type": 3,
+    "Rarity": 3,
+    "Name": "Suite",
+    "Description": "A luxurious room with multiple beds, a chest for storage, a table with chairs, and a fireplace. It's a great place to entertain guests.",
+    "Price": 1000
+  },
+  {
+    "Type": 3,
+    "Rarity": 4,
+    "Name": "Royal Suite",
+    "Description": "Only the most important guests get to stay in the Royal Suite. It has large canopy beds, a sitting area, private bath, and grand fireplace. The rooms are adorned with fine art and tapestries. Fit for kings and queens.",
+    "Price": 5000
+  }
+]
