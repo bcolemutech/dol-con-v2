@@ -106,6 +106,7 @@ public class ShopService : IShopService
 
     private Dictionary<int,ShopSelection> GetServiceSelections(Scene scene)
     {
+        var playersCoin = SaveGameService.Party.Players[0].coin;
         var locationRarity = (scene.Location?.Rarity ?? Rarity.common);
         var selections = new Dictionary<int, ShopSelection>();
         var i = 1;
@@ -115,7 +116,7 @@ public class ShopService : IShopService
             var services = _servicesService.GetServices(ServiceType.Lodging, locationRarity);
             foreach (var service in services)
             {
-                selections.Add(i, new ShopSelection{Name = service.Name, Price = service.Price});
+                selections.Add(i, new ShopSelection{Name = service.Name, Price = service.Price, Afford = service.Price <= playersCoin});
                 i++;
             }
         }
