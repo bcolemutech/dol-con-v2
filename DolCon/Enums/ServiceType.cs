@@ -2,8 +2,6 @@
 
 public enum ServiceType
 {
-    Sell,
-    Buy,
     Repair,
     Lodging,
     Ships,
@@ -12,5 +10,7 @@ public enum ServiceType
     Entertainment,
     Drinks,
     Food,
-    Upgrade
+    Upgrade,
+    Sell,
+    Buy
 }
