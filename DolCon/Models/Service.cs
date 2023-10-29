@@ -2,7 +2,7 @@
 
 namespace DolCon.Models;
 
-public abstract record Service
+public record Service
 {
     public ServiceType Type { get; set; }
     public Rarity Rarity { get; set; }
