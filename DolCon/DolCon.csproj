@@ -22,10 +22,12 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Remove="Resources\Items.json" />
-      <Resource Include="Resources\Items.json">
+      <EmbeddedResource Include="Resources\Items.json">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </Resource>
+      </EmbeddedResource>
+      <EmbeddedResource Include="Resources\Services.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </EmbeddedResource>
     </ItemGroup>
 
 </Project>
