@@ -7,5 +7,5 @@ public record ShopSelection
     public string Description { get; set; }
     public bool IsPurchase { get; set; }
     public int Price { get; set; }
-    public bool Afford { get; set; }
+    public bool Afford { get; set; } = true;
 }
