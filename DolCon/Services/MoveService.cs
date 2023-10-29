@@ -1,6 +1,5 @@
 ﻿namespace DolCon.Services;
 
-using ChanceNET;
 using Enums;
 
 public interface IMoveService
@@ -8,7 +7,7 @@ public interface IMoveService
     MoveStatus MoveToCell(int cellId);
     bool MoveToLocation(Guid locationId);
     bool MoveToBurg(int burg);
-    void Camp();
+    bool Sleep(Rarity? quality = null);
 }
 
 public class MoveService : IMoveService
@@ -106,15 +105,28 @@ public class MoveService : IMoveService
         return true;
     }
 
-    public void Camp()
+    public bool Sleep(Rarity? quality = null)
     {
         var party = SaveGameService.Party;
 
-        party.Stamina += .5;
-        
-        if (party.Stamina > 1)
+        var sleepLimit = .5;
+
+        if (quality.HasValue)
         {
-            party.Stamina = 1;
+            sleepLimit = quality.Value switch
+            {
+                Rarity.Common => .75,
+                Rarity.Uncommon => 1,
+                Rarity.Rare => 1.25,
+                Rarity.Epic => 1.50,
+                Rarity.Legendary => 2,
+                _ => throw new ArgumentOutOfRangeException(nameof(quality), quality, null)
+            };
         }
+
+        if (party.Stamina >= sleepLimit) return false;
+        
+        party.Stamina = sleepLimit;
+        return true;
     }
 }
