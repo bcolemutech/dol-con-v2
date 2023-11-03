@@ -134,6 +134,9 @@ public partial class GameService : IGameService
             case Screen.Inventory:
                 RenderNotReady();
                 break;
+            case Screen.Equipment:
+                RenderNotReady();
+                break;
             case Screen.Quests:
                 RenderNotReady();
                 break;
