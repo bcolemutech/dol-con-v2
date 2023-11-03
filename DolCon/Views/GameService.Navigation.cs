@@ -49,7 +49,7 @@ public partial class GameService
         var controlLines = new List<IRenderable>
         {
             new Markup(
-                "[bold]Standard controls[/]: ([green bold]H[/])ome | ([green bold]N[/])avigation | [Red bold]Esc[/] to exit")
+                "[bold]Standard controls[/]: ([green bold]H[/])ome | ([green bold]I[/])nventory | [Red bold]Esc[/] to exit")
         };
 
         if (location != null)

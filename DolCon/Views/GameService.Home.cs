@@ -27,7 +27,7 @@ public partial class GameService
                     Align.Center(
                         new Rows(
                             new Markup(
-                                "[bold]Standard controls[/]: ([green bold]H[/])ome | ([green bold]N[/])avigation | [Red bold]Esc[/] to exit")
+                                "[bold]Standard controls[/]: ([green bold]N[/])avigation | ([green bold]I[/])nventory | [Red bold]Esc[/] to exit")
                         ),
                         VerticalAlignment.Middle))
                 .Expand());

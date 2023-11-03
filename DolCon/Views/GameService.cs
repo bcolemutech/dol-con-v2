@@ -80,6 +80,10 @@ public partial class GameService : IGameService
             {
                 break;
             }
+            else if (!_scene.IsCompleted)
+            {
+                RenderScreen();
+            }
             else if (Enum.IsDefined((Screen)_flow.Key.Value.Key))
             {
                 _flow.Screen = (Screen)_flow.Key.Value.Key;
@@ -132,7 +136,7 @@ public partial class GameService : IGameService
                 RenderScene();
                 break;
             case Screen.Inventory:
-                RenderNotReady();
+                RenderInventory();
                 break;
             case Screen.Equipment:
                 RenderNotReady();
