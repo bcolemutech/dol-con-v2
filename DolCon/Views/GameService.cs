@@ -76,7 +76,7 @@ public partial class GameService : IGameService
             {
                 RenderScreen();
             }
-            else if (_flow.Key.Value is { Key: ConsoleKey.E, Modifiers: ConsoleModifiers.Alt })
+            else if (_flow.Key.Value is { Key: ConsoleKey.Escape })
             {
                 break;
             }
