@@ -31,6 +31,7 @@ public class EventService : IEventService
                 scene.MoveStatus = ProcessExploration();
                 if (scene.MoveStatus == MoveStatus.Success)
                 {
+                    var subMessage = "";
                     var totalCoin = 0;
                     foreach (var player in SaveGameService.Party.Players)
                     {
@@ -38,9 +39,20 @@ public class EventService : IEventService
                         var playerCoin = random.Dice(100) * 10;
                         player.coin += playerCoin;
                         totalCoin += playerCoin;
+
+                        if (player.Inventory.Count < 50)
+                        {
+                            var item = _shopService.GenerateReward();
+                            player.Inventory.Add(item);
+                        }
+                        else
+                        {
+                            subMessage += player.Name + " inventory is full. ";
+                        }
+                        
                     }
 
-                    scene.Message = "You have explored the area. You have found " + totalCoin + " coin.";
+                    scene.Message = "You have explored the area. You have found " + totalCoin + " coin. " + subMessage;
                 }
                 else
                 {
