@@ -2,5 +2,5 @@
 
 public enum HotKeys
 {
-    Map = 77
+    Map = 77 // M
 }

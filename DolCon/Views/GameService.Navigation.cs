@@ -49,19 +49,19 @@ public partial class GameService
         var controlLines = new List<IRenderable>
         {
             new Markup(
-                "[bold]Standard controls[/]: ([green bold]H[/])ome | ([green bold]N[/])avigation | ([Red bold]Alt+E[/])xit")
+                "[bold]Standard controls[/]: ([green bold]H[/])ome | ([green bold]I[/])nventory | [Red bold]Esc[/] to exit")
         };
 
         if (location != null)
         {
             if (location.Type.Size != LocationSize.unexplorable && location.ExploredPercent < 1)
             {
-                controlLines.Add(new Markup("To explore the location press [green bold]E[/]"));
+                controlLines.Add(new Markup("To explore the location press [green bold]Enter[/]"));
             }
 
             if (location.Type.Size == LocationSize.unexplorable)
             {
-                controlLines.Add(new Markup("To enter the location press [green bold]E[/]"));
+                controlLines.Add(new Markup("To enter the location press [green bold]Enter[/]"));
             }
 
             controlLines.Add(new Markup("To leave the location press [green bold]L[/]"));
@@ -79,7 +79,7 @@ public partial class GameService
 
             if (currentCell.ExploredPercent < 1)
             {
-                controlLines.Add(new Markup("To explore the area press [green bold]E[/]"));
+                controlLines.Add(new Markup("To explore the area press [green bold]Enter[/]"));
             }
 
             controlLines.Add(new Markup("To camp press [green bold]C[/]"));
@@ -104,18 +104,17 @@ public partial class GameService
     {
         var moveStatus = MoveStatus.None;
         var message = string.Empty;
-        switch (char.ToLower(value.KeyChar))
+        switch (value)
         {
-            case 'l' when
-                (SaveGameService.Party.Burg != null || SaveGameService.Party.Location != null):
+            case {Key: ConsoleKey.L} when SaveGameService.Party.Burg != null || SaveGameService.Party.Location != null:
                 SaveGameService.Party.Burg = SaveGameService.Party.Location == null ? null : SaveGameService.Party.Burg;
                 SaveGameService.Party.Location = null;
                 break;
-            case 'b' when SaveGameService.CurrentBurg is null && localBurg != null:
+            case {Key: ConsoleKey.B} when SaveGameService.CurrentBurg is null && localBurg != null:
                 var localBurgId = localBurg.i ?? 0;
                 moveStatus = _moveService.MoveToBurg(localBurgId) ? MoveStatus.Success : MoveStatus.Failure;
                 break;
-            case 'e' when SaveGameService.CurrentLocation != null || SaveGameService.CurrentCell.ExploredPercent < 1:
+            case {Key: ConsoleKey.Enter} when SaveGameService.CurrentLocation != null || SaveGameService.CurrentCell.ExploredPercent < 1:
                 var thisEvent = new Event(SaveGameService.CurrentLocation, SaveGameService.CurrentCell);
 
                 var scene = _eventService.ProcessEvent(thisEvent);
@@ -127,7 +126,7 @@ public partial class GameService
                 message = scene.Message;
 
                 break;
-            case 'c':
+            case {Key: ConsoleKey.C}:
                 if (SaveGameService.CurrentLocation != null || SaveGameService.CurrentBurg != null)
                 {
                     message = "You cannot camp here.";
@@ -271,13 +270,13 @@ public partial class GameService
                         new Markup(explorationString)
                     ),
                     Align.Center(
-                        new Markup("Select from the table below to move to a new cell.")
+                        new Markup("Type a number from the list below to move to a new cell.")
                     ),
                     Align.Center(
                         cellsTable
                     ),
                     Align.Center(
-                        new Markup("Select from the table below to move to a new location.")
+                        new Markup("Type a number from the list below to move to a new location.")
                     ),
                     Align.Center(
                         locationsTable
