@@ -15,6 +15,23 @@ public partial class GameService
             _inventorySelected = 0;
         }
         
+        if (_flow.Key is { Key: ConsoleKey.DownArrow } or { Key: ConsoleKey.S } &&
+            _inventorySelected < SaveGameService.Party.Players.First().Inventory.Count - 1)
+        {
+            _inventorySelected++;
+        }
+        
+        if (_flow.Key is { Key: ConsoleKey.UpArrow } or { Key: ConsoleKey.W } && _inventorySelected > 0)
+        {
+            _inventorySelected--;
+        }
+
+        if (_flow.Key is { Key: ConsoleKey.D} or { Key: ConsoleKey.Delete } && SaveGameService.Party.Players.First().Inventory.Count > 0)
+        {
+            SaveGameService.Party.Players.First().Inventory.RemoveAt(_inventorySelected);
+            _inventorySelected = 0;
+        }
+        
         var table = new Table();
         table.AddColumn("Select");
         table.AddColumn("Name");
