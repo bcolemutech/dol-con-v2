@@ -21,7 +21,7 @@ public partial class GameService
         table.AddColumn("Description");
         table.AddColumn("Rarity");
         table.AddColumn("Tags");
-        table.AddColumn("Price");
+        table.AddColumn("Selling Price");
         var player = SaveGameService.Party.Players.First();
         var i = 0;
         foreach (var item in player.Inventory)
@@ -36,15 +36,16 @@ public partial class GameService
                 Rarity.Legendary => "[gold1]Legendary[/]",
                 _ => throw new ArgumentOutOfRangeException()
             };
-            var copper = item.Price % 100;
-            var silver = (item.Price / 100) % 100;
-            var gold = item.Price / 10000;
+            var sellingPrice = item.Price / 2;
+            var copper = sellingPrice % 10;
+            var silver = (sellingPrice / 10) % 100;
+            var gold = sellingPrice / 1000;
             table.AddRow(
                 selected,
                 item.Name,
                 item.Description,
                 rarity,
-                item.Tags.Select(x => x.ToString()).Aggregate((x, y) => $"{x}, {y}") ?? "",
+                item.Tags.Select(x => x.Name).Aggregate((x, y) => $"{x}, {y}"),
                 $"[bold gold1]{gold}[/]|[bold silver]{silver}[/]|[bold tan]{copper}[/]"
             );
             i++;
