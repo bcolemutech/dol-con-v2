@@ -76,9 +76,13 @@ public partial class GameService : IGameService
             {
                 RenderScreen();
             }
-            else if (_flow.Key.Value is { Key: ConsoleKey.E, Modifiers: ConsoleModifiers.Alt })
+            else if (_flow.Key.Value is { Key: ConsoleKey.Escape })
             {
                 break;
+            }
+            else if (!_scene.IsCompleted)
+            {
+                RenderScreen();
             }
             else if (Enum.IsDefined((Screen)_flow.Key.Value.Key))
             {
@@ -132,6 +136,9 @@ public partial class GameService : IGameService
                 RenderScene();
                 break;
             case Screen.Inventory:
+                RenderInventory();
+                break;
+            case Screen.Equipment:
                 RenderNotReady();
                 break;
             case Screen.Quests:

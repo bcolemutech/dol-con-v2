@@ -1,4 +1,5 @@
-﻿using DolCon.Enums;
+﻿using ChanceNET;
+using DolCon.Enums;
 using DolCon.Models;
 
 namespace DolCon.Services;
@@ -6,17 +7,20 @@ namespace DolCon.Services;
 public interface IShopService
 {
     Scene ProcessShop(Scene scene);
+    Item GenerateReward();
 }
 
 public class ShopService : IShopService
 {
     private readonly IServicesService _servicesService;
     private readonly IMoveService _moveService;
+    private readonly IItemsService _itemsService;
 
-    public ShopService(IServicesService servicesService, IMoveService moveService)
+    public ShopService(IServicesService servicesService, IMoveService moveService, IItemsService itemsService)
     {
         _servicesService = servicesService;
         _moveService = moveService;
+        _itemsService = itemsService;
     }
 
     public Scene ProcessShop(Scene scene)
@@ -85,6 +89,22 @@ public class ShopService : IShopService
         scene.Message = ProcessPurchase(scene, price, sceneSelection);
 
         return scene;
+    }
+
+    public Item GenerateReward()
+    {
+        var random = new Chance();
+        var roll = random.Dice(100);
+        var rarity = roll switch
+        {
+            < 50 => Rarity.Common,
+            < 75 => Rarity.Uncommon,
+            < 90 => Rarity.Rare,
+            < 99 => Rarity.Epic,
+            _ => Rarity.Legendary
+        };
+        var items = _itemsService.GenerateItems(rarity, TagType.GeneralGoods).ToArray();
+        return items[random.Dice(items.Length) - 1];
     }
 
     private string ProcessPurchase(Scene scene, int price, ShopSelection selection)

@@ -1,1 +1,352 @@
-﻿[ ]
+﻿[
+  {
+    "Name": "Azurite",
+    "Description": "Some gems have hidden qualities beyond their luster, beyond their shine... Azurite is one of those gems.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 10000
+  },
+  {
+    "Name": "Bloodstone",
+    "Description": "Origin of the Bloodstone is unknown, hence its low value. It has a very high shine and 12 sides, however.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 50000
+  },
+  {
+    "Name": "Zircon",
+    "Description": "A transparent pale blue-green gemstone worth 50 gold pieces.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 50000
+  },
+  {
+    "Name": "Emerald",
+    "Description": "A transparent deep bright green emerald worth 1,000 gold pieces.",
+    "Rarity": 3,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 1000000
+  },
+  {
+    "Name": "Blue Sapphire",
+    "Description": "A transparent blue corundum worth 1,000 gold pieces.",
+    "Rarity": 3,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 1000000
+  },
+  {
+    "Name": "Ruby",
+    "Description": "A transparent deep crimson corundum worth 5,000 gold pieces.",
+    "Rarity": 4,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 5000000
+  },
+  {
+    "Name": "Black Opal",
+    "Description": "A transparent dark green with black mottling and golden flecks worth 1,000 gold pieces.",
+    "Rarity": 3,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 1000000
+  },
+  {
+    "Name": "Fire Opal",
+    "Description": "A transparent fiery red with yellow and orange mottling worth 1,000 gold pieces.",
+    "Rarity": 3,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 1000000
+  },
+  {
+    "Name": "Star Ruby",
+    "Description": "A transparent ruby with a star-shaped center that glows in sunlight worth 1,000 gold pieces.",
+    "Rarity": 3,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 1000000
+  },
+  {
+    "Name": "Star Sapphire",
+    "Description": "A transparent blue corundum with a star-shaped center that glows in sunlight worth 1,000 gold pieces.",
+    "Rarity": 3,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 1000000
+  },
+  {
+    "Name": "Diamond",
+    "Description": "A transparent blue-white gemstone worth 5,000 gold pieces.",
+    "Rarity": 4,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 5000000
+  },
+  {
+    "Name": "Jacinth",
+    "Description": "A transparent fiery orange gemstone worth 5,000 gold pieces.",
+    "Rarity": 4,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 5000000
+  },
+  {
+    "Name": "Amber",
+    "Description": "A transparent watery gold, red, or brown, or transparent pale green, brown, or yellow-green, worth 100 gold pieces.",
+    "Rarity": 1,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 100000
+  },
+  {
+    "Name": "Amethyst",
+    "Description": "A transparent deep purple, worth 100 gold pieces.",
+    "Rarity": 1,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 100000
+  },
+  {
+    "Name": "Chrysoberyl",
+    "Description": "A transparent yellow-green to pale green, worth 100 gold pieces.",
+    "Rarity": 1,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 100000    
+  },
+  {
+    "Name": "Coral",
+    "Description": "A pink, red, or orange piece of coral, worth 100 gold pieces.",
+    "Rarity": 1,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 100000
+  },
+  {
+    "Name": "Garnet",
+    "Description": "A transparent red, brown-green, or violet garnet worth 100 gold pieces.",
+    "Rarity": 1,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 100000
+  },
+  {
+    "Name": "Jade",
+    "Description": "A translucent green, white, or yellow-green stone worth 100 gold pieces.",
+    "Rarity": 1,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 100000
+  },
+  {
+    "Name": "Jet",
+    "Description": "A deep black stone, worth 100 gold pieces.",
+    "Rarity": 1,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 100000
+  },
+  {
+    "Name": "Pearl",
+    "Description": "A lustrous white, yellow, or pink orb worth 100 gold pieces.",
+    "Rarity": 1,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 100000
+  },
+  {
+    "Name": "Spinel",
+    "Description": "A transparent red, red-brown, or deep green crystal worth 100 gold pieces.",
+    "Rarity": 1,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 100000
+  },
+  {
+    "Name": "Tourmaline",
+    "Description": "A transparent pale green, blue, brown, or red gem worth 100 gold pieces.",
+    "Rarity": 1,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 100000
+  },
+  {
+    "Name": "Turquoise",
+    "Description": "A smooth opaque blue-green stone with small flecks of pyrite worth 10 gold pieces.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 10000
+  },
+  {
+    "Name": "Aquamarine",
+    "Description": "A transparent pale blue-green gem worth 500 gold pieces.",
+    "Rarity": 2,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 500000
+  },
+  {
+    "Name": "Alexandrite",
+    "Description": "A transparent dark green gem worth 500 gold pieces.",
+    "Rarity": 2,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 500000
+  },
+  {
+    "Name": "Black Pearl",
+    "Description": "A lustrous black, gray, or purple pearl worth 500 gold pieces.",
+    "Rarity": 2,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 500000
+  },
+  {
+    "Name": "Peridot",
+    "Description": "An olive-green gem worth 500 gold pieces.",
+    "Rarity": 2,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 500000
+  },
+  {
+    "Name": "Topaz",
+    "Description": "A transparent golden yellow, yellow-brown, or blue gem worth 500 gold pieces.",
+    "Rarity": 2,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 500000
+  },
+  {
+    "Name": "Jasper",
+    "Description": "An opaque reddish-brown gem worth 50 gold pieces.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 50000
+  },
+  {
+    "Name": "Moonstone",
+    "Description": "A transparent white with pale blue glow worth 50 gold pieces.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 50000
+  },
+  {
+    "Name": "Onyx",
+    "Description": "An opaque bands of black and white, or pure black or white worth 50 gold pieces.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 50000
+  },
+  {
+    "Name": "Sardonyx",
+    "Description": "An opaque bands of red and white worth 50 gold pieces.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 50000
+  },
+  {
+    "Name": "Banded Agate",
+    "Description": "An opaque striped brown, blue, white, or red worth 10 gold pieces.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 10000
+  },
+  {
+    "Name": "Eye Agate",
+    "Description": "An opaque circle of white with a central eye of brown, gray, blue, or green worth 10 gold pieces.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 10000
+  },
+  {
+    "Name": "Moss Agate",
+    "Description": "An opaque pink or yellow-white with mossy gray or green markings worth 10 gold pieces.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 10000    
+  },
+  {
+    "Name": "Hematite",
+    "Description": "An opaque gray-black stone worth 10 gold pieces.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 10000
+  },
+  {
+    "Name": "Lapis Lazuli",
+    "Description": "An opaque light and dark blue with yellow flecks worth 10 gold pieces.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 10000
+  },
+  {
+    "Name": "Malachite",
+    "Description": "An opaque striated light and dark green stone worth 10 gold pieces.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 10000    
+  },
+  {
+    "Name": "Obsidian",
+    "Description": "An opaque black stone worth 10 gold pieces.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 10000
+  },
+  {
+    "Name": "Rhodochrosite",
+    "Description": "An opaque light pink gem worth 10 gold pieces.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 10000
+  },
+  {
+    "Name": "Tiger Eye",
+    "Description": "An opaque brown with golden center stone worth 10 gold pieces.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 10000
+  },
+  {
+    "Name": "Carnelian",
+    "Description": "An opaque red-brown gem worth 50 gold pieces.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 50000
+  },
+  {
+    "Name": "Chalcedony",
+    "Description": "An opaque white gem worth 50 gold pieces.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 50000
+  },
+  {
+    "Name": "Chrysoprase",
+    "Description": "An opaque green gem worth 50 gold pieces.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 50000
+  },
+  {
+    "Name": "Citrine",
+    "Description": "An opaque yellow-brown gem worth 50 gold pieces.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 50000
+  },
+  {
+    "Name": "Quartz",
+    "Description": "An opaque white, smoky gray, or yellow crystal worth 50 gold pieces.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 50000    
+  },
+  {
+    "Name": "Star Rose Quartz",
+    "Description": "An opaque rosy stone with white star-shaped center worth 50 gold pieces.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 50000
+  },
+  {
+    "Name": "Blue Spinel",
+    "Description": "An opaque deep blue gem worth 500 gold pieces.",
+    "Rarity": 2,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 500000
+  },
+  {
+    "Name": "Yellow Sapphire",
+    "Description": "An opaque yellow corundum worth 1,000 gold pieces.",
+    "Rarity": 3,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 1000000
+  },
+  {
+    "Name": "Black Sapphire",
+    "Description": "An opaque black corundum worth 5,000 gold pieces.",
+    "Rarity": 4,
+    "Tags": [{"Name": "Gem", "type": 0}],
+    "Price": 5000000
+  }
+]
