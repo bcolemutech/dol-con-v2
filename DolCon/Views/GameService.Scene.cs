@@ -6,6 +6,8 @@ using Enums;
 
 public partial class GameService
 {
+    private int _sceneSelected;
+
     private void RenderScene()
     {
         switch (_scene.Type)
@@ -31,45 +33,62 @@ public partial class GameService
 
     private void RenderShop()
     {
-        if (_flow.Key.HasValue)
-        {
-            var click = _flow.Key.Value;
-            var thisChar = click.KeyChar.ToString();
-            var cleanChar = thisChar.First().ToString();
-            if (int.TryParse(cleanChar, out var choice))
-            {
-                choice = _flow.Key.Value.Modifiers == ConsoleModifiers.Alt ? choice + 10 : choice;
-                _scene.Selection = choice;
-                _scene = _shopService.ProcessShop(_scene);
-            }
-        }
-
         if (_scene.IsCompleted)
         {
             _flow.Screen = Screen.Navigation;
             _flow.Redirect = true;
             _scene.Reset();
+            _sceneSelected = 0;
             return;
         }
 
+        switch (_flow.Key)
+        {
+            case { Key: ConsoleKey.L }: // Leave or go back
+                _scene.IsCompleted = true;
+                _flow.Screen = Screen.Navigation;
+                _flow.Redirect = true;
+                _scene.Message = "You left the shop.";
+                _scene.Reset();
+                _sceneSelected = 0;
+                return;
+            case { Key: ConsoleKey.DownArrow } or { Key: ConsoleKey.S } when
+                _sceneSelected < _scene.Selections.Count - 1:
+                _sceneSelected++;
+                break;
+            case { Key: ConsoleKey.UpArrow } or { Key: ConsoleKey.W } when _sceneSelected > 0:
+                _sceneSelected--;
+                break;
+            case { Key: ConsoleKey.Enter } when _scene.Selections.Count > 0:
+                _scene.Selection = _sceneSelected + 1;
+                _scene = _shopService.ProcessShop(_scene);
+                break;
+        }
+
         var selectionTable = new Table();
-        selectionTable.AddColumn("Key");
+        selectionTable.AddColumn("Select");
         selectionTable.AddColumn("Selection");
         if (_scene.SelectedService is not null)
         {
             selectionTable.AddColumn("Price");
+            var i = 0;
             foreach (var (key, selection) in _scene.Selections)
             {
+                var selected = i == _sceneSelected ? "X" : "";
                 var color = selection.Afford ? "white" : "grey";
-                selectionTable.AddRow(ColorWrap(key.ToString(), color), ColorWrap(selection.Name, color),
+                selectionTable.AddRow(ColorWrap(selected, color), ColorWrap(selection.Name, color),
                     ColorWrap(selection.Price.ToString(), color));
+                i++;
             }
         }
         else
         {
+            var i = 0;
             foreach (var (key, selection) in _scene.Selections)
             {
-                selectionTable.AddRow(key.ToString(), selection.Name);
+                var selected = i == _sceneSelected ? "[green bold]X[/]" : "";
+                selectionTable.AddRow(selected, selection.Name);
+                i++;
             }
         }
 
@@ -85,11 +104,15 @@ public partial class GameService
                     )
                 )));
         _ctx.Refresh();
+
         _controls.Update(
             new Panel(
                     Align.Center(
-                        new Markup(_scene.Message),
-                        VerticalAlignment.Middle))
+                        new Rows(
+                            new Markup(
+                                $"[bold black on white]{_scene.Message}[/]"),
+                            new Markup(
+                                $"[bold black on white]L[/]eave Shop"))))
                 .Expand());
         _ctx.Refresh();
     }

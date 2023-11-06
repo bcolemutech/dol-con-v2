@@ -53,20 +53,10 @@ public class ShopService : IShopService
 
             foreach (var s in typeServices)
             {
-                scene.Selections.Add(i, new ShopSelection{Name = s.ToString()});
+                scene.Selections.Add(i, new ShopSelection { Name = s.ToString() });
                 i++;
             }
-
-            scene.Selections.Add(i, new ShopSelection{Name = "Leave"});
             scene.Message = "Select an option from the menu.";
-            return scene;
-        }
-
-        if (selection == scene.Selections.Count)
-        {
-            scene.IsCompleted = true;
-            scene.Message = "You left the shop.";
-            scene.Reset();
             return scene;
         }
 
@@ -77,15 +67,13 @@ public class ShopService : IShopService
             scene.Title = $"[bold black on white]{scene.SelectedService}[/]";
             scene.Description = "Select purchase.";
             scene.Selections = GetServiceSelections(scene);
-                var nextId = scene.Selections.Count + 1;
-            scene.Selections.Add(nextId, new ShopSelection{Name = "Back"});
             scene.Selection = 0;
             scene.Message = "Select an option from the menu.";
             return scene;
         }
 
         var price = sceneSelection.Price;
-        
+
         scene.Message = ProcessPurchase(scene, price, sceneSelection);
 
         return scene;
@@ -126,17 +114,17 @@ public class ShopService : IShopService
             if (!slept) return "You are not tired enough to sleep here.";
             subMessage = $"You slept at {scene.Location?.Name} at {service.Rarity} quality.";
         }
-        
+
         SaveGameService.Party.Players[0].coin -= price;
         // Calculate money break down
         var copper = price % 10;
         var silver = price / 10 % 100;
         var gold = price / 1000;
-        
+
         return $"You bought a {selection.Name} for {gold} gold, {silver} silver, and {copper} copper.\n{subMessage}";
     }
 
-    private Dictionary<int,ShopSelection> GetServiceSelections(Scene scene)
+    private Dictionary<int, ShopSelection> GetServiceSelections(Scene scene)
     {
         var playersCoin = SaveGameService.Party.Players[0].coin;
         var locationRarity = (scene.Location?.Rarity ?? Rarity.Common);
@@ -148,7 +136,21 @@ public class ShopService : IShopService
             var services = _servicesService.GetServices(ServiceType.Lodging, locationRarity);
             foreach (var service in services)
             {
-                selections.Add(i, new ShopSelection{Name = service.Name, Price = service.Price, Afford = service.Price <= playersCoin});
+                selections.Add(i,
+                    new ShopSelection
+                        { Name = service.Name, Price = service.Price, Afford = service.Price <= playersCoin });
+                i++;
+            }
+        }
+
+        if (scene.SelectedService == ServiceType.Sell)
+        {
+            var player = SaveGameService.Party.Players[0];
+            var inventory = player.Inventory;
+            foreach (var item in inventory)
+            {
+                var price = item.Price / 2;
+                selections.Add(i, new ShopSelection { Name = item.Name, Price = price, Afford = true });
                 i++;
             }
         }
