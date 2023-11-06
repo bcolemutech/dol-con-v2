@@ -121,6 +121,7 @@ public partial class GameService
 
                 _scene = scene;
                 _flow.Screen = _scene.IsCompleted ? Screen.Navigation : Screen.Scene;
+                _flow.Key = new ConsoleKeyInfo();
 
                 moveStatus = scene.MoveStatus;
                 message = scene.Message;
