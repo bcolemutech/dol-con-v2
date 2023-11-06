@@ -72,9 +72,7 @@ public class ShopService : IShopService
             return scene;
         }
 
-        var price = sceneSelection.Price;
-
-        scene.Message = ProcessPurchase(scene, price, sceneSelection);
+        scene.Message = ProcessPurchase(scene, sceneSelection);
 
         return scene;
     }
@@ -95,12 +93,15 @@ public class ShopService : IShopService
         return items[random.Dice(items.Length) - 1];
     }
 
-    private string ProcessPurchase(Scene scene, int price, ShopSelection selection)
+    private string ProcessPurchase(Scene scene, ShopSelection selection)
     {
         var playerMoney = SaveGameService.Party.Players[0].coin;
         var locationRarity = scene.Location?.Rarity ?? Rarity.Common;
-        var subMessage = "";
-        if (playerMoney < price)
+        var copper = selection.Price % 10;
+        var silver = selection.Price / 10 % 100;
+        var gold = selection.Price / 1000;
+        var message = $"You bought a {selection.Name} for {gold} gold, {silver} silver, and {copper} copper.";
+        if (playerMoney < selection.Price)
         {
             return "[red]You don't have enough money.[/]";
         }
@@ -112,16 +113,24 @@ public class ShopService : IShopService
             if (service == null) return "Something went wrong.";
             var slept = _moveService.Sleep(service.Rarity);
             if (!slept) return "You are not tired enough to sleep here.";
-            subMessage = $"You slept at {scene.Location?.Name} at {service.Rarity} quality.";
+            message =  $"{message}\nYou slept at {scene.Location?.Name} at {service.Rarity} quality.";
+        }
+        
+        if (scene.SelectedService == ServiceType.Sell)
+        {
+            var player = SaveGameService.Party.Players[0];
+            var inventory = player.Inventory;
+            var item = inventory[selection.ItemId];
+            inventory.RemoveAt(selection.ItemId);
+            scene.Selections.Remove(selection.ItemId + 1);
+            
+            message = $"You sold {item.Name} for [bold gold1]{gold}[/]|[bold silver]{silver}[/]|[bold tan]{copper}[/].";
+
         }
 
-        SaveGameService.Party.Players[0].coin -= price;
-        // Calculate money break down
-        var copper = price % 10;
-        var silver = price / 10 % 100;
-        var gold = price / 1000;
+        SaveGameService.Party.Players[0].coin -= selection.Price;
 
-        return $"You bought a {selection.Name} for {gold} gold, {silver} silver, and {copper} copper.\n{subMessage}";
+        return message;
     }
 
     private Dictionary<int, ShopSelection> GetServiceSelections(Scene scene)
@@ -149,7 +158,7 @@ public class ShopService : IShopService
             var inventory = player.Inventory;
             foreach (var item in inventory)
             {
-                var price = item.Price / 2;
+                var price = (item.Price / 2) * -1;
                 selections.Add(i, new ShopSelection { Name = item.Name, Price = price, Afford = true });
                 i++;
             }

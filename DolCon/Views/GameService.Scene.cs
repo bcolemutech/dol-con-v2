@@ -76,8 +76,11 @@ public partial class GameService
             {
                 var selected = i == _sceneSelected ? "X" : "";
                 var color = selection.Afford ? "white" : "grey";
+                var copper = selection.Price % 10;
+                var silver = (selection.Price / 10) % 100;
+                var gold = selection.Price / 1000;
                 selectionTable.AddRow(ColorWrap(selected, color), ColorWrap(selection.Name, color),
-                    ColorWrap(selection.Price.ToString(), color));
+                    $"[bold gold1]{gold}[/]|[bold silver]{silver}[/]|[bold tan]{copper}[/]");
                 i++;
             }
         }
