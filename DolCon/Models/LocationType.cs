@@ -181,10 +181,10 @@ public static class LocationTypes
                 new Tag("Medium Armor", TagType.Armor),
                 new Tag("Heavy Armor", TagType.Armor),
                 new Tag("Shield", TagType.Armor),
-                new Tag("Light Weapon", TagType.Weapon),
-                new Tag("Medium Weapon", TagType.Weapon),
-                new Tag("Heavy Weapon", TagType.Weapon),
-                new Tag("Ammunition", TagType.Weapon),
+                new Tag("Simple Melee Weapon", TagType.Weapon),
+                new Tag("Martial Melee Weapon", TagType.Weapon),
+                new Tag("Martial Ranged Weapon", TagType.Weapon),
+                new Tag("Simple Ranged Weapon", TagType.Weapon),
             },
             new[] { ServiceType.Repair }
         ),
@@ -505,8 +505,8 @@ public static class LocationTypes
             {
                 new Tag("Snack", TagType.Food),
                 new Tag("Light Armor", TagType.Armor),
-                new Tag("Light Weapon", TagType.Weapon),
-                new Tag("Ammunition", TagType.Weapon),
+                new Tag("Simple Melee Weapon", TagType.Weapon),
+                new Tag("Simple Ranged Weapon", TagType.Weapon),
                 new Tag("Adventure Gear", TagType.GeneralGoods),
                 new Tag("Tools", TagType.GeneralGoods),
             },
@@ -862,10 +862,10 @@ public static class LocationTypes
                 new Tag("Medium Armor", TagType.Armor),
                 new Tag("Heavy Armor", TagType.Armor),
                 new Tag("Shield", TagType.Armor),
-                new Tag("Light Weapon", TagType.Weapon),
-                new Tag("Medium Weapon", TagType.Weapon),
-                new Tag("Heavy Weapon", TagType.Weapon),
-                new Tag("Ammunition", TagType.Weapon)
+                new Tag("Simple Melee Weapon", TagType.Weapon),
+                new Tag("Martial Melee Weapon", TagType.Weapon),
+                new Tag("Martial Ranged Weapon", TagType.Weapon),
+                new Tag("Simple Ranged Weapon", TagType.Weapon)
             },
             new[] { ServiceType.Repair, ServiceType.Upgrade }
         ),
