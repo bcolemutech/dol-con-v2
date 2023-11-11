@@ -4,440 +4,692 @@
     "Description": "Some gems have hidden qualities beyond their luster, beyond their shine... Azurite is one of those gems.",
     "Rarity": 0,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 10000
+    "Price": 1000
   },
   {
     "Name": "Bloodstone",
     "Description": "Origin of the Bloodstone is unknown, hence its low value. It has a very high shine and 12 sides, however.",
     "Rarity": 0,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 50000
+    "Price": 5000
   },
   {
     "Name": "Zircon",
     "Description": "A transparent pale blue-green gemstone worth 50 gold pieces.",
     "Rarity": 0,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 50000
+    "Price": 5000
   },
   {
     "Name": "Emerald",
     "Description": "A transparent deep bright green emerald worth 1,000 gold pieces.",
     "Rarity": 3,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 1000000
+    "Price": 100000
   },
   {
     "Name": "Blue Sapphire",
     "Description": "A transparent blue corundum worth 1,000 gold pieces.",
     "Rarity": 3,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 1000000
+    "Price": 100000
   },
   {
     "Name": "Ruby",
     "Description": "A transparent deep crimson corundum worth 5,000 gold pieces.",
     "Rarity": 4,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 5000000
+    "Price": 500000
   },
   {
     "Name": "Black Opal",
     "Description": "A transparent dark green with black mottling and golden flecks worth 1,000 gold pieces.",
     "Rarity": 3,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 1000000
+    "Price": 100000
   },
   {
     "Name": "Fire Opal",
     "Description": "A transparent fiery red with yellow and orange mottling worth 1,000 gold pieces.",
     "Rarity": 3,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 1000000
+    "Price": 100000
   },
   {
     "Name": "Star Ruby",
     "Description": "A transparent ruby with a star-shaped center that glows in sunlight worth 1,000 gold pieces.",
     "Rarity": 3,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 1000000
+    "Price": 100000
   },
   {
     "Name": "Star Sapphire",
     "Description": "A transparent blue corundum with a star-shaped center that glows in sunlight worth 1,000 gold pieces.",
     "Rarity": 3,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 1000000
+    "Price": 100000
   },
   {
     "Name": "Diamond",
     "Description": "A transparent blue-white gemstone worth 5,000 gold pieces.",
     "Rarity": 4,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 5000000
+    "Price": 500000
   },
   {
     "Name": "Jacinth",
     "Description": "A transparent fiery orange gemstone worth 5,000 gold pieces.",
     "Rarity": 4,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 5000000
+    "Price": 500000
   },
   {
     "Name": "Amber",
     "Description": "A transparent watery gold, red, or brown, or transparent pale green, brown, or yellow-green, worth 100 gold pieces.",
     "Rarity": 1,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 100000
+    "Price": 10000
   },
   {
     "Name": "Amethyst",
     "Description": "A transparent deep purple, worth 100 gold pieces.",
     "Rarity": 1,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 100000
+    "Price": 10000
   },
   {
     "Name": "Chrysoberyl",
     "Description": "A transparent yellow-green to pale green, worth 100 gold pieces.",
     "Rarity": 1,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 100000    
+    "Price": 10000 
   },
   {
     "Name": "Coral",
     "Description": "A pink, red, or orange piece of coral, worth 100 gold pieces.",
     "Rarity": 1,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 100000
+    "Price": 10000
   },
   {
     "Name": "Garnet",
     "Description": "A transparent red, brown-green, or violet garnet worth 100 gold pieces.",
     "Rarity": 1,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 100000
+    "Price": 10000
   },
   {
     "Name": "Jade",
     "Description": "A translucent green, white, or yellow-green stone worth 100 gold pieces.",
     "Rarity": 1,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 100000
+    "Price": 10000
   },
   {
     "Name": "Jet",
     "Description": "A deep black stone, worth 100 gold pieces.",
     "Rarity": 1,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 100000
+    "Price": 10000
   },
   {
     "Name": "Pearl",
     "Description": "A lustrous white, yellow, or pink orb worth 100 gold pieces.",
     "Rarity": 1,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 100000
+    "Price": 10000
   },
   {
     "Name": "Spinel",
     "Description": "A transparent red, red-brown, or deep green crystal worth 100 gold pieces.",
     "Rarity": 1,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 100000
+    "Price": 10000
   },
   {
     "Name": "Tourmaline",
     "Description": "A transparent pale green, blue, brown, or red gem worth 100 gold pieces.",
     "Rarity": 1,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 100000
+    "Price": 10000
   },
   {
     "Name": "Turquoise",
     "Description": "A smooth opaque blue-green stone with small flecks of pyrite worth 10 gold pieces.",
     "Rarity": 0,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 10000
+    "Price": 1000
   },
   {
     "Name": "Aquamarine",
     "Description": "A transparent pale blue-green gem worth 500 gold pieces.",
     "Rarity": 2,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 500000
+    "Price": 50000
   },
   {
     "Name": "Alexandrite",
     "Description": "A transparent dark green gem worth 500 gold pieces.",
     "Rarity": 2,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 500000
+    "Price": 50000
   },
   {
     "Name": "Black Pearl",
     "Description": "A lustrous black, gray, or purple pearl worth 500 gold pieces.",
     "Rarity": 2,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 500000
+    "Price": 50000
   },
   {
     "Name": "Peridot",
     "Description": "An olive-green gem worth 500 gold pieces.",
     "Rarity": 2,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 500000
+    "Price": 50000
   },
   {
     "Name": "Topaz",
     "Description": "A transparent golden yellow, yellow-brown, or blue gem worth 500 gold pieces.",
     "Rarity": 2,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 500000
+    "Price": 50000
   },
   {
     "Name": "Jasper",
     "Description": "An opaque reddish-brown gem worth 50 gold pieces.",
     "Rarity": 0,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 50000
+    "Price": 5000
   },
   {
     "Name": "Moonstone",
     "Description": "A transparent white with pale blue glow worth 50 gold pieces.",
     "Rarity": 0,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 50000
+    "Price": 5000
   },
   {
     "Name": "Onyx",
     "Description": "An opaque bands of black and white, or pure black or white worth 50 gold pieces.",
     "Rarity": 0,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 50000
+    "Price": 5000
   },
   {
     "Name": "Sardonyx",
     "Description": "An opaque bands of red and white worth 50 gold pieces.",
     "Rarity": 0,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 50000
+    "Price": 5000
   },
   {
     "Name": "Banded Agate",
     "Description": "An opaque striped brown, blue, white, or red worth 10 gold pieces.",
     "Rarity": 0,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 10000
+    "Price": 1000
   },
   {
     "Name": "Eye Agate",
     "Description": "An opaque circle of white with a central eye of brown, gray, blue, or green worth 10 gold pieces.",
     "Rarity": 0,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 10000
+    "Price": 1000
   },
   {
     "Name": "Moss Agate",
     "Description": "An opaque pink or yellow-white with mossy gray or green markings worth 10 gold pieces.",
     "Rarity": 0,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 10000    
+    "Price": 1000  
   },
   {
     "Name": "Hematite",
     "Description": "An opaque gray-black stone worth 10 gold pieces.",
     "Rarity": 0,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 10000
+    "Price": 1000
   },
   {
     "Name": "Lapis Lazuli",
     "Description": "An opaque light and dark blue with yellow flecks worth 10 gold pieces.",
     "Rarity": 0,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 10000
+    "Price": 1000
   },
   {
     "Name": "Malachite",
     "Description": "An opaque striated light and dark green stone worth 10 gold pieces.",
     "Rarity": 0,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 10000    
+    "Price": 1000
   },
   {
     "Name": "Obsidian",
     "Description": "An opaque black stone worth 10 gold pieces.",
     "Rarity": 0,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 10000
+    "Price": 1000
   },
   {
     "Name": "Rhodochrosite",
     "Description": "An opaque light pink gem worth 10 gold pieces.",
     "Rarity": 0,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 10000
+    "Price": 1000
   },
   {
     "Name": "Tiger Eye",
     "Description": "An opaque brown with golden center stone worth 10 gold pieces.",
     "Rarity": 0,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 10000
+    "Price": 1000
   },
   {
     "Name": "Carnelian",
     "Description": "An opaque red-brown gem worth 50 gold pieces.",
     "Rarity": 0,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 50000
+    "Price": 5000
   },
   {
     "Name": "Chalcedony",
     "Description": "An opaque white gem worth 50 gold pieces.",
     "Rarity": 0,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 50000
+    "Price": 5000
   },
   {
     "Name": "Chrysoprase",
     "Description": "An opaque green gem worth 50 gold pieces.",
     "Rarity": 0,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 50000
+    "Price": 5000
   },
   {
     "Name": "Citrine",
     "Description": "An opaque yellow-brown gem worth 50 gold pieces.",
     "Rarity": 0,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 50000
+    "Price": 5000
   },
   {
     "Name": "Quartz",
     "Description": "An opaque white, smoky gray, or yellow crystal worth 50 gold pieces.",
     "Rarity": 0,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 50000    
+    "Price": 5000
   },
   {
     "Name": "Star Rose Quartz",
     "Description": "An opaque rosy stone with white star-shaped center worth 50 gold pieces.",
     "Rarity": 0,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 50000
+    "Price": 5000
   },
   {
     "Name": "Blue Spinel",
     "Description": "An opaque deep blue gem worth 500 gold pieces.",
     "Rarity": 2,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 500000
+    "Price": 50000
   },
   {
     "Name": "Yellow Sapphire",
     "Description": "An opaque yellow corundum worth 1,000 gold pieces.",
     "Rarity": 3,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 1000000
+    "Price": 100000
   },
   {
     "Name": "Black Sapphire",
     "Description": "An opaque black corundum worth 5,000 gold pieces.",
     "Rarity": 4,
     "Tags": [{"Name": "Gem", "type": 0}],
-    "Price": 5000000
+    "Price": 500000
   },
   {
     "Name": "Padded",
     "Description": "Padded armor consists of quilted layers of cloth and batting.",
     "Rarity": 0,
     "Tags": [{"Name": "Light Armor", "type": 1}],
-    "Price": 5000
+    "Price": 500
   },
   {
     "Name": "Leather",
     "Description": "The breastplate and shoulder protectors of this armor are made of leather that has been stiffened by being boiled in oil. The rest of the armor is made of softer and more flexible materials.",
     "Rarity": 1,
     "Tags": [{"Name": "Light Armor", "type": 1}],
-    "Price": 10000
+    "Price": 1000
   },
   {
     "Name": "Studded Leather",
     "Description": "Made from tough but flexible leather, studded leather is reinforced with close-set rivets or spikes.",
     "Rarity": 2,
     "Tags": [{"Name": "Light Armor", "type": 1}],
-    "Price": 45000
+    "Price": 4500
   },
   {
     "Name": "Hide",
     "Description": "This crude armor consists of thick furs and pelts. It is commonly worn by barbarian tribes, evil humanoids, and other folk who lack access to the tools and materials needed to create better armor.",
     "Rarity": 1,
     "Tags": [{"Name": "Medium Armor", "type": 1}],
-    "Price": 10000
+    "Price": 1000
   },
   {
     "Name": "Chain Shirt",
     "Description": "Made of interlocking metal rings, a chain shirt is worn between layers of clothing or leather. This armor offers modest protection to the wearer's upper body and allows the sound of the rings rubbing against one another to be muffled by outer layers.",
     "Rarity": 1,
     "Tags": [{"Name": "Medium Armor", "type": 1}],
-    "Price": 50000
+    "Price": 5000
   },
   {
     "Name": "Scale Mail",
     "Description": "This armor consists of a coat and leggings (and perhaps a separate skirt) of leather covered with overlapping pieces of metal, much like the scales of a fish. The suit includes gauntlets.",
     "Rarity": 2,
     "Tags": [{"Name": "Medium Armor", "type": 1}],
-    "Price": 50000
+    "Price": 5000
   },
   {
     "Name": "Breastplate",
     "Description": "This armor consists of a fitted metal chest piece worn with supple leather. Although it leaves the legs and arms relatively unprotected, this armor provides good protection for the wearer's vital organs while leaving the wearer relatively unencumbered.",
     "Rarity": 1,
     "Tags": [{"Name": "Medium Armor", "type": 1}],
-    "Price": 400000
+    "Price": 40000
   },
   {
     "Name": "Half Plate",
     "Description": "Half plate consists of shaped metal plates that cover most of the wearer's body. It does not include leg protection beyond simple greaves that are attached with leather straps.",
     "Rarity": 2,
     "Tags": [{"Name": "Medium Armor", "type": 1}],
-    "Price": 750000
+    "Price": 75000
   },
   {
     "Name": "Ring Mail",
     "Description": "This armor is leather armor with heavy rings sewn into it. The rings help reinforce the armor against blows from swords and axes. Ring mail is inferior to chain mail, and it's usually worn only by those who can't afford better armor.",
     "Rarity": 0,
     "Tags": [{"Name": "Heavy Armor", "type": 1}],
-    "Price": 30000
+    "Price": 3000
   },
   {
     "Name": "Chain Mail",
     "Description": "Made of interlocking metal rings, chain mail includes a layer of quilted fabric worn underneath the mail to prevent chafing and to cushion the impact of blows. The suit includes gauntlets.",
     "Rarity": 1,
     "Tags": [{"Name": "Heavy Armor", "type": 1}],
-    "Price": 75000
+    "Price": 7500
   },
   {
     "Name": "Splint",
     "Description": "This armor is made of narrow vertical strips of metal riveted to a backing of leather that is worn over cloth padding. Flexible chain mail protects the joints.",
     "Rarity": 2,
     "Tags": [{"Name": "Heavy Armor", "type": 1}],
-    "Price": 200000
+    "Price": 20000
   },
   {
     "Name": "Plate",
     "Description": "Plate consists of shaped, interlocking metal plates to cover the entire body. A suit of plate includes gauntlets, heavy leather boots, a visored helmet, and thick layers of padding underneath the armor. Buckles and straps distribute the weight over the body.",
     "Rarity": 3,
     "Tags": [{"Name": "Heavy Armor", "type": 1}],
-    "Price": 1500000
+    "Price": 150000
   },
   {
     "Name": "Shield",
     "Description": "A shield is made from wood or metal and is carried in one hand. You can benefit from only one shield at a time.",
     "Rarity": 0,
     "Tags": [{"Name": "Shield", "type": 1}],
-    "Price": 10000
+    "Price": 1000
+  },
+  {
+    "Name": "Club",
+    "Description": "A club is a short, heavy stick. A club can be used as a melee weapon.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Simple Melee Weapon", "type": 3}],
+    "Price": 10
+  },
+  {
+    "Name": "Dagger",
+    "Description": "A dagger is a small weapon that can be used as a melee weapon or as a ranged weapon.",
+    "Rarity": 1,
+    "Tags": [{"Name": "Simple Melee Weapon", "type": 3}, {"Name": "Simple Ranged Weapon", "type": 3}],
+    "Price": 200
+  },
+  {
+    "Name": "Greatclub",
+    "Description": "A greatclub is a larger version of a club. A greatclub can be used as a melee weapon.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Simple Melee Weapon", "type": 3}],
+    "Price": 20
+  },
+  {
+    "Name": "Handaxe",
+    "Description": "A handaxe is a small axe that can be used as a melee weapon.",
+    "Rarity": 1,
+    "Tags": [{"Name": "Simple Melee Weapon", "type": 3}],
+    "Price": 500
+  },
+  {
+    "Name": "Light Hammer",
+    "Description": "A light hammer is a small, light hammer that can be used as a melee weapon.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Simple Melee Weapon", "type": 3}],
+    "Price": 200    
+  },
+  {
+    "Name": "Quarterstaff",
+    "Description": "A quarterstaff is a simple two-handed melee weapon.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Simple Melee Weapon", "type": 3}],
+    "Price": 20
+  },
+  {
+    "Name": "Javelin",
+    "Description": "A javelin is a light spear that is thrown at a target.",
+    "Rarity": 2,
+    "Tags": [{"Name": "Simple Melee Weapon", "type": 3}, {"Name": "Simple Ranged Weapon", "type": 3}],
+    "Price": 500
+  },
+  {
+    "Name": "Mace",
+    "Description": "A mace is a light, hafted weapon that can be used as a melee weapon.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Simple Melee Weapon", "type": 3}],
+    "Price": 500    
+  },
+  {
+    "Name": "Sickle",
+    "Description": "A sickle is a light, hafted weapon that is used to cut through undergrowth. A sickle can be used as a melee weapon.",
+    "Rarity": 2,
+    "Tags": [{"Name": "Simple Melee Weapon", "type": 3}],
+    "Price": 100
+  },
+  {
+    "Name": "Spear",
+    "Description": "A spear is a versatile hafted weapon that can be used either as a melee weapon or as a ranged weapon. A spear can be thrown.",
+    "Rarity": 1,
+    "Tags": [{"Name": "Simple Melee Weapon", "type": 3}, {"Name": "Simple Ranged Weapon", "type": 3}],
+    "Price": 100
+  },
+  {
+    "Name": "Whip",
+    "Description": "A whip is a thin, flexible cord with a series of small barbs near the end. A whip can be used as a melee weapon.",
+    "Rarity": 1,
+    "Tags": [{"Name": "Simple Melee Weapon", "type": 3}],
+    "Price": 200
+  },
+  {
+    "Name": "Battleaxe",
+    "Description": "A battleaxe is a heavy hafted weapon that can be used as a melee weapon.",
+    "Rarity": 1,
+    "Tags": [{"Name": "Martial Melee Weapon", "type": 3}],
+    "Price": 1000
+  },
+  {
+    "Name": "Flail",
+    "Description": "A flail is a hafted weapon that can be used as a melee weapon.",
+    "Rarity": 2,
+    "Tags": [{"Name": "Martial Melee Weapon", "type": 3}],
+    "Price": 1000
+  },
+  {
+    "Name": "Glaive",
+    "Description": "A glaive is a heavy, bladed polearm. A glaive can be used as a melee weapon.",
+    "Rarity": 2,
+    "Tags": [{"Name": "Martial Melee Weapon", "type": 3}],
+    "Price": 2000
+  },
+  {
+    "Name": "Greataxe",
+    "Description": "A greataxe is a heavy two-handed axe and a melee weapon.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Martial Melee Weapon", "type": 3}],
+    "Price": 3000
+  },
+  {
+    "Name": "Greatsword",
+    "Description": "A greatsword is a heavy two-handed sword and a melee weapon.",
+    "Rarity": 1,
+    "Tags": [{"Name": "Martial Melee Weapon", "type": 3}],
+    "Price": 5000
+  },
+  {
+    "Name": "Halberd",
+    "Description": "A halberd is a heavy, hafted weapon that can be used as a melee weapon.",
+    "Rarity": 2,
+    "Tags": [{"Name": "Martial Melee Weapon", "type": 3}],
+    "Price": 2000
+  },
+  {
+    "Name": "Lance",
+    "Description": "A lance is a reach weapon that consists of a long wooden haft with a pointed metal head.",
+    "Rarity": 3,
+    "Tags": [{"Name": "Martial Melee Weapon", "type": 3}],
+    "Price": 1000
+  },
+  {
+    "Name": "Longsword",
+    "Description": "A longsword is a versatile weapon with a long blade that can be used as a melee weapon.",
+    "Rarity": 1,
+    "Tags": [{"Name": "Martial Melee Weapon", "type": 3}],
+    "Price": 1500
+  },
+  {
+    "Name": "Maul",
+    "Description": "A maul is a heavy two-handed hammer and a melee weapon.",
+    "Rarity": 2,
+    "Tags": [{"Name": "Martial Melee Weapon", "type": 3}],
+    "Price": 1000
+  },
+  {
+    "Name": "Morningstar",
+    "Description": "A morningstar is a hafted weapon with a spiked metal head. A morningstar can be used as a melee weapon.",
+    "Rarity": 2,
+    "Tags": [{"Name": "Martial Melee Weapon", "type": 3}],
+    "Price": 1500
+  },
+  {
+    "Name": "Pike",
+    "Description": "A pike is a reach weapon that has a long haft topped with a spearhead. A pike can be used as a melee weapon.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Martial Melee Weapon", "type": 3}],
+    "Price": 500
+  },
+  {
+    "Name": "Rapier",
+    "Description": "A rapier is a long, lightweight sword with a sharp point. A rapier can be used as a melee weapon.",
+    "Rarity": 3,
+    "Tags": [{"Name": "Martial Melee Weapon", "type": 3}],
+    "Price": 2500
+  },
+  {
+    "Name": "Scimitar",
+    "Description": "A scimitar is a curved sword with a sharp edge that is used for slashing attacks. A scimitar can be used as a melee weapon.",
+    "Rarity": 2,
+    "Tags": [{"Name": "Martial Melee Weapon", "type": 3}],
+    "Price": 2500
+  },
+  {
+    "Name": "Shortsword",
+    "Description": "A shortsword is a small, light sword that can be used as a melee weapon.",
+    "Rarity": 1,
+    "Tags": [{"Name": "Martial Melee Weapon", "type": 3}],
+    "Price": 1000
+  },
+  {
+    "Name": "Trident",
+    "Description": "A trident is a three-pronged spear that can be thrown. A trident can be used as a melee weapon.",
+    "Rarity": 3,
+    "Tags": [{"Name": "Martial Melee Weapon", "type": 3}, {"Name": "Martial Ranged Weapon", "type": 3}],
+    "Price": 500
+  },
+  {
+    "Name": "War Pick",
+    "Description": "A war pick is a hafted weapon with a spiked metal head. A war pick can be used as a melee weapon.",
+    "Rarity": 2,
+    "Tags": [{"Name": "Martial Melee Weapon", "type": 3}],
+    "Price": 500
+  },
+  {
+    "Name": "Warhammer",
+    "Description": "A warhammer is a heavy, hafted weapon that can be used as a melee weapon.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Martial Melee Weapon", "type": 3}],
+    "Price": 1500
+  },
+  {
+    "Name": "Crossbow, Light",
+    "Description": "A light crossbow is a small crossbow that can be used as a ranged weapon.",
+    "Rarity": 2,
+    "Tags": [{"Name": "Simple Ranged Weapon", "type": 3}],
+    "Price": 2500
+  },
+  {
+    "Name": "Dart",
+    "Description": "A dart is a small, thin object with a sharp point that is designed to be thrown at a target. A dart can be used as a ranged weapon.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Simple Ranged Weapon", "type": 3}],
+    "Price": 5
+  },
+  {
+    "Name": "Shortbow",
+    "Description": "A shortbow is a short, light bow that can be used as a ranged weapon.",
+    "Rarity": 1,
+    "Tags": [{"Name": "Simple Ranged Weapon", "type": 3}],
+    "Price": 2500
+  },
+  {
+    "Name": "Sling",
+    "Description": "A sling is a small strap with a pouch at the end. A sling can be used as a ranged weapon.",
+    "Rarity": 0,
+    "Tags": [{"Name": "Simple Ranged Weapon", "type": 3}],
+    "Price": 10
+  },
+  {
+    "Name": "Blowgun",
+    "Description": "A blowgun is a small tube through which a dart can be blown. A blowgun can be used as a ranged weapon.",
+    "Rarity": 1,
+    "Tags": [{"Name": "Martial Ranged Weapon", "type": 3}],
+    "Price": 1000
+  },
+  {
+    "Name": "Crossbow, Hand",
+    "Description": "A hand crossbow is a small crossbow that can be used as a ranged weapon.",
+    "Rarity": 2,
+    "Tags": [{"Name": "Martial Ranged Weapon", "type": 3}],
+    "Price": 7500
+  },
+  {
+    "Name": "Crossbow, Heavy",
+    "Description": "A heavy crossbow is a large crossbow that can be used as a ranged weapon.",
+    "Rarity": 3,
+    "Tags": [{"Name": "Martial Ranged Weapon", "type": 3}],
+    "Price": 5000
+  },
+  {
+    "Name": "Longbow",
+    "Description": "A longbow is a long, powerful bow that can be used as a ranged weapon.",
+    "Rarity": 1,
+    "Tags": [{"Name": "Martial Ranged Weapon", "type": 3}],
+    "Price": 5000
   }
 ]
