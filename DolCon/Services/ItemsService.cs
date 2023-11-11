@@ -8,6 +8,7 @@ namespace DolCon.Services;
 public interface IItemsService
 {
     IEnumerable<Item> GenerateItems(Rarity rarity, TagType type);
+    IEnumerable<Item> GetItems(Tag[]? goods, Rarity rarity);
 }
 
 public class ItemsService : IItemsService
@@ -27,5 +28,10 @@ public class ItemsService : IItemsService
     public IEnumerable<Item> GenerateItems(Rarity rarity, TagType type)
     {
         return _items.Where(i => i.Rarity == rarity && i.Tags.Any(x => x.type == type));
+    }
+
+    public IEnumerable<Item> GetItems(Tag[]? goods, Rarity rarity)
+    {
+        return goods is null ? new List<Item>() : _items.Where(i => i.Rarity <= rarity && i.Tags.Any(goods.Contains));
     }
 }

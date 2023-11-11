@@ -55,8 +55,8 @@ public partial class GameService
             };
             var sellingPrice = item.Price / 2;
             var copper = sellingPrice % 10;
-            var silver = (sellingPrice / 10) % 100;
-            var gold = sellingPrice / 1000;
+            var silver = (sellingPrice / 10) % 10;
+            var gold = sellingPrice / 100;
             table.AddRow(
                 selected,
                 item.Name,
