@@ -18,7 +18,7 @@ public class Player
     [JsonIgnore]
     public long copper => coin % 10; // 1 copper = 1 coin
     [JsonIgnore]
-    public long silver => coin / 10 % 100; // 1 silver = 10 copper = 10 coin
+    public long silver => coin / 10 % 10; // 1 silver = 10 copper = 10 coin
 
     [JsonIgnore]
     public long gold => coin / 100; // 1 gold = 10 silver = 100 copper = 100 coin 
