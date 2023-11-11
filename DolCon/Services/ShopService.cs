@@ -99,7 +99,7 @@ public class ShopService : IShopService
         var locationRarity = scene.Location?.Rarity ?? Rarity.Common;
         var copper = selection.Price % 10;
         var silver = selection.Price / 10 % 100;
-        var gold = selection.Price / 1000;
+        var gold = selection.Price / 100;
         var message = $"You bought a {selection.Name} for {gold} gold, {silver} silver, and {copper} copper.";
         if (playerMoney < selection.Price)
         {

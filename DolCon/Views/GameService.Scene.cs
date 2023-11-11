@@ -78,7 +78,7 @@ public partial class GameService
                 var color = selection.Afford ? "white" : "grey";
                 var copper = selection.Price % 10;
                 var silver = (selection.Price / 10) % 100;
-                var gold = selection.Price / 1000;
+                var gold = selection.Price / 100;
                 selectionTable.AddRow(ColorWrap(selected, color), ColorWrap(selection.Name, color),
                     $"[bold gold1]{gold}[/]|[bold silver]{silver}[/]|[bold tan]{copper}[/]");
                 i++;
