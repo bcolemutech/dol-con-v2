@@ -16,10 +16,10 @@ public class Player
     public List<Item> Inventory { get; set; } = new();
 
     [JsonIgnore]
-    public long copper => coin % 10;
+    public long copper => coin % 10; // 1 copper = 1 coin
     [JsonIgnore]
-    public long silver => coin / 10 % 100;
+    public long silver => coin / 10 % 10; // 1 silver = 10 copper = 10 coin
 
     [JsonIgnore]
-    public long gold => coin / 1000;
+    public long gold => coin / 100; // 1 gold = 10 silver = 100 copper = 100 coin 
 }

@@ -98,8 +98,8 @@ public class ShopService : IShopService
         var playerMoney = SaveGameService.Party.Players[0].coin;
         var locationRarity = scene.Location?.Rarity ?? Rarity.Common;
         var copper = selection.Price % 10;
-        var silver = selection.Price / 10 % 100;
-        var gold = selection.Price / 1000;
+        var silver = selection.Price / 10 % 10;
+        var gold = selection.Price / 100;
         var message = $"You bought a {selection.Name} for {gold} gold, {silver} silver, and {copper} copper.";
         if (playerMoney < selection.Price)
         {
@@ -127,6 +127,15 @@ public class ShopService : IShopService
             message = $"You sold {item.Name} for [bold gold1]{gold}[/]|[bold silver]{silver}[/]|[bold tan]{copper}[/].";
 
         }
+        
+        if (scene.SelectedService == ServiceType.Buy)
+        {
+            var goods = scene.Location?.Type.Goods;
+            var items = _itemsService.GetItems(goods, locationRarity);
+            var item = items.FirstOrDefault(i => i.Name == selection.Name);
+            if (item == null) return "Something went wrong.";
+            SaveGameService.Party.Players[0].Inventory.Add(item);
+        }
 
         SaveGameService.Party.Players[0].coin -= selection.Price;
 
@@ -140,27 +149,47 @@ public class ShopService : IShopService
         var selections = new Dictionary<int, ShopSelection>();
         var i = 1;
 
-        if (scene.SelectedService == ServiceType.Lodging)
+        switch (scene.SelectedService)
         {
-            var services = _servicesService.GetServices(ServiceType.Lodging, locationRarity);
-            foreach (var service in services)
+            case ServiceType.Lodging:
             {
-                selections.Add(i,
-                    new ShopSelection
-                        { Name = service.Name, Price = service.Price, Afford = service.Price <= playersCoin });
-                i++;
-            }
-        }
+                var services = _servicesService.GetServices(ServiceType.Lodging, locationRarity);
+                foreach (var service in services)
+                {
+                    selections.Add(i,
+                        new ShopSelection
+                            { Name = service.Name, Price = service.Price, Afford = service.Price <= playersCoin });
+                    i++;
+                }
 
-        if (scene.SelectedService == ServiceType.Sell)
-        {
-            var player = SaveGameService.Party.Players[0];
-            var inventory = player.Inventory;
-            foreach (var item in inventory)
+                break;
+            }
+            case ServiceType.Sell:
             {
-                var price = (item.Price / 2) * -1;
-                selections.Add(i, new ShopSelection { Name = item.Name, Price = price, Afford = true });
-                i++;
+                var player = SaveGameService.Party.Players[0];
+                var inventory = player.Inventory;
+                foreach (var item in inventory)
+                {
+                    var price = (item.Price / 2) * -1;
+                    selections.Add(i, new ShopSelection { Name = item.Name, Price = price, Afford = true });
+                    i++;
+                }
+
+                break;
+            }
+            case ServiceType.Buy:
+            {
+                var goods = scene.Location?.Type.Goods;
+                var items = _itemsService.GetItems(goods, locationRarity);
+                foreach (var item in items)
+                {
+                    selections.Add(i,
+                        new ShopSelection
+                            { Name = item.Name, Price = item.Price, Afford = item.Price <= playersCoin });
+                    i++;
+                }
+
+                break;
             }
         }
 
