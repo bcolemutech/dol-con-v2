@@ -89,7 +89,7 @@ public class ShopService : IShopService
             < 99 => Rarity.Epic,
             _ => Rarity.Legendary
         };
-        var items = _itemsService.GenerateItems(rarity, TagType.GeneralGoods).ToArray();
+        var items = _itemsService.GenerateItems(rarity, "Gem").ToArray();
         return items[random.Dice(items.Length) - 1];
     }
 
