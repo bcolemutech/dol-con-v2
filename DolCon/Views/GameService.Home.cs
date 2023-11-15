@@ -92,7 +92,7 @@ public partial class GameService
                 }
                 if (location.Type.Goods.Any())
                 {
-                    rows.Add(new Markup($"Shops: [green]{string.Join(", ", location.Type.Goods.Select(x => x.Name))}[/]"));
+                    rows.Add(new Markup($"Shops: [green]{string.Join(", ", location.Type.Goods)}[/]"));
                 }
             }
             else
