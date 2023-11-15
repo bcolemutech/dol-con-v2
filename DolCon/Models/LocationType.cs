@@ -18,7 +18,7 @@ public record LocationType(
     bool NeedsWalls,
     bool NeedsCityOfLight,
     bool isWild,
-    Tag[] Goods,
+    string[] Goods,
     ServiceType[] Services
 );
 
@@ -42,7 +42,7 @@ public static class LocationTypes
             false,
             false,
             true,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             Array.Empty<ServiceType>()
         ),
         new LocationType(
@@ -61,7 +61,7 @@ public static class LocationTypes
             false,
             false,
             true,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             Array.Empty<ServiceType>()
         ),
         new LocationType(
@@ -80,7 +80,7 @@ public static class LocationTypes
             false,
             false,
             true,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             Array.Empty<ServiceType>()
         ),
         new LocationType(
@@ -99,7 +99,7 @@ public static class LocationTypes
             false,
             false,
             true,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             Array.Empty<ServiceType>()
         ),
         new LocationType(
@@ -118,7 +118,7 @@ public static class LocationTypes
             false,
             false,
             true,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             Array.Empty<ServiceType>()
         ),
         new LocationType(
@@ -137,7 +137,7 @@ public static class LocationTypes
             false,
             false,
             true,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             Array.Empty<ServiceType>()
         ),
         new LocationType(
@@ -156,7 +156,7 @@ public static class LocationTypes
             false,
             false,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             new[] { ServiceType.Combat, ServiceType.Entertainment }
         ),
         new LocationType(
@@ -177,14 +177,14 @@ public static class LocationTypes
             false,
             new[]
             {
-                new Tag("Light Armor", TagType.Armor),
-                new Tag("Medium Armor", TagType.Armor),
-                new Tag("Heavy Armor", TagType.Armor),
-                new Tag("Shield", TagType.Armor),
-                new Tag("Simple Melee Weapon", TagType.Weapon),
-                new Tag("Martial Melee Weapon", TagType.Weapon),
-                new Tag("Martial Ranged Weapon", TagType.Weapon),
-                new Tag("Simple Ranged Weapon", TagType.Weapon),
+                "Light Armor",
+                "Medium Armor",
+                "Heavy Armor",
+                "Shield",
+                "Simple Melee Weapon",
+                "Martial Melee Weapon",
+                "Martial Ranged Weapon",
+                "Simple Ranged Weapon",
             },
             new[] { ServiceType.Repair }
         ),
@@ -204,7 +204,7 @@ public static class LocationTypes
             false,
             false,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             Array.Empty<ServiceType>()
         ),
         new LocationType(
@@ -225,9 +225,9 @@ public static class LocationTypes
             false,
             new[]
             {
-                new Tag("Snack", TagType.Food),
-                new Tag("Meal", TagType.Food),
-                new Tag("Spirits", TagType.Food)
+                "Snack",
+                "Meal",
+                "Spirits"
             },
             new[] { ServiceType.Drinks, ServiceType.Food }
         ),
@@ -247,7 +247,7 @@ public static class LocationTypes
             false,
             false,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             new[] { ServiceType.Repair, ServiceType.Upgrade }
         ),
         new LocationType(
@@ -266,7 +266,7 @@ public static class LocationTypes
             false,
             false,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             Array.Empty<ServiceType>()
         ),
         new LocationType(
@@ -285,7 +285,7 @@ public static class LocationTypes
             false,
             false,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             Array.Empty<ServiceType>()
         ),
         new LocationType(
@@ -304,7 +304,7 @@ public static class LocationTypes
             false,
             false,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             Array.Empty<ServiceType>()
         ),
         new LocationType(
@@ -323,7 +323,7 @@ public static class LocationTypes
             false,
             false,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             Array.Empty<ServiceType>()
         ),
         new LocationType(
@@ -342,7 +342,7 @@ public static class LocationTypes
             false,
             false,
             true,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             Array.Empty<ServiceType>()
         ),
         new LocationType(
@@ -361,7 +361,7 @@ public static class LocationTypes
             false,
             false,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             Array.Empty<ServiceType>()
         ),
         new LocationType(
@@ -380,7 +380,7 @@ public static class LocationTypes
             false,
             false,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             new[] { ServiceType.Combat, ServiceType.Entertainment }
         ),
         new LocationType(
@@ -399,7 +399,7 @@ public static class LocationTypes
             false,
             false,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             Array.Empty<ServiceType>()
         ),
         new LocationType(
@@ -418,7 +418,7 @@ public static class LocationTypes
             true,
             false,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             Array.Empty<ServiceType>()
         ),
         new LocationType(
@@ -439,7 +439,7 @@ public static class LocationTypes
             false,
             new[]
             {
-                new Tag("Snack", TagType.Food),
+                "Snack"
             },
             new[] { ServiceType.Food }
         ),
@@ -459,7 +459,7 @@ public static class LocationTypes
             false,
             false,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             new[] { ServiceType.Food, ServiceType.Combat, ServiceType.Lodging, ServiceType.Repair }
         ),
         new LocationType(
@@ -480,8 +480,8 @@ public static class LocationTypes
             false,
             new[]
             {
-                new Tag("Snack", TagType.Food),
-                new Tag("Meal", TagType.Food),
+                "Snack",
+                "Meal"
             },
             new[] { ServiceType.Food }
         ),
@@ -503,12 +503,12 @@ public static class LocationTypes
             false,
             new[]
             {
-                new Tag("Snack", TagType.Food),
-                new Tag("Light Armor", TagType.Armor),
-                new Tag("Simple Melee Weapon", TagType.Weapon),
-                new Tag("Simple Ranged Weapon", TagType.Weapon),
-                new Tag("Adventure Gear", TagType.GeneralGoods),
-                new Tag("Tools", TagType.GeneralGoods),
+                "Snack",
+                "Light Armor", 
+                "Simple Melee Weapon",
+                "Simple Ranged Weapon",
+                "Adventure Gear",
+                "Tools"
             },
             Array.Empty<ServiceType>()
         ),
@@ -530,9 +530,9 @@ public static class LocationTypes
             false,
             new[]
             {
-                new Tag("Snack", TagType.Food),
-                new Tag("Meal", TagType.Food),
-                new Tag("Spirits", TagType.Food)
+                "Snack",
+                "Meal",
+                "Spirits"
             },
             new[] { ServiceType.Food, ServiceType.Lodging }
         ),
@@ -552,7 +552,7 @@ public static class LocationTypes
             false,
             false,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             Array.Empty<ServiceType>()
         ),
         new LocationType(
@@ -571,7 +571,7 @@ public static class LocationTypes
             false,
             false,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             Array.Empty<ServiceType>()
         ),
         new LocationType(
@@ -590,7 +590,7 @@ public static class LocationTypes
             false,
             false,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             new[] { ServiceType.Ships }
         ),
         new LocationType(
@@ -609,7 +609,7 @@ public static class LocationTypes
             false,
             false,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             new[] { ServiceType.Ships }
         ),
         new LocationType(
@@ -628,7 +628,7 @@ public static class LocationTypes
             false,
             false,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             new[] { ServiceType.Ships }
         ),
         new LocationType(
@@ -647,7 +647,7 @@ public static class LocationTypes
             false,
             false,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             new[] { ServiceType.Ships }
         ),
         new LocationType(
@@ -666,7 +666,7 @@ public static class LocationTypes
             false,
             false,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             Array.Empty<ServiceType>()
         ),
         new LocationType(
@@ -685,7 +685,7 @@ public static class LocationTypes
             false,
             false,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             new[] { ServiceType.Healing }
         ),
         new LocationType(
@@ -704,7 +704,7 @@ public static class LocationTypes
             false,
             false,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             new[] { ServiceType.Healing }
         ),
         new LocationType(
@@ -723,7 +723,7 @@ public static class LocationTypes
             false,
             false,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             new[] { ServiceType.Healing, ServiceType.Lodging }
         ),
         new LocationType(
@@ -742,7 +742,7 @@ public static class LocationTypes
             false,
             true,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             new[] { ServiceType.Healing }
         ),
         new LocationType(
@@ -761,7 +761,7 @@ public static class LocationTypes
             false,
             true,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             Array.Empty<ServiceType>()
         ),
         new LocationType(
@@ -780,7 +780,7 @@ public static class LocationTypes
             false,
             true,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             Array.Empty<ServiceType>()
         ),
         new LocationType(
@@ -799,7 +799,7 @@ public static class LocationTypes
             false,
             true,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             Array.Empty<ServiceType>()
         ),
         new LocationType(
@@ -818,7 +818,7 @@ public static class LocationTypes
             false,
             true,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             new[] { ServiceType.Lodging, ServiceType.Food, ServiceType.Combat }
         ),
         new LocationType(
@@ -837,7 +837,7 @@ public static class LocationTypes
             false,
             true,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             new[] { ServiceType.Lodging, ServiceType.Healing, ServiceType.Food, ServiceType.Drinks, ServiceType.Combat }
         ),
         new LocationType(
@@ -858,14 +858,14 @@ public static class LocationTypes
             false,
             new[]
             {
-                new Tag("Light Armor", TagType.Armor),
-                new Tag("Medium Armor", TagType.Armor),
-                new Tag("Heavy Armor", TagType.Armor),
-                new Tag("Shield", TagType.Armor),
-                new Tag("Simple Melee Weapon", TagType.Weapon),
-                new Tag("Martial Melee Weapon", TagType.Weapon),
-                new Tag("Martial Ranged Weapon", TagType.Weapon),
-                new Tag("Simple Ranged Weapon", TagType.Weapon)
+                "Light Armor",
+                "Medium Armor",
+                "Heavy Armor",
+                "Shield",
+                "Simple Melee Weapon", 
+                "Martial Melee Weapon", 
+                "Martial Ranged Weapon", 
+                "Simple Ranged Weapon"
             },
             new[] { ServiceType.Repair, ServiceType.Upgrade }
         ),
@@ -885,7 +885,7 @@ public static class LocationTypes
             false,
             true,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             Array.Empty<ServiceType>()
         ),
         new LocationType(
@@ -904,7 +904,7 @@ public static class LocationTypes
             false,
             true,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             Array.Empty<ServiceType>()
         ),
         new LocationType(
@@ -923,7 +923,7 @@ public static class LocationTypes
             false,
             true,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             Array.Empty<ServiceType>()
         ),
         new LocationType(
@@ -942,7 +942,7 @@ public static class LocationTypes
             false,
             false,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             new[] { ServiceType.Healing }
         ),
         new LocationType(
@@ -961,7 +961,7 @@ public static class LocationTypes
             false,
             false,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             Array.Empty<ServiceType>()
         ),
         new LocationType(
@@ -980,7 +980,7 @@ public static class LocationTypes
             false,
             false,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             new[] { ServiceType.Food, ServiceType.Drinks }
         ),
         new LocationType(
@@ -999,7 +999,7 @@ public static class LocationTypes
             false,
             false,
             false,
-            Array.Empty<Tag>(),
+            Array.Empty<string>(),
             new[] { ServiceType.Food, ServiceType.Drinks, ServiceType.Lodging }
         )
     };

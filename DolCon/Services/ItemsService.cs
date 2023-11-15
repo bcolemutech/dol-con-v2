@@ -7,8 +7,8 @@ namespace DolCon.Services;
 
 public interface IItemsService
 {
-    IEnumerable<Item> GenerateItems(Rarity rarity, TagType type);
-    IEnumerable<Item> GetItems(Tag[]? goods, Rarity rarity);
+    IEnumerable<Item> GenerateItems(Rarity rarity, string type);
+    IEnumerable<Item> GetItems(string[]? goods, Rarity rarity);
 }
 
 public class ItemsService : IItemsService
@@ -25,13 +25,12 @@ public class ItemsService : IItemsService
         _items = JsonSerializer.Deserialize<List<Item>>(json) ?? new List<Item>();
     }
 
-    public IEnumerable<Item> GenerateItems(Rarity rarity, TagType type)
-    {
-        return _items.Where(i => i.Rarity == rarity && i.Tags.Any(x => x.type == type));
-    }
+    public IEnumerable<Item> GenerateItems(Rarity rarity, string type) =>
+        _items.Where(i => i.Rarity == rarity && i.Tags.Any(x => x.Name == type && x.type == TagType.Good));
 
-    public IEnumerable<Item> GetItems(Tag[]? goods, Rarity rarity)
-    {
-        return goods is null ? new List<Item>() : _items.Where(i => i.Rarity <= rarity && i.Tags.Any(goods.Contains));
-    }
+    public IEnumerable<Item> GetItems(string[]? goods, Rarity rarity) =>
+        goods is null
+            ? new List<Item>()
+            : _items.Where(i =>
+                i.Rarity <= rarity && i.Tags.Any(x => x.type == TagType.Good && goods.Contains(x.Name)));
 }
