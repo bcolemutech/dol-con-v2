@@ -34,6 +34,7 @@ public partial class GameService
         
         var table = new Table();
         table.AddColumn("Select");
+        table.AddColumn("Equipped");
         table.AddColumn("Name");
         table.AddColumn("Description");
         table.AddColumn("Rarity");
@@ -59,6 +60,7 @@ public partial class GameService
             var gold = sellingPrice / 100;
             table.AddRow(
                 selected,
+                item.Equipped ? "[green bold]X[/]" : "",
                 item.Name,
                 item.Description,
                 rarity,
@@ -74,7 +76,9 @@ public partial class GameService
                     Align.Center(
                         new Rows(
                             new Markup(
-                                "[bold]Standard controls[/]: ([green bold]H[/])ome | ([green bold]N[/])avigation | [Red bold]Esc[/] to exit")
+                                "[bold]Standard controls[/]: ([green bold]H[/])ome | ([green bold]N[/])avigation | [Red bold]Esc[/] to exit"),
+                            new Markup(
+                                "[bold]Inventory controls[/]: ([green bold]W[/]) Up | ([green bold]S[/]) Down | ([green bold]D[/]) Delete | ([green bold]E[/]) Equip/Unequip")
                         ),
                         VerticalAlignment.Middle))
                 .Expand());
