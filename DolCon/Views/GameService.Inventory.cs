@@ -32,6 +32,60 @@ public partial class GameService
             _inventorySelected = 0;
         }
         
+        if (_flow.Key is { Key: ConsoleKey.E} && SaveGameService.Party.Players.First().Inventory.Count > 0)
+        {
+            var items = SaveGameService.Party.Players.First().Inventory;
+            var item = items[_inventorySelected];
+            var type = item.Equipment;
+            switch (type)
+            {
+                case Equipment.None:
+                    break;
+                case Equipment.Head:
+                case Equipment.Body:
+                case Equipment.Legs:
+                case Equipment.Feet:
+                case Equipment.Hands:
+                case Equipment.Neck:
+                    item.Equipped = !item.Equipped;
+                    var equipped = items.Where(x => x.Equipment == type && x.Equipped).ToList();
+                    if (equipped.Count > 1)
+                    {
+                        equipped.ForEach(x => x.Equipped = false);
+                        item.Equipped = true;
+                    }
+                    break;
+                case Equipment.OneHanded:
+                case Equipment.TwoHanded:
+                case Equipment.Shield:
+                    item.Equipped = !item.Equipped;
+                    var oneHanded = items.Where(x => x is { Equipment: Equipment.OneHanded, Equipped: true }).ToList();
+                    var twoHanded = items.Where(x => x is { Equipment: Equipment.TwoHanded, Equipped: true }).ToList();
+                    var shield = items.Where(x => x is { Equipment: Equipment.Shield, Equipped: true }).ToList();
+                    if (oneHanded.Count > 2 || twoHanded.Count > 1 || (oneHanded.Count > 1 && shield.Count > 1) ||
+                        shield.Count > 1 || (twoHanded.Count > 0 && shield.Count > 0) || (oneHanded.Count > 0 && twoHanded.Count > 0))
+                    {
+                        oneHanded.ForEach(x => x.Equipped = false);
+                        twoHanded.ForEach(x => x.Equipped = false);
+                        shield.ForEach(x => x.Equipped = false);
+                        item.Equipped = true;
+                    }
+                    break;
+                case Equipment.Ring:
+                    item.Equipped = !item.Equipped;
+                    var rings = items.Where(x => x is { Equipment: Equipment.Ring, Equipped: true }).ToList();
+                    if (rings.Count > 2)
+                    {
+                        rings.ForEach(x => x.Equipped = false);
+                        item.Equipped = true;
+                    }
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+            
+        }
+        
         var table = new Table();
         table.AddColumn("Select");
         table.AddColumn("Equipped");
