@@ -6,7 +6,6 @@ public enum Screen
     Navigation = 78,
     Inventory = 73,
     Quests = 81,
-    Equipment = 69,
     Scene = -1
 }
 

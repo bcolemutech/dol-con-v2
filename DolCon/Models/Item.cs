@@ -9,4 +9,6 @@ public record Item
     public Rarity Rarity { get; set; }
     public List<Tag> Tags { get; set; }
     public int Price { get; set; }
+    public Equipment Equipment { get; set; }
+    public bool Equipped { get; set; } 
 }
