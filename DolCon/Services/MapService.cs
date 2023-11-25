@@ -99,6 +99,8 @@ public class MapService : IMapService
         ctx.Refresh();
 
         _cellTypes = LocationTypes.Types.Where(x => !x.IsBurgLocation).ToList();
+        
+        var crDistance = map.Collections.cells.Max(x => x.p.Max()) / 2;
 
         foreach (var cell in map.Collections.cells)
         {
