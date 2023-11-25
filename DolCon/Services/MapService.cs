@@ -91,6 +91,10 @@ public class MapService : IMapService
             { Type = x, Name = x.Type, Rarity = x.Rarity }));
         AnsiConsole.MarkupLine("City of Light established as [yellow]{0}[/]", cityOfLight.name);
 
+        var colCell = map.Collections.cells.First(x => x.i == cityOfLight.cell);
+        var colX = colCell.p[0];
+        var colY = colCell.p[1];
+
         ctx.Status("Provisioning cells...");
         ctx.Refresh();
 
