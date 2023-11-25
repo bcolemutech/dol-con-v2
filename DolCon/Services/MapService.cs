@@ -107,6 +107,7 @@ public class MapService : IMapService
             ctx.Status($"Setting up cell: {cell.i}...");
             ctx.Refresh();
             cell.locations.AddRange(ProvisionCellLocations(cell));
+            cell.ChallengeRating = CalculateChallengeRating(cell, colX, colY, crDistance);
         }
 
         ctx.Status("Provisioning burgs...");
@@ -139,6 +140,17 @@ public class MapService : IMapService
         _imageService.ProcessSvg();
 
         AnsiConsole.MarkupLine("Player position set to [yellow]{0}[/]", cityOfLight.name);
+    }
+
+    public static double CalculateChallengeRating(Cell cell, double colX, double colY, double crDistance)
+    {
+        var x = cell.p[0];
+        var y = cell.p[1];
+        var distance = Math.Sqrt(Math.Pow(x - colX, 2) + Math.Pow(y - colY, 2));
+        var crRatio = distance / crDistance;
+        var rawRating = crRatio * 20;
+        var nearest8Th = Math.Round(rawRating * 8, MidpointRounding.AwayFromZero) / 8;
+        return nearest8Th;
     }
 
     private IEnumerable<Location> ProvisionCellLocations(Cell cell)
