@@ -69,16 +69,32 @@ public partial class GameService : IGameService
     private async Task ProcessKey(CancellationToken token)
     {
         SetMessage(MessageType.Info, "Welcome to Dominion of Light");
-        
+
         do
         {
             if (_flow.Key is null)
             {
                 RenderScreen();
             }
+            else if (_flow.ShowExitConfirmation)
+            {
+                var result = KeyProcessor.ProcessExitConfirmation(_flow, _flow.Key.Value);
+                switch (result)
+                {
+                    case ExitConfirmationResult.Exit:
+                        return;
+                    case ExitConfirmationResult.Cancel:
+                        RenderScreen();
+                        break;
+                    case ExitConfirmationResult.Ignored:
+                        RenderExitConfirmation();
+                        break;
+                }
+            }
             else if (_flow.Key.Value is { Key: ConsoleKey.Escape })
             {
-                break;
+                _flow.ShowExitConfirmation = true;
+                RenderExitConfirmation();
             }
             else if (!_scene.IsCompleted)
             {
@@ -158,6 +174,33 @@ public partial class GameService : IGameService
         };
 
         _message.Update(new Panel(markup).Collapse());
+        _ctx.Refresh();
+    }
+
+    private void RenderExitConfirmation()
+    {
+        _display.Update(
+            new Panel(
+                    Align.Center(
+                        new Rows(
+                            new Markup("[bold yellow]Are you sure you want to exit?[/]"),
+                            new Markup(""),
+                            new Markup("Your game will be saved automatically."),
+                            new Markup(""),
+                            new Markup("[green bold]Y[/]es - Exit and save"),
+                            new Markup("[red bold]N[/]o - Return to game")
+                        ),
+                        VerticalAlignment.Middle))
+                .Border(BoxBorder.Double)
+                .Expand());
+
+        _controls.Update(
+            new Panel(
+                    Align.Center(
+                        new Markup("Press [green bold]Y[/] to confirm exit or [red bold]N[/] to cancel"),
+                        VerticalAlignment.Middle))
+                .Expand());
+
         _ctx.Refresh();
     }
 }
