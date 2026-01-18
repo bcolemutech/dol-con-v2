@@ -6,23 +6,23 @@ using Newtonsoft.Json;
 public class Map
 {
     public Info? info { get; set; }
-    public Settings settings { get; set; }
-    public Coords coords { get; set; }
-    
+    public Settings settings { get; set; } = null!;
+    public Coords coords { get; set; } = null!;
+
     [JsonPropertyName("cells")]
-    public MapCollections Collections { get; set; }
-    public Biomes biomes { get; set; }
-    public List<NameBasis> nameBases { get; set; }
-    public Party Party { get; set; }
+    public MapCollections Collections { get; set; } = null!;
+    public Biomes biomes { get; set; } = null!;
+    public List<NameBasis> nameBases { get; set; } = null!;
+    public Party Party { get; set; } = null!;
     public Guid CurrentPlayerId { get; set; }
 }
 
 public class MapCollections
 {
-    public List<Cell> cells { get; set; }
-    public List<Culture> cultures { get; set; }
-    public List<Burg> burgs { get; set; }
-    public List<State> states { get; set; }
-    public List<Province> provinces { get; set; }
-    public List<River> rivers { get; set; }
+    public List<Cell> cells { get; set; } = null!;
+    public List<Culture> cultures { get; set; } = null!;
+    public List<Burg> burgs { get; set; } = null!;
+    public List<State> states { get; set; } = null!;
+    public List<Province> provinces { get; set; } = null!;
+    public List<River> rivers { get; set; } = null!;
 }

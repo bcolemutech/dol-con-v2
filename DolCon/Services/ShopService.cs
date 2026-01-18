@@ -49,7 +49,7 @@ public class ShopService : IShopService
             }
 
             if (scene.Location is { Type.Services.Length: > 0 })
-                typeServices.AddRange(scene.Location?.Type.Services);
+                typeServices.AddRange(scene.Location.Type.Services);
 
             foreach (var s in typeServices)
             {
