@@ -5,7 +5,7 @@ using Enums;
 public class Scene
 {
     public MoveStatus MoveStatus { get; set; }
-    public string Message { get; set; }
+    public string Message { get; set; } = string.Empty;
     public bool IsCompleted { get; set; } = true;
     public SceneType Type { get; set; }
     public string? Title { get; set; }
