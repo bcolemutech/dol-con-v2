@@ -23,34 +23,32 @@ public class GameServiceNavigationTests
         }
     }
 
-    [Fact]
+    [SkippableFact]
     public void GetModifierKeyName_OnMacOS_ReturnsOption()
     {
-        // This test documents the expected behavior on macOS
-        // Note: This will only pass when run on macOS
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            // Act
-            var result = GameService.GetModifierKeyName();
+        // Skip if not running on macOS
+        Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.OSX), "Test only runs on macOS");
 
-            // Assert
-            result.Should().Be("Option");
-        }
+        // Act
+        var result = GameService.GetModifierKeyName();
+
+        // Assert
+        result.Should().Be("Option");
     }
 
-    [Fact]
+    [SkippableFact]
     public void GetModifierKeyName_OnWindowsOrLinux_ReturnsAlt()
     {
-        // This test documents the expected behavior on Windows/Linux
-        // Note: This will only pass when run on Windows or Linux
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ||
-            RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-        {
-            // Act
-            var result = GameService.GetModifierKeyName();
+        // Skip if not running on Windows or Linux
+        Skip.IfNot(
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.Linux),
+            "Test only runs on Windows or Linux");
 
-            // Assert
-            result.Should().Be("Alt");
-        }
+        // Act
+        var result = GameService.GetModifierKeyName();
+
+        // Assert
+        result.Should().Be("Alt");
     }
 }
