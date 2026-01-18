@@ -12,10 +12,10 @@ public interface IGameService
 
 public partial class GameService : IGameService
 {
-    private Layout _display;
-    private Layout _controls;
-    private Layout _message;
-    private LiveDisplayContext _ctx;
+    private Layout _display = null!;
+    private Layout _controls = null!;
+    private Layout _message = null!;
+    private LiveDisplayContext _ctx = null!;
     private readonly Flow _flow = new();
     
 

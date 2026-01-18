@@ -24,6 +24,7 @@ public class ImageService : IImageService
         {
             var doc = XDocument.Load(imagePath);
             var svg = doc.Root;
+            if (svg is null) return;
             var circles = svg.Elements();
             var current = circles.First(x => x.Attribute("id")?.Value == "current");
             current.Attribute("cx")?.SetValue(SaveGameService.CurrentCell.p[0]);
