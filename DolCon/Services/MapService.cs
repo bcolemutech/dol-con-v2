@@ -142,6 +142,18 @@ public class MapService : IMapService
         AnsiConsole.MarkupLine("Player position set to [yellow]{0}[/]", cityOfLight.name);
     }
 
+    /// <summary>
+    /// Calculates the challenge rating for a cell based on its distance from the City of Light.
+    /// </summary>
+    /// <param name="cell">The cell to calculate the challenge rating for.</param>
+    /// <param name="colX">The X coordinate of the City of Light.</param>
+    /// <param name="colY">The Y coordinate of the City of Light.</param>
+    /// <param name="crDistance">The maximum distance used for CR scaling (typically map dimension).</param>
+    /// <returns>
+    /// A challenge rating value rounded to the nearest 1/8th (0.125).
+    /// Cells closer to the City of Light have lower CRs, while distant cells have higher CRs.
+    /// The rating scales from 0 to 20 based on the distance ratio.
+    /// </returns>
     public static double CalculateChallengeRating(Cell cell, double colX, double colY, double crDistance)
     {
         var x = cell.p[0];
@@ -149,8 +161,8 @@ public class MapService : IMapService
         var distance = Math.Sqrt(Math.Pow(x - colX, 2) + Math.Pow(y - colY, 2));
         var crRatio = distance / crDistance;
         var rawRating = crRatio * 20;
-        var nearest8Th = Math.Round(rawRating * 8, MidpointRounding.AwayFromZero) / 8;
-        return nearest8Th;
+        var nearest8th = Math.Round(rawRating * 8, MidpointRounding.AwayFromZero) / 8;
+        return nearest8th;
     }
 
     private IEnumerable<Location> ProvisionCellLocations(Cell cell)

@@ -37,12 +37,12 @@ public class EventService : IEventService
                         : 1.0;
 
                     // Roll for combat encounter
-                    var (encounterOccurred, roll, adjustedCR) = RollForCombatEncounter(baseChallengeRating);
+                    var (encounterOccurred, _, adjustedCR) = RollForCombatEncounter(baseChallengeRating);
 
                     if (encounterOccurred)
                     {
                         // Combat encounter - distribute rewards
-                        var subMessage = "";
+                        var subMessageBuilder = new System.Text.StringBuilder();
                         var totalCoin = 0;
                         foreach (var player in SaveGameService.Party.Players)
                         {
@@ -58,11 +58,11 @@ public class EventService : IEventService
                             }
                             else
                             {
-                                subMessage += player.Name + " inventory is full. ";
+                                subMessageBuilder.Append($"{player.Name} inventory is full. ");
                             }
                         }
 
-                        scene.Message = $"Combat encounter! (CR: {adjustedCR:F2}) The party defeated the enemies and earned {totalCoin} coin. {subMessage}";
+                        scene.Message = $"Combat encounter! (CR: {adjustedCR:F2}) The party defeated the enemies and earned {totalCoin} coin. {subMessageBuilder}";
                     }
                     else
                     {
