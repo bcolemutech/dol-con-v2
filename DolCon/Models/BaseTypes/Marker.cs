@@ -2,8 +2,8 @@
 
 public class Marker
 {
-    public string icon { get; set; }
-    public string type { get; set; }
+    public string icon { get; set; } = null!;
+    public string type { get; set; } = null!;
     public int dx { get; set; }
     public int px { get; set; }
     public double x { get; set; }

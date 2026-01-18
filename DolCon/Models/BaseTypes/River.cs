@@ -11,8 +11,8 @@ public class River
     public double widthFactor { get; set; }
     public int sourceWidth { get; set; }
     public int parent { get; set; }
-    public List<int> cells { get; set; }
+    public List<int> cells { get; set; } = null!;
     public int basin { get; set; }
-    public string name { get; set; }
-    public string type { get; set; }
+    public string name { get; set; } = null!;
+    public string type { get; set; } = null!;
 }
