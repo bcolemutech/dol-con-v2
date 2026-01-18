@@ -123,9 +123,25 @@ public class ShopService : IShopService
             var item = inventory[selection.ItemId];
             inventory.RemoveAt(selection.ItemId);
 
+            // Preserve selection index before rebuilding
+            var previousSelection = scene.Selection;
+
             // Rebuild selections with updated inventory
             scene.Selections = GetServiceSelections(scene);
-            scene.Selection = 0;
+
+            // Clamp selection index to remain within bounds of rebuilt list
+            if (scene.Selections.Count > 0)
+            {
+                // Convert from 1-based selection to 0-based index, clamp, then convert back
+                var previousIndex = previousSelection - 1;
+                var maxIndex = scene.Selections.Count - 1;
+                var clampedIndex = Math.Min(previousIndex, maxIndex);
+                scene.Selection = clampedIndex + 1;
+            }
+            else
+            {
+                scene.Selection = 0;
+            }
 
             message = $"You sold {item.Name} for [bold gold1]{gold}[/]|[bold silver]{silver}[/]|[bold tan]{copper}[/].";
 
