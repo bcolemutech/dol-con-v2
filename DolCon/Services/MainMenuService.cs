@@ -50,6 +50,9 @@ public class MainMenuService : IMainMenuService
         if (!saves.Any())
         {
             AnsiConsole.MarkupLine("[red]No saves found![/]");
+            AnsiConsole.WriteLine("Press any key to return to the main menu...");
+            Console.ReadKey(true);
+            await Show(cancellationToken);
             return;
         }
 
