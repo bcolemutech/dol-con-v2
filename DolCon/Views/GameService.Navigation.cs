@@ -16,7 +16,7 @@ public partial class GameService
     /// <summary>
     /// Gets the platform-specific modifier key name (Alt on Windows/Linux, Option on macOS)
     /// </summary>
-    private static string GetModifierKeyName()
+    internal static string GetModifierKeyName()
     {
         return OperatingSystem.IsMacOS() ? "Option" : "Alt";
     }
