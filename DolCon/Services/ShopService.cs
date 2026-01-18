@@ -122,8 +122,11 @@ public class ShopService : IShopService
             var inventory = player.Inventory;
             var item = inventory[selection.ItemId];
             inventory.RemoveAt(selection.ItemId);
-            scene.Selections.Remove(selection.ItemId + 1);
-            
+
+            // Rebuild selections with updated inventory
+            scene.Selections = GetServiceSelections(scene);
+            scene.Selection = 0;
+
             message = $"You sold {item.Name} for [bold gold1]{gold}[/]|[bold silver]{silver}[/]|[bold tan]{copper}[/].";
 
         }
@@ -168,11 +171,13 @@ public class ShopService : IShopService
             {
                 var player = SaveGameService.Party.Players[0];
                 var inventory = player.Inventory;
+                var itemIndex = 0;
                 foreach (var item in inventory)
                 {
                     var price = (item.Price / 2) * -1;
-                    selections.Add(i, new ShopSelection { Name = item.Name, Price = price, Afford = true });
+                    selections.Add(i, new ShopSelection { Name = item.Name, Price = price, Afford = true, ItemId = itemIndex });
                     i++;
+                    itemIndex++;
                 }
 
                 break;
