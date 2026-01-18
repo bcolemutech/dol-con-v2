@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-DolCon is a console-based role-playing game written in C# (.NET 8.0) using Spectre.Console for the UI. The game features map-based exploration with parties traveling across cells, burgs (settlements), and locations while managing stamina, inventory, and currency. Players can explore locations, interact with vendors, and manage equipment.
+DolCon is a console-based role-playing game written in C# (.NET 10.0) using Spectre.Console for the UI. The game features map-based exploration with parties traveling across cells, burgs (settlements), and locations while managing stamina, inventory, and currency. Players can explore locations, interact with vendors, and manage equipment.
 
 ## Commands
 
