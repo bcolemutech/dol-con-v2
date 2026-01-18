@@ -91,16 +91,23 @@ public class MapService : IMapService
             { Type = x, Name = x.Type, Rarity = x.Rarity }));
         AnsiConsole.MarkupLine("City of Light established as [yellow]{0}[/]", cityOfLight.name);
 
+        var colCell = map.Collections.cells.First(x => x.i == cityOfLight.cell);
+        var colX = colCell.p[0];
+        var colY = colCell.p[1];
+
         ctx.Status("Provisioning cells...");
         ctx.Refresh();
 
         _cellTypes = LocationTypes.Types.Where(x => !x.IsBurgLocation).ToList();
+        
+        var crDistance = map.Collections.cells.Max(x => x.p.Max()) / 2;
 
         foreach (var cell in map.Collections.cells)
         {
             ctx.Status($"Setting up cell: {cell.i}...");
             ctx.Refresh();
             cell.locations.AddRange(ProvisionCellLocations(cell));
+            cell.ChallengeRating = CalculateChallengeRating(cell, colX, colY, crDistance);
         }
 
         ctx.Status("Provisioning burgs...");
@@ -133,6 +140,29 @@ public class MapService : IMapService
         _imageService.ProcessSvg();
 
         AnsiConsole.MarkupLine("Player position set to [yellow]{0}[/]", cityOfLight.name);
+    }
+
+    /// <summary>
+    /// Calculates the challenge rating for a cell based on its distance from the City of Light.
+    /// </summary>
+    /// <param name="cell">The cell to calculate the challenge rating for.</param>
+    /// <param name="colX">The X coordinate of the City of Light.</param>
+    /// <param name="colY">The Y coordinate of the City of Light.</param>
+    /// <param name="crDistance">The maximum distance used for CR scaling (typically map dimension).</param>
+    /// <returns>
+    /// A challenge rating value rounded to the nearest 1/8th (0.125).
+    /// Cells closer to the City of Light have lower CRs, while distant cells have higher CRs.
+    /// The rating scales from 0 to 20 based on the distance ratio.
+    /// </returns>
+    public static double CalculateChallengeRating(Cell cell, double colX, double colY, double crDistance)
+    {
+        var x = cell.p[0];
+        var y = cell.p[1];
+        var distance = Math.Sqrt(Math.Pow(x - colX, 2) + Math.Pow(y - colY, 2));
+        var crRatio = distance / crDistance;
+        var rawRating = crRatio * 20;
+        var nearest8th = Math.Round(rawRating * 8, MidpointRounding.AwayFromZero) / 8;
+        return nearest8th;
     }
 
     private IEnumerable<Location> ProvisionCellLocations(Cell cell)

@@ -31,28 +31,44 @@ public class EventService : IEventService
                 scene.MoveStatus = ProcessExploration();
                 if (scene.MoveStatus == MoveStatus.Success)
                 {
-                    var subMessage = "";
-                    var totalCoin = 0;
-                    foreach (var player in SaveGameService.Party.Players)
+                    // Get challenge rating from current cell (default to 1.0 if CR is 0)
+                    var baseChallengeRating = SaveGameService.CurrentCell.ChallengeRating > 0
+                        ? SaveGameService.CurrentCell.ChallengeRating
+                        : 1.0;
+
+                    // Roll for combat encounter
+                    var (encounterOccurred, _, adjustedCR) = RollForCombatEncounter(baseChallengeRating);
+
+                    if (encounterOccurred)
                     {
-                        var random = new Chance().New();
-                        var playerCoin = random.Dice(100) * 10;
-                        player.coin += playerCoin;
-                        totalCoin += playerCoin;
+                        // Combat encounter - distribute rewards
+                        var subMessageBuilder = new System.Text.StringBuilder();
+                        var totalCoin = 0;
+                        foreach (var player in SaveGameService.Party.Players)
+                        {
+                            var random = new Chance().New();
+                            var playerCoin = random.Dice(100) * 10;
+                            player.coin += playerCoin;
+                            totalCoin += playerCoin;
 
-                        if (player.Inventory.Count < 50)
-                        {
-                            var item = _shopService.GenerateReward();
-                            player.Inventory.Add(item);
+                            if (player.Inventory.Count < 50)
+                            {
+                                var item = _shopService.GenerateReward();
+                                player.Inventory.Add(item);
+                            }
+                            else
+                            {
+                                subMessageBuilder.Append($"{player.Name} inventory is full. ");
+                            }
                         }
-                        else
-                        {
-                            subMessage += player.Name + " inventory is full. ";
-                        }
-                        
+
+                        scene.Message = $"Combat encounter! (CR: {adjustedCR:F2}) The party defeated the enemies and earned {totalCoin} coin. {subMessageBuilder}";
                     }
-
-                    scene.Message = "You have explored the area. You have found " + totalCoin + " coin. " + subMessage;
+                    else
+                    {
+                        // No encounter - exploration but no rewards
+                        scene.Message = "The party explored the area but encountered nothing of interest.";
+                    }
                 }
                 else
                 {
@@ -75,6 +91,28 @@ public class EventService : IEventService
         scene.Location = thisEvent.Location;
         scene = _shopService.ProcessShop(scene);
         return scene;
+    }
+
+    private static (bool encounterOccurred, int roll, double adjustedCR) RollForCombatEncounter(double baseChallengeRating)
+    {
+        var chance = new Chance();
+        var roll = chance.Dice(20);
+
+        bool encounterOccurred = roll > 5;
+        double adjustedCR = baseChallengeRating;
+
+        if (encounterOccurred)
+        {
+            adjustedCR = roll switch
+            {
+                20 => baseChallengeRating * 1.20,      // +20%
+                >= 16 => baseChallengeRating * 1.15,   // +15%
+                >= 11 => baseChallengeRating * 1.10,   // +10%
+                _ => baseChallengeRating
+            };
+        }
+
+        return (encounterOccurred, roll, adjustedCR);
     }
 
     private static MoveStatus ProcessExploration()

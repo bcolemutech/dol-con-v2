@@ -46,4 +46,6 @@ public class Cell
     };
     
     public Biome Biome => (Biome)this.biome;
+    
+    public double ChallengeRating { get; set; }
 }

@@ -3,6 +3,7 @@
 namespace DolCon.Views;
 
 using Enums;
+using Services;
 
 public partial class GameService
 {
@@ -95,6 +96,9 @@ public partial class GameService
             }
         }
 
+        var player = SaveGameService.Party.Players.First();
+        var coinDisplay = $"Your Coin: [bold gold1]{player.gold}[/]|[bold silver]{player.silver}[/]|[bold tan]{player.copper}[/]";
+
         _display.Update(
             new Panel(
                 new Rows(
@@ -102,6 +106,8 @@ public partial class GameService
                         new Markup($"[bold black on white]{_scene.Title}[/]")),
                     Align.Center(
                         new Markup($"[bold]{_scene.Description}[/]")),
+                    Align.Center(
+                        new Markup(coinDisplay)),
                     Align.Center(
                         selectionTable
                     )

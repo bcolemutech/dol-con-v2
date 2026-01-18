@@ -52,4 +52,38 @@ public class MapServiceTests
         burg.size.Should().Be(size);
         burg.population.Should().BeApproximately(near, .1);
     }
+
+    [Fact]
+    public void GivenACellCalculateTheChallengeRating()
+    {
+        // Arrange
+        var cell = new Cell
+        {
+            p = new List<double>
+            {
+                50, 50
+            }
+        };
+        // Act
+        var actual = MapService.CalculateChallengeRating(cell, 25,25, 50);
+        // Assert
+        actual.Should().Be(14.125);
+    }
+    
+    [Fact]
+    public void GivenACellMoreThanCrDistanceCalculateTheChallengeRating()
+    {
+        // Arrange
+        var cell = new Cell
+        {
+            p = new List<double>
+            {
+                75, 75
+            }
+        };
+        // Act
+        var actual = MapService.CalculateChallengeRating(cell, 25,25, 50);
+        // Assert
+        actual.Should().Be(28.25);
+    }
 }
