@@ -51,7 +51,7 @@ public class SaveGameService : ISaveGameService
 
     public async Task<string> SaveGame(string saveName = "AutoSave")
     {
-        var saveGamePath = Path.Combine(_savesPath, $"{CurrentMap.info.mapName}.{saveName}.json");
+        var saveGamePath = Path.Combine(_savesPath, $"{CurrentMap.info?.mapName ?? "unknown"}.{saveName}.json");
         await AnsiConsole.Status().StartAsync("Saving game...", async ctx =>
         {
             ctx.Spinner(Spinner.Known.Star);

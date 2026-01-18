@@ -11,13 +11,13 @@ public class Burg
     public int? state { get; set; }
     public int? i { get; set; }
     public int? culture { get; set; }
-    public string name { get; set; }
+    public string name { get; set; } = null!;
     public int? feature { get; set; }
     public int? capital { get; set; }
     public int? port { get; set; }
     public double population { get; set; } = 0;
-    public string type { get; set; }
-    public Coa coa { get; set; }
+    public string type { get; set; } = null!;
+    public Coa coa { get; set; } = null!;
     public int? citadel { get; set; }
     public int? plaza { get; set; }
     public int? walls { get; set; }

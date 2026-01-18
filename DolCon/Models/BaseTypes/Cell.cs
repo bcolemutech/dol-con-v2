@@ -5,9 +5,9 @@ using Enums;
 public class Cell
 {
     public int i { get; set; }
-    public List<int> v { get; set; }
-    public List<int> c { get; set; }
-    public List<double> p { get; set; }
+    public List<int> v { get; set; } = null!;
+    public List<int> c { get; set; } = null!;
+    public List<double> p { get; set; } = null!;
     public int g { get; set; }
     public int h { get; set; }
     public int area { get; set; }
