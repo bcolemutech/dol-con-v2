@@ -8,6 +8,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <InternalsVisibleTo Include="DolCon.Tests" />
+    </ItemGroup>
+
+    <ItemGroup>
       <PackageReference Include="Chance.NET" Version="2.2.0" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.2" />
       <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.2" />
