@@ -13,6 +13,14 @@ public partial class GameService
     private Dictionary<int, int> _directionOptions = new();
     private Dictionary<int, Guid> _locationOptions = new();
 
+    /// <summary>
+    /// Gets the platform-specific modifier key name (Alt on Windows/Linux, Option on macOS)
+    /// </summary>
+    internal static string GetModifierKeyName()
+    {
+        return OperatingSystem.IsMacOS() ? "Option" : "Alt";
+    }
+
     private void RenderNavigation(ConsoleKeyInfo value)
     {
         var currentCell = SaveGameService.CurrentCell;
@@ -240,7 +248,7 @@ public partial class GameService
                 ? $"[green bold]{location.ExploredPercent:P}[/] explored"
                 : "[green bold]Fully explored[/]";
             locationsTable.AddRow(
-                key < 10 ? $"{key}" : $"Alt+{key - 10}",
+                key < 10 ? $"{key}" : $"{GetModifierKeyName()}+{key - 10}",
                 location.Name,
                 location.Type.Type,
                 location.Rarity.ToString(),
@@ -327,7 +335,7 @@ public partial class GameService
         foreach (var location in currentCell.locations.Where(x => x.Discovered))
         {
             var key = i++;
-            var keyString = key < 10 ? $"{key}" : $"Alt+{key - 10}";
+            var keyString = key < 10 ? $"{key}" : $"{GetModifierKeyName()}+{key - 10}";
             _locationOptions.Add(key, location.Id);
 
             var exploredString = location.ExploredPercent < 1 && location.Type.Size != LocationSize.unexplorable
