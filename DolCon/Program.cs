@@ -1,8 +1,12 @@
-﻿using DolCon.Services;
+﻿using DolCon.Data;
+using DolCon.Services;
 using DolCon.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using GameService = DolCon.Views.GameService;
+
+// Initialize enemy index at startup
+EnemyIndex.Initialize();
 
 using var host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((hostContext, services) =>
@@ -18,6 +22,7 @@ using var host = Host.CreateDefaultBuilder(args)
         services.AddSingleton<IShopService, ShopService>();
         services.AddSingleton<IServicesService, ServicesService>();
         services.AddSingleton<IItemsService, ItemsService>();
+        services.AddSingleton<ICombatService, CombatService>();
         services.AddHostedService<HostedService>();
     })
     .Build();
