@@ -24,14 +24,16 @@ public partial class GameService : IGameService
     private readonly IEventService _eventService;
     private Scene _scene = new();
     private readonly IShopService _shopService;
+    private readonly ICombatService _combatService;
 
     public GameService(IImageService imageService, IMoveService moveService, IEventService eventService,
-        IShopService shopService)
+        IShopService shopService, ICombatService combatService)
     {
         _imageService = imageService;
         _moveService = moveService;
         _eventService = eventService;
         _shopService = shopService;
+        _combatService = combatService;
     }
 
     public async Task Start(CancellationToken token)
