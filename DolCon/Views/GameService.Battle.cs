@@ -8,7 +8,11 @@ namespace DolCon.Views;
 
 public partial class GameService
 {
-    private const int EnemyTurnDisplayMs = 1000;
+    private const int ActionDisplayMs = 1000;
+
+    // Track if we're displaying the player's action result
+    private bool _isDisplayingPlayerAction;
+    private DateTime? _playerActionDisplayStart;
 
     private void RenderBattle()
     {
@@ -21,6 +25,8 @@ public partial class GameService
                 SaveGameService.Party.Stamina,
                 biome,
                 _scene.EncounterCR);
+            _isDisplayingPlayerAction = false;
+            _playerActionDisplayStart = null;
         }
 
         var state = _scene.CombatState;
@@ -32,19 +38,39 @@ public partial class GameService
             return;
         }
 
+        // Handle player action display pause
+        if (_isDisplayingPlayerAction)
+        {
+            RenderBattleUI(state);
+
+            if (_playerActionDisplayStart.HasValue &&
+                (DateTime.Now - _playerActionDisplayStart.Value).TotalMilliseconds >= ActionDisplayMs)
+            {
+                _isDisplayingPlayerAction = false;
+                _playerActionDisplayStart = null;
+
+                // Now process enemy turn if it's their turn
+                if (!state.IsPlayerTurn() && state.Result == CombatResult.InProgress)
+                {
+                    _combatService.ProcessEnemyTurn(state);
+                }
+            }
+
+            Thread.Sleep(50);
+            _flow.Redirect = true;
+            return;
+        }
+
         // Handle enemy turn display pause
         if (state.IsDisplayingEnemyTurn)
         {
             RenderBattleUI(state);
 
-            // Check if pause has elapsed
             if (state.EnemyTurnDisplayStart.HasValue &&
-                (DateTime.Now - state.EnemyTurnDisplayStart.Value).TotalMilliseconds >= EnemyTurnDisplayMs)
+                (DateTime.Now - state.EnemyTurnDisplayStart.Value).TotalMilliseconds >= ActionDisplayMs)
             {
                 state.IsDisplayingEnemyTurn = false;
                 _combatService.AdvanceTurn(state);
-
-                // Check for combat end after advancing turn
                 _combatService.CheckCombatEnd(state);
 
                 // If next combatant is also an enemy, process their turn automatically
@@ -54,54 +80,64 @@ public partial class GameService
                 }
             }
 
-            // Keep looping without waiting for key input during enemy display
-            // Small delay to prevent CPU spinning
             Thread.Sleep(50);
             _flow.Redirect = true;
             return;
         }
 
-        // Process input on player turn
+        // Process input on player turn only
         if (state.IsPlayerTurn())
         {
-            ProcessPlayerCombatInput(state);
+            var actionTaken = ProcessPlayerCombatInput(state);
+
+            if (actionTaken && state.LastAttackResult != null)
+            {
+                // Start player action display pause
+                _isDisplayingPlayerAction = true;
+                _playerActionDisplayStart = DateTime.Now;
+            }
         }
         else
         {
-            // Auto-process enemy turn
+            // Auto-process enemy turn (shouldn't normally reach here due to chaining above)
             _combatService.ProcessEnemyTurn(state);
         }
 
         RenderBattleUI(state);
 
-        // If enemy turn just started displaying, keep the loop running
-        if (state.IsDisplayingEnemyTurn)
+        // Keep looping during action displays
+        if (_isDisplayingPlayerAction || state.IsDisplayingEnemyTurn)
         {
             _flow.Redirect = true;
         }
     }
 
-    private void ProcessPlayerCombatInput(CombatState state)
+    /// <summary>
+    /// Process player combat input. Returns true if a combat action was taken (attack/defend/flee).
+    /// </summary>
+    private bool ProcessPlayerCombatInput(CombatState state)
     {
         switch (_flow.Key)
         {
             case { Key: ConsoleKey.A }:
                 var targetId = GetSelectedTargetId(state);
                 _combatService.ProcessPlayerAction(state, CombatAction.Attack, targetId);
-                break;
+                return true;
             case { Key: ConsoleKey.D }:
                 _combatService.ProcessPlayerAction(state, CombatAction.Defend);
-                break;
+                return true;
             case { Key: ConsoleKey.F } when state.CanFlee:
                 _combatService.ProcessPlayerAction(state, CombatAction.Flee);
-                break;
+                return true;
             case { Key: ConsoleKey.UpArrow } or { Key: ConsoleKey.W }:
                 state.SelectedTargetIndex = Math.Max(0, state.SelectedTargetIndex - 1);
-                break;
+                return false;
             case { Key: ConsoleKey.DownArrow } or { Key: ConsoleKey.S }:
                 var aliveCount = state.GetAliveEnemies().Count;
                 state.SelectedTargetIndex = Math.Min(aliveCount - 1, state.SelectedTargetIndex + 1);
-                break;
+                return false;
+            default:
+                return false;
         }
     }
 
@@ -195,10 +231,20 @@ public partial class GameService
                 )).Expand());
         _ctx.Refresh();
 
-        // Controls - hide during enemy turn display
-        var controlText = state.IsDisplayingEnemyTurn
-            ? "[dim]Enemy is attacking...[/]"
-            : $"[green]A[/]ttack | [blue]D[/]efend{(state.CanFlee ? " | [yellow]F[/]lee" : "")} | [dim]W/S or Arrows to select target[/]";
+        // Controls - hide during action display
+        string controlText;
+        if (_isDisplayingPlayerAction)
+        {
+            controlText = "[dim]Your attack...[/]";
+        }
+        else if (state.IsDisplayingEnemyTurn)
+        {
+            controlText = "[dim]Enemy is attacking...[/]";
+        }
+        else
+        {
+            controlText = $"[green]A[/]ttack | [blue]D[/]efend{(state.CanFlee ? " | [yellow]F[/]lee" : "")} | [dim]W/S or Arrows to select target[/]";
+        }
 
         _controls.Update(
             new Panel(
@@ -333,6 +379,8 @@ public partial class GameService
         _scene.IsCompleted = true;
         _scene.CombatState = null;
         _scene.EncounterCR = 0;
+        _isDisplayingPlayerAction = false;
+        _playerActionDisplayStart = null;
         _flow.Screen = Screen.Navigation;
         _flow.Redirect = true;
     }
