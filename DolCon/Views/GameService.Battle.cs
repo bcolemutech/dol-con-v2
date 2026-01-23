@@ -50,8 +50,8 @@ public partial class GameService
                 // Any key press advances to enemy turn
                 if (_flow.Key != null && _flow.Key.Value.Key != ConsoleKey.NoName)
                 {
-                    // Process enemy turn if it's their turn
-                    if (!state.IsPlayerTurn() && state.Result == CombatResult.InProgress)
+                    // Process enemy turn if it's their turn (result is always InProgress here)
+                    if (!state.IsPlayerTurn())
                     {
                         _combatService.ProcessEnemyTurn(state);
                         _combatDisplayState = CombatDisplayState.ShowingEnemyResult;
@@ -325,23 +325,24 @@ public partial class GameService
         var newStamina = CombatService.CalculatePostCombatStamina(state, SaveGameService.Party.Stamina);
         SaveGameService.Party.Stamina = newStamina;
 
-        // Give item rewards to first player with space
-        foreach (var player in SaveGameService.Party.Players)
+        // Give loot from pending loot (enemy drops) to players with inventory space
+        var playersWithSpace = SaveGameService.Party.Players
+            .Where(p => p.Inventory.Count < 50)
+            .ToList();
+
+        foreach (var lootDrop in state.PendingLoot)
         {
-            if (player.Inventory.Count < 50)
-            {
-                var item = _shopService.GenerateReward();
-                player.Inventory.Add(item);
-                break;
-            }
+            var recipient = playersWithSpace.FirstOrDefault(p => p.Inventory.Count < 50);
+            if (recipient == null) break;
+
+            // Convert loot drop to item via shop service
+            var item = _shopService.GenerateReward();
+            recipient.Inventory.Add(item);
         }
 
-        // Give coin rewards
+        // Give coin rewards based on XP earned
         var coinReward = state.TotalXPEarned / 2;
-        foreach (var player in SaveGameService.Party.Players)
-        {
-            player.coin += coinReward;
-        }
+        SaveGameService.Party.Players.ForEach(p => p.coin += coinReward);
     }
 
     private void ApplyFleeConsequences()

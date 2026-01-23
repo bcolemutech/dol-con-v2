@@ -46,15 +46,14 @@ public class PlayerCombatant : CombatEntity
         // Base AC
         ArmorClass = 10;
 
-        var equippedItems = _player.Inventory.Where(i => i.Equipped).ToList();
+        // Find equipped armor items and calculate AC bonus
+        var equippedArmorItems = _player.Inventory
+            .Where(i => i.Equipped && i.Tags.Any(t => t.Name.Contains("Armor")))
+            .ToList();
 
-        foreach (var item in equippedItems)
+        foreach (var item in equippedArmorItems)
         {
-            // Armor adds to AC
-            if (item.Tags.Any(t => t.Name.Contains("Armor")))
-            {
-                ArmorClass += CalculateArmorBonus(item);
-            }
+            ArmorClass += CalculateArmorBonus(item);
         }
     }
 

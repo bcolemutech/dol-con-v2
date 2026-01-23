@@ -257,10 +257,19 @@ public class CombatService : ICombatService
 
     private void ProcessDefend(CombatState state, PlayerCombatant player)
     {
-        // Defending gives +2 AC until next turn (simplified - we just log it)
+        // Defending gives +2 AC until their next turn
         player.ArmorClass += 2;
         player.HasUsedDefend = true;
         state.CombatLog.Add($"{player.Name} takes a defensive stance. (+2 AC)");
+    }
+
+    private void ResetDefendBonusIfNeeded(PlayerCombatant player)
+    {
+        if (player.HasUsedDefend)
+        {
+            player.ArmorClass -= 2;
+            player.HasUsedDefend = false;
+        }
     }
 
     private void ProcessFlee(CombatState state)
@@ -345,13 +354,6 @@ public class CombatService : ICombatService
         state.IsDisplayingEnemyTurn = true;
         state.EnemyTurnDisplayStart = DateTime.Now;
 
-        // Reset defend bonus if player had it
-        if (target.HasUsedDefend)
-        {
-            target.ArmorClass -= 2;
-            target.HasUsedDefend = false;
-        }
-
         CheckCombatEnd(state);
 
         // Note: Turn advancement is now handled by the UI after the display pause
@@ -407,16 +409,13 @@ public class CombatService : ICombatService
             // Calculate total XP from all enemies
             state.TotalXPEarned = state.Enemies.Sum(e => e.ExperienceValue);
 
-            // Generate loot
-            foreach (var enemy in state.Enemies)
+            // Generate loot from defeated enemies
+            var lootDrops = state.Enemies
+                .SelectMany(e => e.PossibleLoot)
+                .Where(loot => _rng.NextDouble() <= loot.DropChance);
+            foreach (var lootDrop in lootDrops)
             {
-                foreach (var lootDrop in enemy.PossibleLoot)
-                {
-                    if (_rng.NextDouble() <= lootDrop.DropChance)
-                    {
-                        state.PendingLoot.Add(lootDrop);
-                    }
-                }
+                state.PendingLoot.Add(lootDrop);
             }
 
             state.CombatLog.Add("Victory! The party is victorious!");
@@ -436,7 +435,6 @@ public class CombatService : ICombatService
         if (state.TurnOrder.Count == 0)
             return;
 
-        var startIndex = state.CurrentTurnIndex;
         var loopCount = 0;
 
         do
@@ -459,6 +457,13 @@ public class CombatService : ICombatService
         while (!state.TurnOrder[state.CurrentTurnIndex].IsAlive);
 
         state.ActiveCombatantId = state.TurnOrder[state.CurrentTurnIndex].Id;
+
+        // Reset defend bonus when player's turn starts
+        var activePlayer = state.Players.FirstOrDefault(p => p.Id == state.ActiveCombatantId);
+        if (activePlayer != null)
+        {
+            ResetDefendBonusIfNeeded(activePlayer);
+        }
     }
 
     /// <summary>

@@ -58,7 +58,7 @@ public class Enemy : CombatEntity
             8 => 3900,
             9 => 5000,
             10 => 5900,
-            _ => (int)(ExperienceValue * Math.Pow(1.5, ChallengeRating - 10))
+            _ => (int)(5900 * Math.Pow(1.5, ChallengeRating - 10))
         };
     }
     

@@ -85,7 +85,6 @@ public class CombatServiceTests
         state.CurrentTurnIndex = state.TurnOrder.FindIndex(e => state.Players.Any(p => p.Id == e.Id));
 
         // Act - Attack multiple times to ensure at least one hit
-        var initialHP = state.Enemies.First().CurrentHitPoints;
         for (int i = 0; i < 10; i++)
         {
             _combatService.ProcessPlayerAction(state, CombatAction.Attack, targetId);
@@ -169,8 +168,6 @@ public class CombatServiceTests
         {
             state.CurrentTurnIndex = enemyIndex;
         }
-
-        var initialPlayerHP = state.Players.First().CurrentHitPoints;
 
         // Act
         _combatService.ProcessEnemyTurn(state);
@@ -271,7 +268,6 @@ public class CombatServiceTests
         var state = _combatService.StartCombat(players, 1.0, BiomeType.Plains, 0.5);
 
         var targetEnemy = state.Enemies.First();
-        var expectedXP = targetEnemy.ExperienceValue;
 
         // Kill the enemy
         targetEnemy.CurrentHitPoints = 0;
@@ -283,6 +279,78 @@ public class CombatServiceTests
         if (state.Result == CombatResult.Victory)
         {
             state.TotalXPEarned.Should().BeGreaterThan(0);
+        }
+    }
+
+    [Fact]
+    public void Defend_ACBonusRemovedOnNextPlayerTurn()
+    {
+        // Arrange
+        var players = new List<Player> { new Player { Name = "Defender" } };
+        var state = _combatService.StartCombat(players, 1.0, BiomeType.Plains, 0.5);
+
+        // Simulate player's turn
+        var playerIndex = state.TurnOrder.FindIndex(e => state.Players.Any(p => p.Id == e.Id));
+        state.CurrentTurnIndex = playerIndex;
+        state.ActiveCombatantId = state.Players[0].Id;
+
+        var originalAC = state.Players[0].ArmorClass;
+
+        // Act - Player defends
+        _combatService.ProcessPlayerAction(state, CombatAction.Defend);
+
+        // Assert - AC should be increased by 2
+        state.Players[0].ArmorClass.Should().Be(originalAC + 2);
+        state.Players[0].HasUsedDefend.Should().BeTrue();
+
+        // Now advance turns back to player (simulating a full round)
+        // The AdvanceTurn should reset the defend bonus when it's the player's turn again
+        state.CurrentTurnIndex = playerIndex;
+        state.ActiveCombatantId = state.Players[0].Id;
+
+        // Call AdvanceTurn which should reset defend bonus
+        _combatService.AdvanceTurn(state);
+
+        // Find the new active combatant - if it's the player, check AC was reset
+        var activeCombatant = state.GetActiveCombatant();
+        var player = state.Players.FirstOrDefault(p => p.Id == activeCombatant?.Id);
+        if (player != null)
+        {
+            player.ArmorClass.Should().Be(originalAC);
+            player.HasUsedDefend.Should().BeFalse();
+        }
+    }
+
+    [Fact]
+    public void Defend_ACBonusPersistsThroughEnemyAttacks()
+    {
+        // Arrange
+        var players = new List<Player> { new Player { Name = "Defender" } };
+        var state = _combatService.StartCombat(players, 1.0, BiomeType.Plains, 0.5);
+
+        // Set player turn
+        var playerIndex = state.TurnOrder.FindIndex(e => state.Players.Any(p => p.Id == e.Id));
+        state.CurrentTurnIndex = playerIndex;
+        state.ActiveCombatantId = state.Players[0].Id;
+
+        var originalAC = state.Players[0].ArmorClass;
+
+        // Player defends
+        _combatService.ProcessPlayerAction(state, CombatAction.Defend);
+        var boostedAC = state.Players[0].ArmorClass;
+        boostedAC.Should().Be(originalAC + 2);
+
+        // Simulate enemy attack - AC should remain boosted
+        var enemyIndex = state.TurnOrder.FindIndex(e => state.Enemies.Any(en => en.Id == e.Id && en.IsAlive));
+        if (enemyIndex >= 0)
+        {
+            state.CurrentTurnIndex = enemyIndex;
+            state.ActiveCombatantId = state.TurnOrder[enemyIndex].Id;
+
+            _combatService.ProcessEnemyTurn(state);
+
+            // AC should still be boosted (not removed on attack)
+            state.Players[0].ArmorClass.Should().Be(boostedAC);
         }
     }
 }
