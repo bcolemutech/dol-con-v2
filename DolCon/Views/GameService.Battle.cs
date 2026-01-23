@@ -8,11 +8,15 @@ namespace DolCon.Views;
 
 public partial class GameService
 {
-    private const int ActionDisplayMs = 1000;
+    // Combat display states
+    private enum CombatDisplayState
+    {
+        WaitingForPlayerInput,
+        ShowingPlayerResult,
+        ShowingEnemyResult
+    }
 
-    // Track if we're displaying the player's action result
-    private bool _isDisplayingPlayerAction;
-    private DateTime? _playerActionDisplayStart;
+    private CombatDisplayState _combatDisplayState = CombatDisplayState.WaitingForPlayerInput;
 
     private void RenderBattle()
     {
@@ -25,8 +29,7 @@ public partial class GameService
                 SaveGameService.Party.Stamina,
                 biome,
                 _scene.EncounterCR);
-            _isDisplayingPlayerAction = false;
-            _playerActionDisplayStart = null;
+            _combatDisplayState = CombatDisplayState.WaitingForPlayerInput;
         }
 
         var state = _scene.CombatState;
@@ -38,77 +41,73 @@ public partial class GameService
             return;
         }
 
-        // Handle player action display pause
-        if (_isDisplayingPlayerAction)
+        switch (_combatDisplayState)
         {
-            RenderBattleUI(state);
+            case CombatDisplayState.ShowingPlayerResult:
+                // Show player's action result, wait for any key to continue
+                RenderBattleUI(state);
 
-            if (_playerActionDisplayStart.HasValue &&
-                (DateTime.Now - _playerActionDisplayStart.Value).TotalMilliseconds >= ActionDisplayMs)
-            {
-                _isDisplayingPlayerAction = false;
-                _playerActionDisplayStart = null;
-
-                // Now process enemy turn if it's their turn
-                if (!state.IsPlayerTurn() && state.Result == CombatResult.InProgress)
+                // Any key press advances to enemy turn
+                if (_flow.Key != null && _flow.Key.Value.Key != ConsoleKey.NoName)
                 {
-                    _combatService.ProcessEnemyTurn(state);
+                    // Process enemy turn if it's their turn
+                    if (!state.IsPlayerTurn() && state.Result == CombatResult.InProgress)
+                    {
+                        _combatService.ProcessEnemyTurn(state);
+                        _combatDisplayState = CombatDisplayState.ShowingEnemyResult;
+                    }
+                    else
+                    {
+                        // Back to player's turn (e.g., after defend or if enemy died)
+                        _combatDisplayState = CombatDisplayState.WaitingForPlayerInput;
+                    }
                 }
-            }
+                break;
 
-            Thread.Sleep(50);
-            _flow.Redirect = true;
-            return;
-        }
+            case CombatDisplayState.ShowingEnemyResult:
+                // Show enemy's action result, wait for any key to continue
+                RenderBattleUI(state);
 
-        // Handle enemy turn display pause
-        if (state.IsDisplayingEnemyTurn)
-        {
-            RenderBattleUI(state);
-
-            if (state.EnemyTurnDisplayStart.HasValue &&
-                (DateTime.Now - state.EnemyTurnDisplayStart.Value).TotalMilliseconds >= ActionDisplayMs)
-            {
-                state.IsDisplayingEnemyTurn = false;
-                _combatService.AdvanceTurn(state);
-                _combatService.CheckCombatEnd(state);
-
-                // If next combatant is also an enemy, process their turn automatically
-                if (!state.IsPlayerTurn() && state.Result == CombatResult.InProgress)
+                // Any key press advances turn
+                if (_flow.Key != null && _flow.Key.Value.Key != ConsoleKey.NoName)
                 {
-                    _combatService.ProcessEnemyTurn(state);
+                    _combatService.AdvanceTurn(state);
+                    _combatService.CheckCombatEnd(state);
+
+                    // Check if next is another enemy
+                    if (!state.IsPlayerTurn() && state.Result == CombatResult.InProgress)
+                    {
+                        _combatService.ProcessEnemyTurn(state);
+                        // Stay in ShowingEnemyResult to show this enemy's action
+                    }
+                    else
+                    {
+                        _combatDisplayState = CombatDisplayState.WaitingForPlayerInput;
+                    }
                 }
-            }
+                break;
 
-            Thread.Sleep(50);
-            _flow.Redirect = true;
-            return;
-        }
+            case CombatDisplayState.WaitingForPlayerInput:
+            default:
+                // Process player input
+                if (state.IsPlayerTurn())
+                {
+                    var actionTaken = ProcessPlayerCombatInput(state);
 
-        // Process input on player turn only
-        if (state.IsPlayerTurn())
-        {
-            var actionTaken = ProcessPlayerCombatInput(state);
+                    if (actionTaken)
+                    {
+                        _combatDisplayState = CombatDisplayState.ShowingPlayerResult;
+                    }
+                }
+                else
+                {
+                    // Shouldn't happen, but handle gracefully
+                    _combatService.ProcessEnemyTurn(state);
+                    _combatDisplayState = CombatDisplayState.ShowingEnemyResult;
+                }
 
-            if (actionTaken && state.LastAttackResult != null)
-            {
-                // Start player action display pause
-                _isDisplayingPlayerAction = true;
-                _playerActionDisplayStart = DateTime.Now;
-            }
-        }
-        else
-        {
-            // Auto-process enemy turn (shouldn't normally reach here due to chaining above)
-            _combatService.ProcessEnemyTurn(state);
-        }
-
-        RenderBattleUI(state);
-
-        // Keep looping during action displays
-        if (_isDisplayingPlayerAction || state.IsDisplayingEnemyTurn)
-        {
-            _flow.Redirect = true;
+                RenderBattleUI(state);
+                break;
         }
     }
 
@@ -231,19 +230,19 @@ public partial class GameService
                 )).Expand());
         _ctx.Refresh();
 
-        // Controls - hide during action display
+        // Controls - show appropriate text based on combat state
         string controlText;
-        if (_isDisplayingPlayerAction)
+        switch (_combatDisplayState)
         {
-            controlText = "[dim]Your attack...[/]";
-        }
-        else if (state.IsDisplayingEnemyTurn)
-        {
-            controlText = "[dim]Enemy is attacking...[/]";
-        }
-        else
-        {
-            controlText = $"[green]A[/]ttack | [blue]D[/]efend{(state.CanFlee ? " | [yellow]F[/]lee" : "")} | [dim]W/S or Arrows to select target[/]";
+            case CombatDisplayState.ShowingPlayerResult:
+                controlText = "[dim]Press any key to continue...[/]";
+                break;
+            case CombatDisplayState.ShowingEnemyResult:
+                controlText = "[dim]Press any key to continue...[/]";
+                break;
+            default:
+                controlText = $"[green]A[/]ttack | [blue]D[/]efend{(state.CanFlee ? " | [yellow]F[/]lee" : "")} | [dim]W/S or Arrows to select target[/]";
+                break;
         }
 
         _controls.Update(
@@ -258,28 +257,38 @@ public partial class GameService
 
     private Panel BuildActionDetailsPanel(CombatState state)
     {
-        if (state.LastAttackResult == null)
+        // Show attack result if available
+        if (state.LastAttackResult != null)
         {
-            return new Panel(new Markup("[dim]No actions yet...[/]"))
+            var result = state.LastAttackResult;
+
+            var rows = new List<IRenderable>
+            {
+                new Markup($"[bold]{Markup.Escape(result.AttackerName)}[/] attacks [bold]{Markup.Escape(result.TargetName)}[/] with {Markup.Escape(result.DamageSource)}"),
+                new Markup($"Attack Roll: {result.GetAttackFormula()}"),
+                new Markup($"Result: {result.GetResultSummary()}")
+            };
+
+            if (result.IsHit)
+            {
+                rows.Add(new Markup($"Damage: {result.GetDamageFormula()}"));
+            }
+
+            return new Panel(new Rows(rows.ToArray()))
                 .Header("[bold yellow]Last Action Details[/]")
                 .Border(BoxBorder.Rounded);
         }
 
-        var result = state.LastAttackResult;
-
-        var rows = new List<IRenderable>
+        // Show last combat log entry for non-attack actions (like defend)
+        if (state.CombatLog.Count > 0)
         {
-            new Markup($"[bold]{Markup.Escape(result.AttackerName)}[/] attacks [bold]{Markup.Escape(result.TargetName)}[/] with {Markup.Escape(result.DamageSource)}"),
-            new Markup($"Attack Roll: {result.GetAttackFormula()}"),
-            new Markup($"Result: {result.GetResultSummary()}")
-        };
-
-        if (result.IsHit)
-        {
-            rows.Add(new Markup($"Damage: {result.GetDamageFormula()}"));
+            var lastLog = state.CombatLog.Last();
+            return new Panel(new Markup(Markup.Escape(lastLog)))
+                .Header("[bold yellow]Last Action Details[/]")
+                .Border(BoxBorder.Rounded);
         }
 
-        return new Panel(new Rows(rows.ToArray()))
+        return new Panel(new Markup("[dim]No actions yet...[/]"))
             .Header("[bold yellow]Last Action Details[/]")
             .Border(BoxBorder.Rounded);
     }
@@ -379,8 +388,7 @@ public partial class GameService
         _scene.IsCompleted = true;
         _scene.CombatState = null;
         _scene.EncounterCR = 0;
-        _isDisplayingPlayerAction = false;
-        _playerActionDisplayStart = null;
+        _combatDisplayState = CombatDisplayState.WaitingForPlayerInput;
         _flow.Screen = Screen.Navigation;
         _flow.Redirect = true;
     }
