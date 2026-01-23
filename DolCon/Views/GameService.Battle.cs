@@ -53,6 +53,11 @@ public partial class GameService
                     _combatService.ProcessEnemyTurn(state);
                 }
             }
+
+            // Keep looping without waiting for key input during enemy display
+            // Small delay to prevent CPU spinning
+            Thread.Sleep(50);
+            _flow.Redirect = true;
             return;
         }
 
@@ -68,6 +73,12 @@ public partial class GameService
         }
 
         RenderBattleUI(state);
+
+        // If enemy turn just started displaying, keep the loop running
+        if (state.IsDisplayingEnemyTurn)
+        {
+            _flow.Redirect = true;
+        }
     }
 
     private void ProcessPlayerCombatInput(CombatState state)
