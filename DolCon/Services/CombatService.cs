@@ -194,10 +194,32 @@ public class CombatService : ICombatService
         var attackBonus = player.GetModifier(player.Strength);
         var totalAttack = roll + attackBonus;
 
+        // Create attack result for UI display
+        var attackResult = new AttackResult
+        {
+            AttackerName = player.Name,
+            TargetName = target.Name,
+            D20Roll = roll,
+            AttackModifier = attackBonus,
+            TotalAttack = totalAttack,
+            TargetAC = target.ArmorClass,
+            IsNatural1 = roll == 1,
+            IsCritical = roll == 20,
+            DamageSource = GetPlayerWeaponName(player)
+        };
+
         if (roll == 20 || (roll != 1 && totalAttack >= target.ArmorClass))
         {
-            var damage = player.GetWeaponDamage();
+            attackResult.IsHit = true;
+            var baseDamage = player.GetWeaponDamage();
+            var rarityBonus = GetPlayerWeaponRarityBonus(player);
+
+            attackResult.BaseDamage = baseDamage - rarityBonus; // Base without rarity
+            attackResult.BonusDamage = rarityBonus;
+
+            var damage = baseDamage;
             if (roll == 20) damage *= 2; // Critical hit
+            attackResult.TotalDamage = damage;
 
             target.TakeDamage(damage);
             state.CombatLog.Add($"{player.Name} hits {target.Name} for {damage} damage!{(roll == 20 ? " (Critical!)" : "")}");
@@ -210,8 +232,27 @@ public class CombatService : ICombatService
         }
         else
         {
+            attackResult.IsHit = false;
             state.CombatLog.Add($"{player.Name} misses {target.Name}!");
         }
+
+        state.LastAttackResult = attackResult;
+    }
+
+    private string GetPlayerWeaponName(PlayerCombatant player)
+    {
+        var weapon = player.SourcePlayer.Inventory
+            .FirstOrDefault(i => i.Equipped && i.Tags.Any(t => t.Name.Contains("Weapon")));
+
+        return weapon?.Name ?? "Unarmed";
+    }
+
+    private int GetPlayerWeaponRarityBonus(PlayerCombatant player)
+    {
+        var weapon = player.SourcePlayer.Inventory
+            .FirstOrDefault(i => i.Equipped && i.Tags.Any(t => t.Name.Contains("Weapon")));
+
+        return weapon != null ? (int)weapon.Rarity * 2 : 0;
     }
 
     private void ProcessDefend(CombatState state, PlayerCombatant player)
@@ -260,12 +301,33 @@ public class CombatService : ICombatService
         // Enemy attack roll
         var roll = _rng.Next(1, 21);
         var attackBonus = enemy.GetModifier(enemy.Strength);
+        var totalAttack = roll + attackBonus;
 
-        if (roll == 20 || (roll != 1 && roll + attackBonus >= target.ArmorClass))
+        // Create attack result for UI display
+        var attackResult = new AttackResult
         {
+            AttackerName = enemy.Name,
+            TargetName = target.Name,
+            D20Roll = roll,
+            AttackModifier = attackBonus,
+            TotalAttack = totalAttack,
+            TargetAC = target.ArmorClass,
+            IsNatural1 = roll == 1,
+            IsCritical = roll == 20,
+            DamageSource = GetEnemyAttackName(enemy)
+        };
+
+        if (roll == 20 || (roll != 1 && totalAttack >= target.ArmorClass))
+        {
+            attackResult.IsHit = true;
+
             // Base damage from enemy CR
             var baseDamage = Math.Max(2, (int)(3 + enemy.ChallengeRating * 2));
+            attackResult.BaseDamage = baseDamage;
+            attackResult.BonusDamage = 0; // Enemies don't have bonus damage
+
             var damage = roll == 20 ? baseDamage * 2 : baseDamage;
+            attackResult.TotalDamage = damage;
 
             target.TakeDamage(damage);
             state.TotalDamageTaken += damage;
@@ -273,8 +335,15 @@ public class CombatService : ICombatService
         }
         else
         {
+            attackResult.IsHit = false;
             state.CombatLog.Add($"{enemy.Name} misses {target.Name}!");
         }
+
+        state.LastAttackResult = attackResult;
+
+        // Set enemy turn display flags for UI pause
+        state.IsDisplayingEnemyTurn = true;
+        state.EnemyTurnDisplayStart = DateTime.Now;
 
         // Reset defend bonus if player had it
         if (target.HasUsedDefend)
@@ -285,10 +354,38 @@ public class CombatService : ICombatService
 
         CheckCombatEnd(state);
 
-        if (state.Result == CombatResult.InProgress)
+        // Note: Turn advancement is now handled by the UI after the display pause
+    }
+
+    private string GetEnemyAttackName(Enemy enemy)
+    {
+        // Determine attack name based on category and subcategory
+        return enemy.Category switch
         {
-            AdvanceTurn(state);
-        }
+            EnemyCategory.Nature => enemy.Subcategory switch
+            {
+                EnemySubcategory.Beast => "Claws",
+                EnemySubcategory.Plant => "Thorns",
+                EnemySubcategory.Elemental => "Elemental Blast",
+                _ => "Natural Attack"
+            },
+            EnemyCategory.Undead => "Deathly Touch",
+            EnemyCategory.Human => enemy.Subcategory switch
+            {
+                EnemySubcategory.Bandit => "Weapon Strike",
+                EnemySubcategory.Cultist => "Dark Magic",
+                EnemySubcategory.Soldier => "Sword Slash",
+                EnemySubcategory.Mercenary => "Mercenary Strike",
+                _ => "Attack"
+            },
+            EnemyCategory.Demon => enemy.Subcategory switch
+            {
+                EnemySubcategory.DemonHuman => "Corrupted Strike",
+                EnemySubcategory.DemonCreature => "Demonic Claw",
+                _ => "Demonic Strike"
+            },
+            _ => "Attack"
+        };
     }
 
     private Enemy? GetActiveEnemy(CombatState state)

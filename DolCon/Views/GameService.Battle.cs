@@ -8,6 +8,8 @@ namespace DolCon.Views;
 
 public partial class GameService
 {
+    private const int EnemyTurnDisplayMs = 1000;
+
     private void RenderBattle()
     {
         // Initialize combat if needed
@@ -30,7 +32,31 @@ public partial class GameService
             return;
         }
 
-        // Process input
+        // Handle enemy turn display pause
+        if (state.IsDisplayingEnemyTurn)
+        {
+            RenderBattleUI(state);
+
+            // Check if pause has elapsed
+            if (state.EnemyTurnDisplayStart.HasValue &&
+                (DateTime.Now - state.EnemyTurnDisplayStart.Value).TotalMilliseconds >= EnemyTurnDisplayMs)
+            {
+                state.IsDisplayingEnemyTurn = false;
+                _combatService.AdvanceTurn(state);
+
+                // Check for combat end after advancing turn
+                _combatService.CheckCombatEnd(state);
+
+                // If next combatant is also an enemy, process their turn automatically
+                if (!state.IsPlayerTurn() && state.Result == CombatResult.InProgress)
+                {
+                    _combatService.ProcessEnemyTurn(state);
+                }
+            }
+            return;
+        }
+
+        // Process input on player turn
         if (state.IsPlayerTurn())
         {
             ProcessPlayerCombatInput(state);
@@ -125,8 +151,11 @@ public partial class GameService
             );
         }
 
-        // Combat log (last 5 entries)
-        var logEntries = state.CombatLog.TakeLast(5).ToList();
+        // Last Action Details panel
+        var actionPanel = BuildActionDetailsPanel(state);
+
+        // Combat log (last 3 entries to make room for action details)
+        var logEntries = state.CombatLog.TakeLast(3).ToList();
         var logContent = logEntries.Count > 0
             ? string.Join("\n", logEntries)
             : "Combat begins...";
@@ -138,7 +167,7 @@ public partial class GameService
         // Current turn indicator
         var turnInfo = state.IsPlayerTurn()
             ? "[green]Your turn![/]"
-            : $"[yellow]Enemy turn...[/]";
+            : "[yellow]Enemy turn...[/]";
 
         // Build main display
         _display.Update(
@@ -150,20 +179,52 @@ public partial class GameService
                         new Panel(partyTable).Header("[bold blue]Party[/]").Expand(),
                         new Panel(enemyTable).Header("[bold red]Enemies[/]").Expand()
                     ),
+                    actionPanel,
                     logPanel
                 )).Expand());
         _ctx.Refresh();
 
-        // Controls
-        var fleeOption = state.CanFlee ? " | [yellow]F[/]lee" : "";
+        // Controls - hide during enemy turn display
+        var controlText = state.IsDisplayingEnemyTurn
+            ? "[dim]Enemy is attacking...[/]"
+            : $"[green]A[/]ttack | [blue]D[/]efend{(state.CanFlee ? " | [yellow]F[/]lee" : "")} | [dim]W/S or Arrows to select target[/]";
+
         _controls.Update(
             new Panel(
                 Align.Center(
-                    new Markup($"[green]A[/]ttack | [blue]D[/]efend{fleeOption} | [dim]W/S or Arrows to select target[/]")
+                    new Markup(controlText)
                 )).Expand());
         _ctx.Refresh();
 
         SetMessage(MessageType.Info, _scene.Message);
+    }
+
+    private Panel BuildActionDetailsPanel(CombatState state)
+    {
+        if (state.LastAttackResult == null)
+        {
+            return new Panel(new Markup("[dim]No actions yet...[/]"))
+                .Header("[bold yellow]Last Action Details[/]")
+                .Border(BoxBorder.Rounded);
+        }
+
+        var result = state.LastAttackResult;
+
+        var rows = new List<IRenderable>
+        {
+            new Markup($"[bold]{Markup.Escape(result.AttackerName)}[/] attacks [bold]{Markup.Escape(result.TargetName)}[/] with {Markup.Escape(result.DamageSource)}"),
+            new Markup($"Attack Roll: {result.GetAttackFormula()}"),
+            new Markup($"Result: {result.GetResultSummary()}")
+        };
+
+        if (result.IsHit)
+        {
+            rows.Add(new Markup($"Damage: {result.GetDamageFormula()}"));
+        }
+
+        return new Panel(new Rows(rows.ToArray()))
+            .Header("[bold yellow]Last Action Details[/]")
+            .Border(BoxBorder.Rounded);
     }
 
     private void RenderBattleResult(CombatState state)

@@ -76,6 +76,21 @@ public class CombatState
     public int SelectedTargetIndex { get; set; }
 
     /// <summary>
+    /// Details of the last attack action for UI display
+    /// </summary>
+    public AttackResult? LastAttackResult { get; set; }
+
+    /// <summary>
+    /// Indicates that an enemy turn is being displayed (for pause logic)
+    /// </summary>
+    public bool IsDisplayingEnemyTurn { get; set; }
+
+    /// <summary>
+    /// Timestamp when enemy turn display started
+    /// </summary>
+    public DateTime? EnemyTurnDisplayStart { get; set; }
+
+    /// <summary>
     /// Get the currently active combatant
     /// </summary>
     public CombatEntity? GetActiveCombatant()
