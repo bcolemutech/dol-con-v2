@@ -153,82 +153,53 @@ public partial class GameService
 
     private void RenderBattleUI(CombatState state)
     {
-        // Party status table
-        var partyTable = new Table();
-        partyTable.AddColumn("Name");
-        partyTable.AddColumn("HP");
-        partyTable.AddColumn("Status");
-        partyTable.Border(TableBorder.Rounded);
-
-        foreach (var player in state.Players)
-        {
-            var hpColor = player.CurrentHitPoints > player.MaxHitPoints / 2
-                ? "green"
-                : (player.CurrentHitPoints > player.MaxHitPoints / 4 ? "yellow" : "red");
-            var status = player.IsAlive ? (player.HasUsedDefend ? "Defending" : "Active") : "[red]Down[/]";
-
-            partyTable.AddRow(
-                player.Name,
-                $"[{hpColor}]{player.CurrentHitPoints}/{player.MaxHitPoints}[/]",
-                status
-            );
-        }
-
-        // Enemy table
-        var enemyTable = new Table();
-        enemyTable.AddColumn("");
-        enemyTable.AddColumn("Enemy");
-        enemyTable.AddColumn("HP");
-        enemyTable.AddColumn("CR");
-        enemyTable.Border(TableBorder.Rounded);
-
-        var aliveEnemies = state.GetAliveEnemies();
-        for (int i = 0; i < aliveEnemies.Count; i++)
-        {
-            var enemy = aliveEnemies[i];
-            var selected = i == state.SelectedTargetIndex ? "[green bold]>[/]" : " ";
-            var hpColor = enemy.CurrentHitPoints > enemy.MaxHitPoints / 2
-                ? "green"
-                : (enemy.CurrentHitPoints > enemy.MaxHitPoints / 4 ? "yellow" : "red");
-
-            enemyTable.AddRow(
-                selected,
-                enemy.Name,
-                $"[{hpColor}]{enemy.CurrentHitPoints}/{enemy.MaxHitPoints}[/]",
-                enemy.ChallengeRating.ToString("F1")
-            );
-        }
-
-        // Last Action Details panel
-        var actionPanel = BuildActionDetailsPanel(state);
-
-        // Combat log (last 3 entries to make room for action details)
-        var logEntries = state.CombatLog.TakeLast(3).ToList();
-        var logContent = logEntries.Count > 0
-            ? string.Join("\n", logEntries)
-            : "Combat begins...";
-
-        var logPanel = new Panel(new Markup(logContent))
-            .Header("[bold]Combat Log[/]")
-            .Border(BoxBorder.Rounded);
-
         // Current turn indicator
         var turnInfo = state.IsPlayerTurn()
             ? "[green]Your turn![/]"
             : "[yellow]Enemy turn...[/]";
 
-        // Build main display
+        // Build compact party status (single line)
+        var partyStatus = string.Join(" | ", state.Players.Select(p =>
+        {
+            var hpColor = p.CurrentHitPoints > p.MaxHitPoints / 2
+                ? "green"
+                : (p.CurrentHitPoints > p.MaxHitPoints / 4 ? "yellow" : "red");
+            var status = p.IsAlive ? (p.HasUsedDefend ? "Def" : "") : "[red]Down[/]";
+            return $"{p.Name}: [{hpColor}]{p.CurrentHitPoints}/{p.MaxHitPoints}[/]{(status != "" ? $" {status}" : "")}";
+        }));
+
+        // Build compact enemy list
+        var aliveEnemies = state.GetAliveEnemies();
+        var enemyLines = new List<string>();
+        for (int i = 0; i < aliveEnemies.Count; i++)
+        {
+            var enemy = aliveEnemies[i];
+            var selected = i == state.SelectedTargetIndex ? "[green bold]>[/] " : "  ";
+            var hpColor = enemy.CurrentHitPoints > enemy.MaxHitPoints / 2
+                ? "green"
+                : (enemy.CurrentHitPoints > enemy.MaxHitPoints / 4 ? "yellow" : "red");
+            enemyLines.Add($"{selected}{enemy.Name} [{hpColor}]{enemy.CurrentHitPoints}/{enemy.MaxHitPoints}[/]");
+        }
+
+        // Last Action Details - THE MAIN FOCUS
+        var actionContent = BuildActionContent(state);
+
+        // Combat log (last entry only for space)
+        var lastLog = state.CombatLog.Count > 0 ? state.CombatLog.Last() : "Combat begins...";
+
+        // Build main display - action details prominently at top
         _display.Update(
             new Panel(
                 new Rows(
                     Align.Center(new Markup($"[bold red]COMBAT[/] - Turn {state.CurrentTurn + 1} - {turnInfo}")),
-                    new Rule(),
-                    new Columns(
-                        new Panel(partyTable).Header("[bold blue]Party[/]").Expand(),
-                        new Panel(enemyTable).Header("[bold red]Enemies[/]").Expand()
-                    ),
-                    actionPanel,
-                    logPanel
+                    new Rule("[bold yellow]LAST ACTION[/]").RuleStyle("yellow"),
+                    actionContent,
+                    new Rule().RuleStyle("dim"),
+                    new Markup($"[bold blue]Party:[/] {partyStatus}"),
+                    new Markup($"[bold red]Enemies:[/]"),
+                    new Markup(string.Join("\n", enemyLines)),
+                    new Rule().RuleStyle("dim"),
+                    new Markup($"[dim]Log: {Markup.Escape(lastLog)}[/]")
                 )).Expand());
         _ctx.Refresh();
 
@@ -257,49 +228,36 @@ public partial class GameService
         SetMessage(MessageType.Info, _scene.Message);
     }
 
-    private Panel BuildActionDetailsPanel(CombatState state)
+    private IRenderable BuildActionContent(CombatState state)
     {
         // Show attack result if available
         if (state.LastAttackResult != null)
         {
             var result = state.LastAttackResult;
 
-            var rows = new List<IRenderable>
+            var lines = new List<IRenderable>
             {
-                new Rule("[bold white]ATTACK[/]").RuleStyle("yellow"),
-                new Markup($"[bold cyan]{Markup.Escape(result.AttackerName)}[/] attacks [bold red]{Markup.Escape(result.TargetName)}[/] with [bold]{Markup.Escape(result.DamageSource)}[/]"),
-                new Markup(""),
-                new Markup($"[bold]Attack Roll:[/] {result.GetAttackFormula()}"),
-                new Markup($"[bold]Result:[/] {result.GetResultSummary()}")
+                Align.Center(new Markup($"[bold cyan]{Markup.Escape(result.AttackerName)}[/] attacks [bold red]{Markup.Escape(result.TargetName)}[/] with [bold]{Markup.Escape(result.DamageSource)}[/]")),
+                Align.Center(new Markup($"[bold]Roll:[/] {result.GetAttackFormula()}")),
+                Align.Center(new Markup($"[bold]Result:[/] {result.GetResultSummary()}"))
             };
 
             if (result.IsHit)
             {
-                rows.Add(new Markup($"[bold]Damage:[/] {result.GetDamageFormula()}"));
+                lines.Add(Align.Center(new Markup($"[bold]Damage:[/] {result.GetDamageFormula()}")));
             }
 
-            return new Panel(new Rows(rows.ToArray()))
-                .Header("[bold yellow on blue] LAST ACTION DETAILS [/]")
-                .Border(BoxBorder.Double)
-                .BorderColor(Color.Yellow);
+            return new Rows(lines.ToArray());
         }
 
         // Show last combat log entry for non-attack actions (like defend)
         if (state.CombatLog.Count > 0)
         {
             var lastLog = state.CombatLog.Last();
-            return new Panel(new Rows(
-                    new Rule("[bold white]ACTION[/]").RuleStyle("blue"),
-                    new Markup($"[bold]{Markup.Escape(lastLog)}[/]")
-                ))
-                .Header("[bold yellow on blue] LAST ACTION DETAILS [/]")
-                .Border(BoxBorder.Double)
-                .BorderColor(Color.Yellow);
+            return Align.Center(new Markup($"[bold yellow]{Markup.Escape(lastLog)}[/]"));
         }
 
-        return new Panel(new Markup("[dim]Waiting for action...[/]"))
-            .Header("[bold yellow] LAST ACTION DETAILS [/]")
-            .Border(BoxBorder.Rounded);
+        return Align.Center(new Markup("[dim]Waiting for action...[/]"));
     }
 
     private void RenderBattleResult(CombatState state)
