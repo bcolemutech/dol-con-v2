@@ -97,6 +97,8 @@ public partial class GameService
                     if (actionTaken)
                     {
                         _combatDisplayState = CombatDisplayState.ShowingPlayerResult;
+                        // Clear the key so it doesn't immediately advance past the result
+                        _flow.Key = null;
                     }
                 }
                 else
@@ -264,32 +266,39 @@ public partial class GameService
 
             var rows = new List<IRenderable>
             {
-                new Markup($"[bold]{Markup.Escape(result.AttackerName)}[/] attacks [bold]{Markup.Escape(result.TargetName)}[/] with {Markup.Escape(result.DamageSource)}"),
-                new Markup($"Attack Roll: {result.GetAttackFormula()}"),
-                new Markup($"Result: {result.GetResultSummary()}")
+                new Rule("[bold white]ATTACK[/]").RuleStyle("yellow"),
+                new Markup($"[bold cyan]{Markup.Escape(result.AttackerName)}[/] attacks [bold red]{Markup.Escape(result.TargetName)}[/] with [bold]{Markup.Escape(result.DamageSource)}[/]"),
+                new Markup(""),
+                new Markup($"[bold]Attack Roll:[/] {result.GetAttackFormula()}"),
+                new Markup($"[bold]Result:[/] {result.GetResultSummary()}")
             };
 
             if (result.IsHit)
             {
-                rows.Add(new Markup($"Damage: {result.GetDamageFormula()}"));
+                rows.Add(new Markup($"[bold]Damage:[/] {result.GetDamageFormula()}"));
             }
 
             return new Panel(new Rows(rows.ToArray()))
-                .Header("[bold yellow]Last Action Details[/]")
-                .Border(BoxBorder.Rounded);
+                .Header("[bold yellow on blue] LAST ACTION DETAILS [/]")
+                .Border(BoxBorder.Double)
+                .BorderColor(Color.Yellow);
         }
 
         // Show last combat log entry for non-attack actions (like defend)
         if (state.CombatLog.Count > 0)
         {
             var lastLog = state.CombatLog.Last();
-            return new Panel(new Markup(Markup.Escape(lastLog)))
-                .Header("[bold yellow]Last Action Details[/]")
-                .Border(BoxBorder.Rounded);
+            return new Panel(new Rows(
+                    new Rule("[bold white]ACTION[/]").RuleStyle("blue"),
+                    new Markup($"[bold]{Markup.Escape(lastLog)}[/]")
+                ))
+                .Header("[bold yellow on blue] LAST ACTION DETAILS [/]")
+                .Border(BoxBorder.Double)
+                .BorderColor(Color.Yellow);
         }
 
-        return new Panel(new Markup("[dim]No actions yet...[/]"))
-            .Header("[bold yellow]Last Action Details[/]")
+        return new Panel(new Markup("[dim]Waiting for action...[/]"))
+            .Header("[bold yellow] LAST ACTION DETAILS [/]")
             .Border(BoxBorder.Rounded);
     }
 
