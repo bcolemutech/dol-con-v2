@@ -166,11 +166,6 @@ public partial class GameService
         return $"[{color}]{text}[/]";
     }
 
-    private void RenderBattle()
-    {
-        throw new NotImplementedException();
-    }
-
     private void RenderDialog()
     {
         throw new NotImplementedException();

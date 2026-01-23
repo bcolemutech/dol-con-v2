@@ -400,3 +400,6 @@ FodyWeavers.xsd
 
 # TLDR
 Maps/
+
+# macOS
+.DS_Store

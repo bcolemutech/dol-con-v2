@@ -41,28 +41,12 @@ public class EventService : IEventService
 
                     if (encounterOccurred)
                     {
-                        // Combat encounter - distribute rewards
-                        var subMessageBuilder = new System.Text.StringBuilder();
-                        var totalCoin = 0;
-                        foreach (var player in SaveGameService.Party.Players)
-                        {
-                            var random = new Chance().New();
-                            var playerCoin = random.Dice(100) * 10;
-                            player.coin += playerCoin;
-                            totalCoin += playerCoin;
-
-                            if (player.Inventory.Count < 50)
-                            {
-                                var item = _shopService.GenerateReward();
-                                player.Inventory.Add(item);
-                            }
-                            else
-                            {
-                                subMessageBuilder.Append($"{player.Name} inventory is full. ");
-                            }
-                        }
-
-                        scene.Message = $"Combat encounter! (CR: {adjustedCR:F2}) The party defeated the enemies and earned {totalCoin} coin. {subMessageBuilder}";
+                        // Combat encounter - set up battle scene
+                        scene.Type = SceneType.Battle;
+                        scene.EncounterCR = adjustedCR;
+                        scene.IsCompleted = false;
+                        scene.Message = $"Combat encounter! (CR: {adjustedCR:F2})";
+                        return scene;
                     }
                     else
                     {

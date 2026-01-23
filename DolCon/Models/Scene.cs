@@ -1,5 +1,6 @@
 ﻿namespace DolCon.Models;
 
+using Combat;
 using Enums;
 
 public class Scene
@@ -15,6 +16,10 @@ public class Scene
     public int Selection { get; set; }
     public Location? Location { get; set; }
 
+    // Combat-specific properties
+    public CombatState? CombatState { get; set; }
+    public double EncounterCR { get; set; }
+
     public void Reset()
     {
         Title = null;
@@ -23,5 +28,7 @@ public class Scene
         SelectedService = null;
         Selection = 0;
         Location = null;
+        CombatState = null;
+        EncounterCR = 0;
     }
 }
