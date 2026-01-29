@@ -1,0 +1,45 @@
+name: Version Check
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  check-version:
+    name: Check Version Bump
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout PR
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Check version.json changed
+      id: version-check
+      run: |
+        # Get version from PR branch
+        PR_VERSION=$(cat version.json | jq -r '.version')
+        PR_PRERELEASE=$(cat version.json | jq -r '.prerelease')
+
+        # Get version from main branch
+        git fetch origin main
+        MAIN_VERSION=$(git show origin/main:version.json | jq -r '.version')
+        MAIN_PRERELEASE=$(git show origin/main:version.json | jq -r '.prerelease')
+
+        echo "PR Version: $PR_VERSION-$PR_PRERELEASE"
+        echo "Main Version: $MAIN_VERSION-$MAIN_PRERELEASE"
+
+        # Compare versions
+        if [ "$PR_VERSION-$PR_PRERELEASE" == "$MAIN_VERSION-$MAIN_PRERELEASE" ]; then
+          echo "::warning::Version has not been updated. Please update version.json before merging."
+          echo "version_changed=false" >> $GITHUB_OUTPUT
+        else
+          echo "Version has been updated."
+          echo "version_changed=true" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Version Warning
+      if: steps.version-check.outputs.version_changed == 'false'
+      run: |
+        echo "::warning title=Version Not Updated::Consider updating the version in version.json and Directory.Build.props before merging this PR."
