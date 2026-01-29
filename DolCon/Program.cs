@@ -1,4 +1,5 @@
-﻿using DolCon.Data;
+﻿using DolCon.Core.Data;
+using DolCon.Core.Services;
 using DolCon.Services;
 using DolCon.Views;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,20 +12,36 @@ EnemyIndex.Initialize();
 using var host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((hostContext, services) =>
     {
+        // Core services
         services.AddSingleton<ISaveGameService, SaveGameService>();
-        services.AddSingleton<IMainMenuService, MainMenuService>();
-        services.AddSingleton<IMapService, MapService>();
         services.AddSingleton<IPlayerService, PlayerService>();
-        services.AddSingleton<IGameService, GameService>();
-        services.AddSingleton<IImageService, ImageService>();
-        services.AddSingleton<IMoveService, MoveService>();
         services.AddSingleton<IEventService, EventService>();
         services.AddSingleton<IShopService, ShopService>();
         services.AddSingleton<IServicesService, ServicesService>();
         services.AddSingleton<IItemsService, ItemsService>();
         services.AddSingleton<ICombatService, CombatService>();
+
+        // Console-specific services
+        services.AddSingleton<IMainMenuService, MainMenuService>();
+        services.AddSingleton<IImageService, ImageService>();
+        services.AddSingleton<IGameService, GameService>();
+
+        // Bridge services (adapt IImageService to IPositionUpdateHandler)
+        services.AddSingleton<IPositionUpdateHandler>(sp =>
+            new ImageServicePositionHandler(sp.GetRequiredService<IImageService>()));
+        services.AddSingleton<IMapService, MapService>();
+        services.AddSingleton<IMoveService, MoveService>();
+
         services.AddHostedService<HostedService>();
     })
     .Build();
-    
+
 await host.RunAsync();
+
+// Adapter to bridge IImageService to IPositionUpdateHandler
+internal class ImageServicePositionHandler : IPositionUpdateHandler
+{
+    private readonly IImageService _imageService;
+    public ImageServicePositionHandler(IImageService imageService) => _imageService = imageService;
+    public void OnPositionUpdated() => _imageService.ProcessSvg();
+}

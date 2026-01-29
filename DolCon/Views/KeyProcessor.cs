@@ -1,7 +1,7 @@
 namespace DolCon.Views;
 
-using Enums;
-using Models;
+using DolCon.Core.Enums;
+using DolCon.Models;
 
 public static class KeyProcessor
 {
