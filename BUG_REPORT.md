@@ -2,21 +2,24 @@
 
 ## General
 
-- The game is not saving progress
+- 
 
 ## Navigation
 
-- Locations that should have options like shop and inns display "no options available"
-- When navigating to another area it should display the direction of each option
-- When moving to a new Cell it displays in the options other cells and at the bottom of the list maybe an expected location or two
-- The option to explore is missing from cells and locations
+- Unexplorable locations should not have an option to explore nor display explored percent at all.
+- The nerby cell selction screen is using pipe delimited list which is not well formatted. Use a proper table to display rows and details
+- 
 
 ## Shopping
+
+- shops like blacksmiths, inn, and stores should have mechant options.
 
 ## Inventory
 
 ## Combat
 
-- During combat I should see the formula used to calculate hit and damage scores
-- After the first player attack, I cannot make any move. The key stock is registered but it just skip strait to the neemies turn. I am unable flee so it just keeps going till I lose the fight.
-- After a loss the player should lose half thier Stamina. Currently nothing happens to the player after the loss
+- the combat details and result are overlapping in the detail panel, they should line up and read like a log along with the results.
+- Player attacks are getting calculated but results are no showing and enemy is not taking damage.
+- Defend action does not ppear to have any affect this should increase player AC for one turn
+- Flee option does nothing
+- 
