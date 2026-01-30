@@ -253,59 +253,76 @@ public class NavigationScreen : ScreenBase
 
         var option = _options[_selectedIndex];
 
-        if (option.CellId.HasValue)
+        try
         {
-            // Move to cell
-            var result = _moveService.MoveToCell(option.CellId.Value);
-            switch (result)
+            if (option.CellId.HasValue)
             {
-                case MoveStatus.Success:
-                    _message = "Moved to new cell";
+                // Move to cell
+                var result = _moveService.MoveToCell(option.CellId.Value);
+                switch (result)
+                {
+                    case MoveStatus.Success:
+                        _message = "Moved to new cell";
+                        ProcessEvent();
+                        SaveHelper.TriggerSave();
+                        break;
+                    case MoveStatus.Failure:
+                        _message = "Not enough stamina!";
+                        break;
+                    case MoveStatus.Blocked:
+                        _message = "Cannot move there!";
+                        break;
+                }
+                BuildOptions();
+            }
+            else if (option.LocationId.HasValue)
+            {
+                // Move to location
+                if (_moveService.MoveToLocation(option.LocationId.Value))
+                {
+                    _message = "Entered location";
                     ProcessEvent();
                     SaveHelper.TriggerSave();
-                    break;
-                case MoveStatus.Failure:
+                }
+                else
+                {
                     _message = "Not enough stamina!";
-                    break;
-                case MoveStatus.Blocked:
-                    _message = "Cannot move there!";
-                    break;
+                }
+                BuildOptions();
             }
-            BuildOptions();
         }
-        else if (option.LocationId.HasValue)
+        catch (Exception ex)
         {
-            // Move to location
-            if (_moveService.MoveToLocation(option.LocationId.Value))
-            {
-                _message = "Entered location";
-                ProcessEvent();
-                SaveHelper.TriggerSave();
-            }
-            else
-            {
-                _message = "Not enough stamina!";
-            }
+            _message = $"Error: {ex.Message}";
+            System.Diagnostics.Debug.WriteLine($"NavigationScreen.ProcessSelection error: {ex}");
             BuildOptions();
         }
     }
 
     private void ProcessEvent()
     {
-        var location = SaveGameService.CurrentLocation;
-        var cell = SaveGameService.CurrentCell;
-        var thisEvent = new Event(location, cell);
-        _currentScene = _eventService.ProcessEvent(thisEvent);
+        try
+        {
+            var location = SaveGameService.CurrentLocation;
+            var cell = SaveGameService.CurrentCell;
+            var thisEvent = new Event(location, cell);
+            _currentScene = _eventService.ProcessEvent(thisEvent);
 
-        if (_currentScene.Type == SceneType.Battle)
-        {
-            // Switch to battle screen
-            ScreenManager.SwitchTo(ScreenType.Battle);
+            if (_currentScene.Type == SceneType.Battle)
+            {
+                // Switch to battle screen
+                ScreenManager.SwitchTo(ScreenType.Battle);
+            }
+            else if (_currentScene.Type == SceneType.Shop)
+            {
+                // Switch to shop screen
+                ScreenManager.SwitchToShop(_currentScene);
+            }
         }
-        else if (_currentScene.Type == SceneType.Shop)
+        catch (Exception ex)
         {
-            // Switch to shop screen
-            ScreenManager.SwitchToShop(_currentScene);
+            _message = $"Error entering location: {ex.Message}";
+            System.Diagnostics.Debug.WriteLine($"NavigationScreen.ProcessEvent error: {ex}");
         }
     }
 
@@ -383,11 +400,11 @@ public class NavigationScreen : ScreenBase
                 // Check if any cells fall within visible range
                 if (visibleStart < cellEndIndex && visibleEnd > cellStartIndex)
                 {
-                    // Column positions for table layout
+                    // Column positions for table layout - expanded to use more width
                     var colDirection = padding + 40;
-                    var colBiome = padding + 150;
-                    var colProvince = padding + 280;
-                    var colBurg = padding + 450;
+                    var colBiome = padding + 170;
+                    var colProvince = padding + 340;
+                    var colBurg = padding + 560;
 
                     DrawText(spriteBatch, "Nearby Cells:", new Vector2(padding, y), Color.White);
                     y += 25;
@@ -399,8 +416,8 @@ public class NavigationScreen : ScreenBase
                     DrawText(spriteBatch, "Burg", new Vector2(colBurg, y), Color.Gray);
                     y += 22;
 
-                    // Separator line
-                    DrawRect(spriteBatch, new Rectangle(padding + 15, y, viewport.Width - 250, 1), Color.DarkGray);
+                    // Separator line - extended to match wider table
+                    DrawRect(spriteBatch, new Rectangle(padding + 15, y, viewport.Width - 100, 1), Color.DarkGray);
                     y += 5;
 
                     // Calculate which cells are visible
@@ -415,7 +432,7 @@ public class NavigationScreen : ScreenBase
 
                         if (isSelected)
                         {
-                            DrawRect(spriteBatch, new Rectangle(padding + 15, y - 2, viewport.Width - 250, 22), new Color(60, 60, 80));
+                            DrawRect(spriteBatch, new Rectangle(padding + 15, y - 2, viewport.Width - 100, 22), new Color(60, 60, 80));
                         }
 
                         var prefix = isSelected ? "> " : "  ";
@@ -424,9 +441,9 @@ public class NavigationScreen : ScreenBase
                         // Draw each column separately for proper alignment
                         DrawText(spriteBatch, prefix, new Vector2(padding + 20, y), color);
                         DrawText(spriteBatch, cellOpt.Direction.ToString(), new Vector2(colDirection, y), color);
-                        DrawText(spriteBatch, TruncateText(cellOpt.Biome, 12), new Vector2(colBiome, y), color);
-                        DrawText(spriteBatch, TruncateText(cellOpt.Province, 15), new Vector2(colProvince, y), color);
-                        DrawText(spriteBatch, TruncateText(cellOpt.Burg, 18), new Vector2(colBurg, y), color);
+                        DrawText(spriteBatch, TruncateText(cellOpt.Biome, 16), new Vector2(colBiome, y), color);
+                        DrawText(spriteBatch, TruncateText(cellOpt.Province, 22), new Vector2(colProvince, y), color);
+                        DrawText(spriteBatch, TruncateText(cellOpt.Burg, 25), new Vector2(colBurg, y), color);
                         y += 22;
                         itemsDrawn++;
                     }
@@ -457,7 +474,7 @@ public class NavigationScreen : ScreenBase
 
                         if (isSelected)
                         {
-                            DrawRect(spriteBatch, new Rectangle(padding + 15, y - 2, viewport.Width - 250, 22), new Color(60, 60, 80));
+                            DrawRect(spriteBatch, new Rectangle(padding + 15, y - 2, viewport.Width - 100, 22), new Color(60, 60, 80));
                         }
 
                         var prefix = isSelected ? "> " : "  ";

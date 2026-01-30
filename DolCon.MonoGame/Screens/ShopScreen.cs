@@ -34,9 +34,17 @@ public class ShopScreen : ScreenBase
         _selectedIndex = 0;
         _scrollOffset = 0;
 
-        // Process the scene to get initial selections
-        _scene = _shopService.ProcessShop(_scene);
-        _message = _scene.Message ?? "Welcome!";
+        try
+        {
+            // Process the scene to get initial selections
+            _scene = _shopService.ProcessShop(_scene);
+            _message = _scene.Message ?? "Welcome!";
+        }
+        catch (Exception ex)
+        {
+            _message = $"Error loading shop: {ex.Message}";
+            System.Diagnostics.Debug.WriteLine($"ShopScreen.InitializeWithScene error: {ex}");
+        }
     }
 
     public override void Initialize()
@@ -115,21 +123,37 @@ public class ShopScreen : ScreenBase
     {
         if (_scene.Selections.Count == 0) return;
 
-        // Convert 0-based index to 1-based key for scene selection
-        _scene.Selection = _selectedIndex + 1;
-        _scene = _shopService.ProcessShop(_scene);
-        _message = _scene.Message ?? "";
-
-        // Reset selection index if list changed
-        if (_selectedIndex >= _scene.Selections.Count)
-            _selectedIndex = Math.Max(0, _scene.Selections.Count - 1);
-
-        EnsureVisible();
-
-        // Auto-save after successful purchase
-        if (!string.IsNullOrEmpty(_message) && !_message.Contains("don't have enough"))
+        try
         {
-            SaveHelper.TriggerSave();
+            // Convert 0-based index to 1-based key for scene selection
+            _scene.Selection = _selectedIndex + 1;
+
+            // Verify the selection key exists
+            if (!_scene.Selections.ContainsKey(_scene.Selection))
+            {
+                _message = "Invalid selection";
+                return;
+            }
+
+            _scene = _shopService.ProcessShop(_scene);
+            _message = _scene.Message ?? "";
+
+            // Reset selection index if list changed
+            if (_selectedIndex >= _scene.Selections.Count)
+                _selectedIndex = Math.Max(0, _scene.Selections.Count - 1);
+
+            EnsureVisible();
+
+            // Auto-save after successful purchase
+            if (!string.IsNullOrEmpty(_message) && !_message.Contains("don't have enough") && !_message.Contains("not available"))
+            {
+                SaveHelper.TriggerSave();
+            }
+        }
+        catch (Exception ex)
+        {
+            _message = $"Error: {ex.Message}";
+            System.Diagnostics.Debug.WriteLine($"ShopScreen.ProcessSelection error: {ex}");
         }
     }
 

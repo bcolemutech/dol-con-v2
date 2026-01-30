@@ -212,6 +212,18 @@ public class ShopService : IShopService
 
                 break;
             }
+            default:
+            {
+                // Service type not yet implemented (Food, Drinks, Repair, etc.)
+                // Return placeholder message instead of empty selection
+                selections.Add(1, new ShopSelection
+                {
+                    Name = $"{scene.SelectedService} service is not available",
+                    Price = 0,
+                    Afford = false
+                });
+                break;
+            }
         }
 
         return selections;
