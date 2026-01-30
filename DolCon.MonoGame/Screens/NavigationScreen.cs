@@ -24,7 +24,7 @@ public class NavigationScreen : ScreenBase
     private string _message = "";
     private Scene _currentScene = new();
 
-    private record NavigationOption(string Label, int? CellId, Guid? LocationId, bool IsExplore = false);
+    private record NavigationOption(string Label, int? CellId, Guid? LocationId, bool IsExplore = false, bool IsCamp = false);
 
     // Separate lists for cells and locations
     private List<CellOption> _cellOptions = new();
@@ -73,10 +73,12 @@ public class NavigationScreen : ScreenBase
                 {
                     _options.Add(new NavigationOption($"{location.Name} - Fully explored", null, null, IsExplore: false));
                 }
+                // Add camp option at explorable locations
+                _options.Add(new NavigationOption("Camp here (restore stamina to 50%)", null, null, IsCamp: true));
             }
             else
             {
-                // Unexplorable location - show services available
+                // Unexplorable location - show services available (use lodging instead of camping)
                 _options.Add(new NavigationOption($"{location.Name} - Services available", null, null, IsExplore: false));
             }
             return;
@@ -98,11 +100,13 @@ public class NavigationScreen : ScreenBase
         }
         else
         {
-            // In a cell - show explore option, directions to neighboring cells, and local locations
+            // In a cell - show explore option, camp option, directions to neighboring cells, and local locations
             if (cell.ExploredPercent < 1)
             {
                 _options.Add(new NavigationOption($"Explore area ({cell.ExploredPercent:P0} explored)", null, null, IsExplore: true));
             }
+            // Add camp option in wilderness
+            _options.Add(new NavigationOption("Camp in wilderness (restore stamina to 50%)", null, null, IsCamp: true));
 
             // Add directions to neighboring cells with direction info
             foreach (var neighbor in cell.c)
@@ -199,15 +203,28 @@ public class NavigationScreen : ScreenBase
             _selectedIndex = Math.Min(_options.Count - 1, _selectedIndex + VisibleItems);
             EnsureVisible();
         }
+        else if (input.IsKeyPressed(Keys.C))
+        {
+            // Quick camp hotkey
+            ProcessCamp();
+        }
         else if (input.IsKeyPressed(Keys.Enter) || input.IsKeyPressed(Keys.Space))
         {
-            if (_options.Count > 0 && _selectedIndex < _options.Count && _options[_selectedIndex].IsExplore)
+            if (_options.Count > 0 && _selectedIndex < _options.Count)
             {
-                ProcessExploration();
-            }
-            else
-            {
-                ProcessSelection();
+                var option = _options[_selectedIndex];
+                if (option.IsExplore)
+                {
+                    ProcessExploration();
+                }
+                else if (option.IsCamp)
+                {
+                    ProcessCamp();
+                }
+                else
+                {
+                    ProcessSelection();
+                }
             }
         }
     }
@@ -233,6 +250,25 @@ public class NavigationScreen : ScreenBase
             _message = _currentScene.Message ?? "Exploration complete";
             BuildOptions();
         }
+    }
+
+    private void ProcessCamp()
+    {
+        var party = SaveGameService.Party;
+        var previousStamina = party.Stamina;
+
+        // Sleep with no quality = wilderness camping (restores to 50%)
+        if (_moveService.Sleep())
+        {
+            var newStamina = party.Stamina;
+            _message = $"You set up camp and rest. Stamina restored from {previousStamina:P0} to {newStamina:P0}.";
+            SaveHelper.TriggerSave();
+        }
+        else
+        {
+            _message = "You're not tired enough to camp here. (Stamina must be below 50%)";
+        }
+        BuildOptions();
     }
 
     private void EnsureVisible()
@@ -507,8 +543,12 @@ public class NavigationScreen : ScreenBase
         // Controls panel (bottom)
         var controlsY = viewport.Height - 80;
         DrawRect(spriteBatch, new Rectangle(0, controlsY, viewport.Width, 80), new Color(30, 30, 50));
-        var controlsText = _options.Any(o => o.IsExplore)
-            ? "[Up/Down] Navigate  [Enter] Select/Explore  [H] Home  [I] Inventory  [ESC] Back"
+        var canCamp = _options.Any(o => o.IsCamp);
+        var canExplore = _options.Any(o => o.IsExplore);
+        var controlsText = canExplore && canCamp
+            ? "[Up/Down] Navigate  [Enter] Select  [C] Camp  [H] Home  [I] Inventory  [ESC] Back"
+            : canCamp
+            ? "[Up/Down] Navigate  [Enter] Select  [C] Camp  [H] Home  [I] Inventory  [ESC] Back"
             : "[Up/Down] Navigate  [Enter] Select  [H] Home  [I] Inventory  [ESC] Back";
         DrawText(spriteBatch, controlsText, new Vector2(padding, controlsY + 25), Color.Gray);
     }

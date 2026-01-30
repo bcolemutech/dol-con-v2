@@ -10,7 +10,7 @@ using DolCon.MonoGame.Input;
 namespace DolCon.MonoGame.Screens;
 
 /// <summary>
-/// Battle screen for turn-based combat.
+/// Battle screen for turn-based combat with D&D-style turn order cards.
 /// </summary>
 public class BattleScreen : ScreenBase
 {
@@ -21,7 +21,13 @@ public class BattleScreen : ScreenBase
     private readonly string[] _actions = { "Attack", "Defend", "Flee" };
     private string _lastActionResult = "";
     private InputManager? _lastInput;
-    private Scene? _currentScene;  // Store scene for pending exploration
+    private Scene? _currentScene;
+
+    // Turn order card constants
+    private const int CardWidth = 130;
+    private const int CardHeight = 130;
+    private const int CardSpacing = 10;
+    private const int TurnOrderY = 55;
 
     private enum BattlePhase
     {
@@ -65,9 +71,32 @@ public class BattleScreen : ScreenBase
             var challengeRating = cell.ChallengeRating > 0 ? cell.ChallengeRating : 1.0;
 
             _combatState = _combatService.StartCombat(players, party.Stamina, biome, challengeRating);
-            _phase = BattlePhase.PlayerTurn;
             _selectedAction = 0;
             _lastActionResult = "";
+
+            // Check who won initiative
+            if (_combatState.IsPlayerTurn())
+            {
+                _phase = BattlePhase.PlayerTurn;
+            }
+            else
+            {
+                // Enemy goes first - process their turn and show result
+                _combatService.ProcessEnemyTurn(_combatState);
+                _combatService.AdvanceTurn(_combatState); // Advance to next combatant after enemy acts
+                _lastActionResult = _combatState.CombatLog.LastOrDefault() ?? "Enemy attacks first!";
+
+                // Check if enemy attack defeated the player
+                if (_combatState.Result == CombatResult.Defeat)
+                {
+                    _phase = BattlePhase.Defeat;
+                    _lastActionResult = "You have been defeated...";
+                }
+                else
+                {
+                    _phase = BattlePhase.ShowingResult;
+                }
+            }
         }
         else
         {
@@ -143,7 +172,7 @@ public class BattleScreen : ScreenBase
             _ => CombatAction.Attack
         };
 
-        // Bug 8 fix: Check flee eligibility BEFORE processing
+        // Check flee eligibility BEFORE processing
         if (action == CombatAction.Flee && !_combatState.CanFlee)
         {
             _lastActionResult = "Cannot flee after the first turn!";
@@ -194,8 +223,17 @@ public class BattleScreen : ScreenBase
             return;
         }
 
+        // Check if it's already the player's turn (e.g., after enemy attacked first in init)
+        if (_combatState.IsPlayerTurn())
+        {
+            _phase = BattlePhase.PlayerTurn;
+            return;
+        }
+
         // Process enemy turn
         _combatService.ProcessEnemyTurn(_combatState);
+        _combatService.AdvanceTurn(_combatState); // Advance to next combatant after enemy acts
+        _lastActionResult = _combatState.CombatLog.LastOrDefault() ?? "";
 
         // Check again after enemy turn
         if (_combatState.Result == CombatResult.Defeat)
@@ -205,7 +243,9 @@ public class BattleScreen : ScreenBase
             return;
         }
 
-        _phase = BattlePhase.PlayerTurn;
+        // Stay in ShowingResult to display the enemy's attack
+        // Next call to AdvanceCombat will check IsPlayerTurn at the start
+        _phase = BattlePhase.ShowingResult;
     }
 
     private void ApplyPostCombatEffects()
@@ -227,13 +267,12 @@ public class BattleScreen : ScreenBase
                 player.coin += coinReward;
             }
 
-            // Bug 9 fix: Only commit exploration progress on victory
+            // Only commit exploration progress on victory
             if (_currentScene != null)
             {
                 EventService.CommitPendingExploration(_currentScene);
             }
         }
-        // On Defeat or Fled, pending exploration is discarded (not committed)
 
         // Clear scene reference
         _currentScene = null;
@@ -251,87 +290,256 @@ public class BattleScreen : ScreenBase
         DrawRect(spriteBatch, new Rectangle(0, 0, viewport.Width, 50), new Color(50, 20, 20));
         DrawText(spriteBatch, "COMBAT", new Vector2(padding, 15), Color.Red);
 
+        // Show round number
+        if (_combatState != null)
+        {
+            var roundText = $"Round {_combatState.CurrentTurn + 1}";
+            DrawText(spriteBatch, roundText, new Vector2(viewport.Width - 150, 15), Color.White);
+        }
+
         if (_combatState == null)
         {
             DrawText(spriteBatch, "No combat state!", new Vector2(padding, 100), Color.White);
             return;
         }
 
-        // LEFT COLUMN: Player status (Y=60-180)
-        var playerPanel = new Rectangle(padding, 60, 300, 130);
+        // Turn order cards (Y=55-185)
+        DrawTurnOrderCards(spriteBatch, padding);
+
+        // Middle section (Y=195+)
+        var middleY = TurnOrderY + CardHeight + 10;
+
+        // LEFT COLUMN: Player status panel
+        var playerPanel = new Rectangle(padding, middleY, 280, 150);
         DrawBorder(spriteBatch, playerPanel, Color.Blue, 2);
-        DrawText(spriteBatch, "Player", new Vector2(playerPanel.X + 10, playerPanel.Y + 10), Color.LightBlue);
+        DrawPlayerPanel(spriteBatch, playerPanel);
+
+        // CENTER COLUMN: Combat log
+        var logPanel = new Rectangle(padding + 290, middleY, 350, 280);
+        DrawBorder(spriteBatch, logPanel, Color.DarkGray, 1);
+        DrawCombatLog(spriteBatch, logPanel);
+
+        // RIGHT COLUMN: Attack result
+        var resultPanel = new Rectangle(padding + 650, middleY, 350, 280);
+        DrawBorder(spriteBatch, resultPanel, new Color(80, 80, 40), 1);
+        DrawAttackResult(spriteBatch, resultPanel.X + 10, resultPanel.Y + 10);
+
+        // Enemy strip (Y=480-570)
+        var enemyStripY = middleY + 290;
+        DrawEnemyStrip(spriteBatch, padding, enemyStripY, viewport.Width - padding * 2);
+
+        // Controls panel (bottom)
+        var controlsY = viewport.Height - 100;
+        DrawRect(spriteBatch, new Rectangle(0, controlsY - 10, viewport.Width, 110), new Color(30, 30, 40));
+        DrawControls(spriteBatch, padding, controlsY);
+    }
+
+    private void DrawTurnOrderCards(SpriteBatch spriteBatch, int padding)
+    {
+        if (_combatState == null) return;
+
+        var x = padding;
+        var maxCards = (GraphicsDevice.Viewport.Width - padding * 2) / (CardWidth + CardSpacing);
+
+        // If too many combatants, compress cards
+        var cardWidth = CardWidth;
+        var cardCount = _combatState.TurnOrder.Count;
+        if (cardCount > maxCards)
+        {
+            cardWidth = Math.Max(100, (GraphicsDevice.Viewport.Width - padding * 2 - CardSpacing * (cardCount - 1)) / cardCount);
+        }
+
+        for (int i = 0; i < _combatState.TurnOrder.Count; i++)
+        {
+            var entity = _combatState.TurnOrder[i];
+            var isActive = i == _combatState.CurrentTurnIndex;
+            var cardRect = new Rectangle(x, TurnOrderY, cardWidth, CardHeight);
+
+            DrawCombatCard(spriteBatch, entity, cardRect, isActive);
+            x += cardWidth + CardSpacing;
+
+            // Stop if cards go off screen
+            if (x + cardWidth > GraphicsDevice.Viewport.Width - padding)
+                break;
+        }
+    }
+
+    private void DrawCombatCard(SpriteBatch spriteBatch, CombatEntity entity, Rectangle cardRect, bool isActive)
+    {
+        if (_combatState == null) return;
+
+        var isPlayer = _combatState.Players.Any(p => p.Id == entity.Id);
+        var isDead = !entity.IsAlive;
+
+        // Card background color
+        var bgColor = isDead ? new Color(50, 50, 50) :
+                      isPlayer ? new Color(40, 60, 100) : new Color(100, 40, 40);
+
+        // Active glow effect
+        if (isActive && !isDead)
+        {
+            var glowRect = new Rectangle(cardRect.X - 4, cardRect.Y - 4,
+                                          cardRect.Width + 8, cardRect.Height + 8);
+            DrawRect(spriteBatch, glowRect, new Color(255, 215, 0, 80)); // Gold glow
+        }
+
+        DrawRect(spriteBatch, cardRect, bgColor);
+
+        // Border
+        var borderColor = isActive ? Color.Gold : (isDead ? Color.DarkGray : Color.White);
+        var borderThickness = isActive ? 3 : 1;
+        DrawBorder(spriteBatch, cardRect, borderColor, borderThickness);
+
+        // Content
+        DrawCardContent(spriteBatch, entity, cardRect, isPlayer, isDead);
+    }
+
+    private void DrawCardContent(SpriteBatch spriteBatch, CombatEntity entity, Rectangle cardRect, bool isPlayer, bool isDead)
+    {
+        int x = cardRect.X + 5;
+        int y = cardRect.Y + 5;
+        var textColor = isDead ? Color.Gray : Color.White;
+        var cardWidth = cardRect.Width;
+
+        // Row 1: Initiative + Type indicator
+        DrawText(spriteBatch, $"Init:{entity.Initiative}", new Vector2(x, y), textColor);
+        var indicator = isPlayer ? "[P]" : "[E]";
+        var indicatorColor = isDead ? Color.Gray : (isPlayer ? Color.LightBlue : Color.LightCoral);
+        DrawText(spriteBatch, indicator, new Vector2(cardRect.Right - 35, y), indicatorColor);
+        y += 22;
+
+        // Row 2: Name (truncated)
+        var maxNameLen = cardWidth > 110 ? 12 : 10;
+        var name = TruncateText(entity.Name, maxNameLen);
+        if (isDead) name = "X " + TruncateText(entity.Name, maxNameLen - 2);
+        DrawText(spriteBatch, name, new Vector2(x, y), textColor);
+        y += 24;
+
+        // Row 3: HP bar
+        var hpPercent = isDead ? 0f : (float)entity.CurrentHitPoints / entity.MaxHitPoints;
+        var barWidth = cardWidth - 15;
+        var hpBarBg = new Rectangle(x, y, barWidth, 14);
+        var hpBarFill = new Rectangle(x, y, (int)(barWidth * hpPercent), 14);
+        DrawRect(spriteBatch, hpBarBg, Color.DarkRed);
+        if (!isDead)
+        {
+            DrawRect(spriteBatch, hpBarFill, isPlayer ? Color.Green : Color.Red);
+        }
+        y += 16;
+
+        // HP values
+        var hpText = isDead ? "DEAD" : $"{entity.CurrentHitPoints}/{entity.MaxHitPoints}";
+        DrawText(spriteBatch, hpText, new Vector2(x, y), textColor);
+        y += 20;
+
+        // Row 4: AC
+        DrawText(spriteBatch, $"AC: {entity.ArmorClass}", new Vector2(x, y), textColor);
+        y += 20;
+
+        // Row 5: Modifiers
+        if (entity.HasUsedDefend && !isDead)
+        {
+            DrawText(spriteBatch, "Def +2", new Vector2(x, y), Color.Cyan);
+        }
+    }
+
+    private void DrawPlayerPanel(SpriteBatch spriteBatch, Rectangle panel)
+    {
+        if (_combatState == null) return;
 
         var player = _combatState.Players.FirstOrDefault();
         if (player == null) return;
 
-        int y = playerPanel.Y + 35;
-        DrawText(spriteBatch, $"HP: {player.CurrentHitPoints}/{player.MaxHitPoints}",
-            new Vector2(playerPanel.X + 10, y), Color.White);
+        int x = panel.X + 10;
+        int y = panel.Y + 10;
+
+        DrawText(spriteBatch, "Player Status", new Vector2(x, y), Color.LightBlue);
+        y += 25;
+
+        DrawText(spriteBatch, player.Name, new Vector2(x, y), Color.White);
         y += 22;
+
+        DrawText(spriteBatch, $"HP: {player.CurrentHitPoints}/{player.MaxHitPoints}", new Vector2(x, y), Color.White);
+        y += 20;
 
         // HP bar
         var hpPercent = (float)player.CurrentHitPoints / player.MaxHitPoints;
-        var hpBarBg = new Rectangle(playerPanel.X + 10, y, 200, 18);
-        var hpBar = new Rectangle(playerPanel.X + 10, y, (int)(200 * hpPercent), 18);
+        var hpBarBg = new Rectangle(x, y, 200, 16);
+        var hpBar = new Rectangle(x, y, (int)(200 * hpPercent), 16);
         DrawRect(spriteBatch, hpBarBg, Color.DarkRed);
         DrawRect(spriteBatch, hpBar, Color.Green);
-        y += 28;
+        y += 22;
 
-        // Bug 7 fix: Show AC with defend indicator
+        // AC with defend indicator
         var acText = $"AC: {player.ArmorClass}";
-        DrawText(spriteBatch, acText, new Vector2(playerPanel.X + 10, y), Color.LightGray);
         if (player.HasUsedDefend)
         {
-            DrawText(spriteBatch, " (Defending +2)", new Vector2(playerPanel.X + 80, y), Color.Cyan);
+            acText += " (Defending +2)";
         }
+        DrawText(spriteBatch, acText, new Vector2(x, y), Color.LightGray);
+    }
 
-        // LEFT COLUMN: Combat log (Y=200-400)
-        var logPanel = new Rectangle(padding, 200, 300, 200);
-        DrawBorder(spriteBatch, logPanel, Color.DarkGray, 1);
-        DrawText(spriteBatch, "Combat Log", new Vector2(logPanel.X + 10, logPanel.Y + 5), Color.Gray);
-        y = logPanel.Y + 28;
-        var logEntries = _combatState.CombatLog.TakeLast(7).ToList();
+    private void DrawCombatLog(SpriteBatch spriteBatch, Rectangle panel)
+    {
+        if (_combatState == null) return;
+
+        int x = panel.X + 10;
+        int y = panel.Y + 5;
+
+        DrawText(spriteBatch, "Combat Log", new Vector2(x, y), Color.Gray);
+        y += 25;
+
+        var logEntries = _combatState.CombatLog.TakeLast(10).ToList();
         foreach (var entry in logEntries)
         {
-            DrawText(spriteBatch, TruncateText(entry, 38), new Vector2(logPanel.X + 10, y), Color.LightGray);
+            DrawText(spriteBatch, TruncateText(entry, 45), new Vector2(x, y), Color.LightGray);
             y += 22;
         }
+    }
 
-        // RIGHT COLUMN: Enemies (Y=60-260)
-        var enemyPanel = new Rectangle(viewport.Width - 350 - padding, 60, 350, 200);
-        DrawBorder(spriteBatch, enemyPanel, Color.Red, 2);
-        DrawText(spriteBatch, "Enemies", new Vector2(enemyPanel.X + 10, enemyPanel.Y + 10), Color.LightCoral);
+    private void DrawEnemyStrip(SpriteBatch spriteBatch, int x, int y, int width)
+    {
+        if (_combatState == null) return;
 
-        y = enemyPanel.Y + 40;
+        var stripPanel = new Rectangle(x, y, width, 90);
+        DrawRect(spriteBatch, stripPanel, new Color(40, 30, 30));
+        DrawBorder(spriteBatch, stripPanel, Color.DarkRed, 1);
+
+        DrawText(spriteBatch, "Enemies:", new Vector2(x + 10, y + 5), Color.LightCoral);
+
+        var enemyX = x + 10;
+        var enemyY = y + 28;
+        var enemyWidth = Math.Min(200, (width - 20) / Math.Max(1, _combatState.Enemies.Count));
+
         foreach (var enemy in _combatState.Enemies)
         {
             var color = enemy.CurrentHitPoints > 0 ? Color.White : Color.Gray;
-            DrawText(spriteBatch, $"{enemy.Name} (CR {enemy.ChallengeRating})",
-                new Vector2(enemyPanel.X + 10, y), color);
-            y += 22;
+            var nameText = TruncateText($"{enemy.Name} (CR{enemy.ChallengeRating:F1})", 22);
+            DrawText(spriteBatch, nameText, new Vector2(enemyX, enemyY), color);
 
-            var enemyHpPercent = (float)enemy.CurrentHitPoints / enemy.MaxHitPoints;
-            var enemyHpBarBg = new Rectangle(enemyPanel.X + 10, y, 150, 15);
-            var enemyHpBar = new Rectangle(enemyPanel.X + 10, y, (int)(150 * Math.Max(0, enemyHpPercent)), 15);
-            DrawRect(spriteBatch, enemyHpBarBg, Color.DarkRed);
+            // HP bar
+            var hpPercent = (float)enemy.CurrentHitPoints / enemy.MaxHitPoints;
+            var barY = enemyY + 22;
+            var barWidth = Math.Min(150, enemyWidth - 10);
+            var hpBarBg = new Rectangle(enemyX, barY, barWidth, 12);
+            var hpBar = new Rectangle(enemyX, barY, (int)(barWidth * Math.Max(0, hpPercent)), 12);
+            DrawRect(spriteBatch, hpBarBg, Color.DarkRed);
             if (enemy.CurrentHitPoints > 0)
             {
-                DrawRect(spriteBatch, enemyHpBar, Color.Red);
+                DrawRect(spriteBatch, hpBar, Color.Red);
             }
-            DrawText(spriteBatch, $"{enemy.CurrentHitPoints}/{enemy.MaxHitPoints}",
-                new Vector2(enemyPanel.X + 170, y), color);
-            y += 28;
+
+            // HP text
+            var hpText = enemy.CurrentHitPoints > 0 ? $"{enemy.CurrentHitPoints}/{enemy.MaxHitPoints}" : "DEAD";
+            DrawText(spriteBatch, hpText, new Vector2(enemyX + barWidth + 5, barY - 2), color);
+
+            enemyX += enemyWidth + 20;
         }
+    }
 
-        // RIGHT COLUMN: Action result panel (Y=270-400)
-        var resultPanel = new Rectangle(viewport.Width - 350 - padding, 270, 350, 130);
-        DrawBorder(spriteBatch, resultPanel, new Color(80, 80, 40), 1);
-        DrawAttackResult(spriteBatch, resultPanel.X + 10, resultPanel.Y + 10);
-
-        // Actions (bottom - Y=viewport.Height-100)
-        var controlsY = viewport.Height - 100;
-        DrawRect(spriteBatch, new Rectangle(0, controlsY - 10, viewport.Width, 110), new Color(30, 30, 40));
+    private void DrawControls(SpriteBatch spriteBatch, int padding, int controlsY)
+    {
+        if (_combatState == null) return;
 
         if (_phase == BattlePhase.PlayerTurn)
         {
@@ -357,9 +565,20 @@ public class BattleScreen : ScreenBase
         {
             DrawText(spriteBatch, "Press any key to continue...", new Vector2(padding, controlsY), Color.Gray);
         }
-        else if (_phase == BattlePhase.Victory || _phase == BattlePhase.Defeat || _phase == BattlePhase.Fled)
+        else if (_phase == BattlePhase.Victory)
         {
-            DrawText(spriteBatch, "Press any key to continue...", new Vector2(padding, controlsY), Color.Gray);
+            DrawText(spriteBatch, _lastActionResult, new Vector2(padding, controlsY), Color.Gold);
+            DrawText(spriteBatch, "Press any key to continue...", new Vector2(padding, controlsY + 30), Color.Gray);
+        }
+        else if (_phase == BattlePhase.Defeat)
+        {
+            DrawText(spriteBatch, _lastActionResult, new Vector2(padding, controlsY), Color.Red);
+            DrawText(spriteBatch, "Press any key to continue...", new Vector2(padding, controlsY + 30), Color.Gray);
+        }
+        else if (_phase == BattlePhase.Fled)
+        {
+            DrawText(spriteBatch, _lastActionResult, new Vector2(padding, controlsY), Color.Yellow);
+            DrawText(spriteBatch, "Press any key to continue...", new Vector2(padding, controlsY + 30), Color.Gray);
         }
     }
 
@@ -372,7 +591,9 @@ public class BattleScreen : ScreenBase
 
     private void DrawAttackResult(SpriteBatch spriteBatch, int x, int y)
     {
-        // Bug 6 fix: Show attack result during PlayerTurn as well if there's a result
+        DrawText(spriteBatch, "Last Action", new Vector2(x, y), Color.Gray);
+        y += 25;
+
         if (_combatState?.LastAttackResult != null &&
             (_phase == BattlePhase.ShowingResult || _phase == BattlePhase.EnemyTurn || _phase == BattlePhase.PlayerTurn))
         {
@@ -407,6 +628,10 @@ public class BattleScreen : ScreenBase
         else if (!string.IsNullOrEmpty(_lastActionResult))
         {
             DrawText(spriteBatch, _lastActionResult, new Vector2(x, y), Color.Yellow);
+        }
+        else
+        {
+            DrawText(spriteBatch, "No actions yet", new Vector2(x, y), Color.DarkGray);
         }
     }
 }
