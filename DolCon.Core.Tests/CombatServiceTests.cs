@@ -353,4 +353,32 @@ public class CombatServiceTests
             state.Players[0].ArmorClass.Should().Be(boostedAC);
         }
     }
+
+    [Fact]
+    public void CalculatePostCombatStamina_Defeat_Returns50Percent()
+    {
+        // Arrange
+        var state = new CombatState { Result = CombatResult.Defeat };
+        var currentStamina = 0.8;
+
+        // Act
+        var result = CombatService.CalculatePostCombatStamina(state, currentStamina);
+
+        // Assert
+        result.Should().Be(0.4); // 50% of 0.8
+    }
+
+    [Fact]
+    public void CalculatePostCombatStamina_Defeat_MinimumZero()
+    {
+        // Arrange
+        var state = new CombatState { Result = CombatResult.Defeat };
+        var currentStamina = 0.0;
+
+        // Act
+        var result = CombatService.CalculatePostCombatStamina(state, currentStamina);
+
+        // Assert
+        result.Should().Be(0.0);
+    }
 }

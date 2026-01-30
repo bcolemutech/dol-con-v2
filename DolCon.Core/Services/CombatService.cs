@@ -483,8 +483,8 @@ public class CombatService : ICombatService
                 return Math.Max(0, currentStamina - 0.05);
 
             case CombatResult.Defeat:
-                // No stamina change - damage already applied
-                return currentStamina;
+                // Reduce stamina by 50% on defeat
+                return Math.Max(0, currentStamina * 0.5);
 
             default:
                 return currentStamina;
