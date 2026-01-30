@@ -20,7 +20,7 @@ public class BattleScreen : ScreenBase
     private int _selectedAction;
     private readonly string[] _actions = { "Attack", "Defend", "Flee" };
     private string _lastActionResult = "";
-    private int _combatLogOffset;
+    private InputManager? _lastInput;
 
     private enum BattlePhase
     {
@@ -58,7 +58,6 @@ public class BattleScreen : ScreenBase
             _phase = BattlePhase.PlayerTurn;
             _selectedAction = 0;
             _lastActionResult = "";
-            _combatLogOffset = 0;
         }
         else
         {
@@ -69,6 +68,7 @@ public class BattleScreen : ScreenBase
 
     public override void Update(GameTime gameTime, InputManager input)
     {
+        _lastInput = input;
         if (_combatState == null) return;
 
         switch (_phase)
@@ -87,6 +87,7 @@ public class BattleScreen : ScreenBase
             case BattlePhase.Fled:
                 if (input.AnyKeyPressed())
                 {
+                    ApplyPostCombatEffects();
                     ScreenManager.SwitchTo(ScreenType.Navigation);
                 }
                 break;
@@ -157,6 +158,9 @@ public class BattleScreen : ScreenBase
             _phase = BattlePhase.ShowingResult;
             _lastActionResult = _combatState.CombatLog.LastOrDefault() ?? "";
         }
+
+        // Consume input to prevent immediate phase transition
+        _lastInput?.ConsumeInput();
     }
 
     private void AdvanceCombat()
@@ -190,6 +194,27 @@ public class BattleScreen : ScreenBase
         }
 
         _phase = BattlePhase.PlayerTurn;
+    }
+
+    private void ApplyPostCombatEffects()
+    {
+        if (_combatState == null) return;
+
+        var party = SaveGameService.Party;
+
+        // Apply stamina changes based on combat result
+        party.Stamina = CombatService.CalculatePostCombatStamina(_combatState, party.Stamina);
+
+        // Apply victory rewards
+        if (_combatState.Result == CombatResult.Victory)
+        {
+            // Give coin rewards based on XP
+            var coinReward = _combatState.TotalXPEarned / 2;
+            foreach (var player in party.Players)
+            {
+                player.coin += coinReward;
+            }
+        }
     }
 
     public override void Draw(SpriteBatch spriteBatch)
@@ -256,11 +281,8 @@ public class BattleScreen : ScreenBase
             y += 30;
         }
 
-        // Action result / message
-        if (!string.IsNullOrEmpty(_lastActionResult))
-        {
-            DrawText(spriteBatch, _lastActionResult, new Vector2(padding, 280), Color.Yellow);
-        }
+        // Action result / message with formula display
+        DrawAttackResult(spriteBatch, padding, 280);
 
         // Combat log
         var logPanel = new Rectangle(padding, 310, viewport.Width - 2 * padding, 200);
@@ -294,6 +316,45 @@ public class BattleScreen : ScreenBase
         else if (_phase == BattlePhase.Victory || _phase == BattlePhase.Defeat || _phase == BattlePhase.Fled)
         {
             DrawText(spriteBatch, "Press any key to continue...", new Vector2(padding, controlsY), Color.Gray);
+        }
+    }
+
+    private void DrawAttackResult(SpriteBatch spriteBatch, int x, int y)
+    {
+        if (_combatState?.LastAttackResult != null &&
+            (_phase == BattlePhase.ShowingResult || _phase == BattlePhase.EnemyTurn))
+        {
+            var result = _combatState.LastAttackResult;
+
+            // Attacker and target
+            DrawText(spriteBatch, $"{result.AttackerName} attacks {result.TargetName}",
+                new Vector2(x, y), Color.Cyan);
+            y += 25;
+
+            // Attack formula
+            var formula = result.GetAttackFormula();
+            DrawText(spriteBatch, $"Roll: {formula}", new Vector2(x, y), Color.White);
+            y += 25;
+
+            // Hit/Miss result
+            var hitColor = result.IsCritical ? Color.Gold :
+                           result.IsHit ? Color.Green : Color.Red;
+            var hitText = result.IsCritical ? "CRITICAL HIT!" :
+                          result.IsHit ? $"HIT for {result.TotalDamage} damage" :
+                          result.IsNatural1 ? "MISS (Natural 1)" : "MISS";
+            DrawText(spriteBatch, hitText, new Vector2(x, y), hitColor);
+            y += 25;
+
+            // Damage formula (if hit)
+            if (result.IsHit)
+            {
+                var damageFormula = result.GetDamageFormula();
+                DrawText(spriteBatch, $"Damage: {damageFormula}", new Vector2(x, y), Color.Orange);
+            }
+        }
+        else if (!string.IsNullOrEmpty(_lastActionResult))
+        {
+            DrawText(spriteBatch, _lastActionResult, new Vector2(x, y), Color.Yellow);
         }
     }
 }
