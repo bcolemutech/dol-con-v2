@@ -62,14 +62,22 @@ public class NavigationScreen : ScreenBase
 
         if (location != null)
         {
-            // In a location - show explore option if not fully explored
-            if (location.ExploredPercent < 1)
+            // Only show explore option for explorable locations
+            if (location.Type.Size != LocationSize.unexplorable)
             {
-                _options.Add(new NavigationOption($"Explore {location.Name} ({location.ExploredPercent:P0} explored)", null, null, IsExplore: true));
+                if (location.ExploredPercent < 1)
+                {
+                    _options.Add(new NavigationOption($"Explore {location.Name} ({location.ExploredPercent:P0} explored)", null, null, IsExplore: true));
+                }
+                else
+                {
+                    _options.Add(new NavigationOption($"{location.Name} - Fully explored", null, null, IsExplore: false));
+                }
             }
             else
             {
-                _options.Add(new NavigationOption($"{location.Name} - Fully explored", null, null, IsExplore: true));
+                // Unexplorable location - show services available
+                _options.Add(new NavigationOption($"{location.Name} - Services available", null, null, IsExplore: false));
             }
             return;
         }
@@ -79,7 +87,10 @@ public class NavigationScreen : ScreenBase
             // In a burg - show locations (burgs are settlements, exploration is via locations)
             foreach (var loc in burg.locations)
             {
-                var exploredStr = loc.ExploredPercent > 0 ? $"{loc.ExploredPercent:P0}" : "Unexplored";
+                // Show "Services" for unexplorable locations instead of exploration percentage
+                var exploredStr = loc.Type.Size == LocationSize.unexplorable
+                    ? "Services"
+                    : (loc.ExploredPercent > 0 ? $"{loc.ExploredPercent:P0}" : "Unexplored");
                 var typeStr = loc.Type.Size.ToString();
                 _locationOptions.Add(new LocationOption(loc.Id, loc.Name, typeStr, exploredStr));
                 _options.Add(new NavigationOption($"{loc.Name} ({typeStr})", null, loc.Id));
@@ -118,7 +129,10 @@ public class NavigationScreen : ScreenBase
             // Add discovered cell locations
             foreach (var loc in cell.locations.Where(l => l.Discovered))
             {
-                var exploredStr = loc.ExploredPercent > 0 ? $"{loc.ExploredPercent:P0}" : "Unexplored";
+                // Show "Services" for unexplorable locations instead of exploration percentage
+                var exploredStr = loc.Type.Size == LocationSize.unexplorable
+                    ? "Services"
+                    : (loc.ExploredPercent > 0 ? $"{loc.ExploredPercent:P0}" : "Unexplored");
                 var typeStr = loc.Type.Size.ToString();
                 _locationOptions.Add(new LocationOption(loc.Id, loc.Name, typeStr, exploredStr));
                 _options.Add(new NavigationOption($"{loc.Name} ({typeStr})", null, loc.Id));
@@ -207,7 +221,12 @@ public class NavigationScreen : ScreenBase
 
         if (_currentScene.Type == SceneType.Battle)
         {
-            ScreenManager.SwitchTo(ScreenType.Battle);
+            // Use SwitchToBattle to pass scene with pending exploration
+            ScreenManager.SwitchToBattle(_currentScene);
+        }
+        else if (_currentScene.Type == SceneType.Shop)
+        {
+            ScreenManager.SwitchToShop(_currentScene);
         }
         else
         {
@@ -283,6 +302,11 @@ public class NavigationScreen : ScreenBase
             // Switch to battle screen
             ScreenManager.SwitchTo(ScreenType.Battle);
         }
+        else if (_currentScene.Type == SceneType.Shop)
+        {
+            // Switch to shop screen
+            ScreenManager.SwitchToShop(_currentScene);
+        }
     }
 
     public override void Draw(SpriteBatch spriteBatch)
@@ -329,71 +353,120 @@ public class NavigationScreen : ScreenBase
         // Options header
         if (_options.Count > 0)
         {
+            // Calculate visible range based on scroll offset
+            var visibleStart = _scrollOffset;
+            var visibleEnd = Math.Min(_options.Count, _scrollOffset + VisibleItems);
+            var itemsDrawn = 0;
+
             // Check if explore option is available
             var hasExploreOption = _options.Any(o => o.IsExplore);
-            if (hasExploreOption)
+            var cellStartIndex = hasExploreOption ? 1 : 0;
+            var locStartIndex = cellStartIndex + _cellOptions.Count;
+
+            // Draw explore option if visible (index 0)
+            if (hasExploreOption && visibleStart == 0)
             {
                 var exploreOpt = _options.FirstOrDefault(o => o.IsExplore);
-                var isExploreSelected = _selectedIndex == 0 && exploreOpt != null && exploreOpt.IsExplore;
+                var isExploreSelected = _selectedIndex == 0;
                 var exploreColor = isExploreSelected ? Color.Yellow : Color.Cyan;
                 var explorePrefix = isExploreSelected ? "> " : "  ";
                 DrawText(spriteBatch, $"{explorePrefix}{exploreOpt?.Label ?? "Explore"}", new Vector2(padding, y), exploreColor);
                 y += 30;
+                itemsDrawn++;
             }
 
-            // Draw cells section if we have cell options
+            // Draw cells section if we have cell options and any are visible
             if (_cellOptions.Count > 0)
             {
-                DrawText(spriteBatch, "Nearby Cells:", new Vector2(padding, y), Color.White);
-                y += 25;
-                DrawText(spriteBatch, "Direction | Biome       | Province    | Burg",
-                    new Vector2(padding + 20, y), Color.Gray);
-                y += 20;
+                var cellEndIndex = cellStartIndex + _cellOptions.Count;
 
-                var cellStartIndex = hasExploreOption ? 1 : 0;
-                for (int i = 0; i < _cellOptions.Count; i++)
+                // Check if any cells fall within visible range
+                if (visibleStart < cellEndIndex && visibleEnd > cellStartIndex)
                 {
-                    var actualIndex = cellStartIndex + i;
-                    var cellOpt = _cellOptions[i];
-                    var isSelected = actualIndex == _selectedIndex;
+                    // Column positions for table layout
+                    var colDirection = padding + 40;
+                    var colBiome = padding + 150;
+                    var colProvince = padding + 280;
+                    var colBurg = padding + 450;
 
-                    if (isSelected)
-                    {
-                        DrawRect(spriteBatch, new Rectangle(padding + 15, y - 2, viewport.Width - 250, 22), new Color(60, 60, 80));
-                    }
+                    DrawText(spriteBatch, "Nearby Cells:", new Vector2(padding, y), Color.White);
+                    y += 25;
 
-                    var prefix = isSelected ? "> " : "  ";
-                    var color = isSelected ? Color.Yellow : Color.LightGray;
-                    var displayText = $"{prefix}{cellOpt.Direction,-9} | {cellOpt.Biome,-11} | {cellOpt.Province,-11} | {cellOpt.Burg}";
-                    DrawText(spriteBatch, displayText, new Vector2(padding + 20, y), color);
+                    // Header row
+                    DrawText(spriteBatch, "Direction", new Vector2(colDirection, y), Color.Gray);
+                    DrawText(spriteBatch, "Biome", new Vector2(colBiome, y), Color.Gray);
+                    DrawText(spriteBatch, "Province", new Vector2(colProvince, y), Color.Gray);
+                    DrawText(spriteBatch, "Burg", new Vector2(colBurg, y), Color.Gray);
                     y += 22;
+
+                    // Separator line
+                    DrawRect(spriteBatch, new Rectangle(padding + 15, y, viewport.Width - 250, 1), Color.DarkGray);
+                    y += 5;
+
+                    // Calculate which cells are visible
+                    var cellVisibleStart = Math.Max(0, visibleStart - cellStartIndex);
+                    var cellVisibleEnd = Math.Min(_cellOptions.Count, visibleEnd - cellStartIndex);
+
+                    for (int i = cellVisibleStart; i < cellVisibleEnd && itemsDrawn < VisibleItems; i++)
+                    {
+                        var actualIndex = cellStartIndex + i;
+                        var cellOpt = _cellOptions[i];
+                        var isSelected = actualIndex == _selectedIndex;
+
+                        if (isSelected)
+                        {
+                            DrawRect(spriteBatch, new Rectangle(padding + 15, y - 2, viewport.Width - 250, 22), new Color(60, 60, 80));
+                        }
+
+                        var prefix = isSelected ? "> " : "  ";
+                        var color = isSelected ? Color.Yellow : Color.LightGray;
+
+                        // Draw each column separately for proper alignment
+                        DrawText(spriteBatch, prefix, new Vector2(padding + 20, y), color);
+                        DrawText(spriteBatch, cellOpt.Direction.ToString(), new Vector2(colDirection, y), color);
+                        DrawText(spriteBatch, TruncateText(cellOpt.Biome, 12), new Vector2(colBiome, y), color);
+                        DrawText(spriteBatch, TruncateText(cellOpt.Province, 15), new Vector2(colProvince, y), color);
+                        DrawText(spriteBatch, TruncateText(cellOpt.Burg, 18), new Vector2(colBurg, y), color);
+                        y += 22;
+                        itemsDrawn++;
+                    }
+                    y += 10;
                 }
-                y += 10;
             }
 
-            // Draw locations section if we have location options
+            // Draw locations section if we have location options and any are visible
             if (_locationOptions.Count > 0)
             {
-                DrawText(spriteBatch, "Discovered Locations:", new Vector2(padding, y), Color.White);
-                y += 25;
+                var locEndIndex = locStartIndex + _locationOptions.Count;
 
-                var locStartIndex = (hasExploreOption ? 1 : 0) + _cellOptions.Count;
-                for (int i = 0; i < _locationOptions.Count; i++)
+                // Check if any locations fall within visible range
+                if (visibleStart < locEndIndex && visibleEnd > locStartIndex)
                 {
-                    var actualIndex = locStartIndex + i;
-                    var locOpt = _locationOptions[i];
-                    var isSelected = actualIndex == _selectedIndex;
+                    DrawText(spriteBatch, "Discovered Locations:", new Vector2(padding, y), Color.White);
+                    y += 25;
 
-                    if (isSelected)
+                    // Calculate which locations are visible
+                    var locVisibleStart = Math.Max(0, visibleStart - locStartIndex);
+                    var locVisibleEnd = Math.Min(_locationOptions.Count, visibleEnd - locStartIndex);
+
+                    for (int i = locVisibleStart; i < locVisibleEnd && itemsDrawn < VisibleItems; i++)
                     {
-                        DrawRect(spriteBatch, new Rectangle(padding + 15, y - 2, viewport.Width - 250, 22), new Color(60, 60, 80));
-                    }
+                        var actualIndex = locStartIndex + i;
+                        var locOpt = _locationOptions[i];
+                        var isSelected = actualIndex == _selectedIndex;
 
-                    var prefix = isSelected ? "> " : "  ";
-                    var color = isSelected ? Color.Yellow : Color.LightGreen;
-                    DrawText(spriteBatch, $"{prefix}{locOpt.Name} ({locOpt.Type}) - {locOpt.Explored}",
-                        new Vector2(padding + 20, y), color);
-                    y += 22;
+                        if (isSelected)
+                        {
+                            DrawRect(spriteBatch, new Rectangle(padding + 15, y - 2, viewport.Width - 250, 22), new Color(60, 60, 80));
+                        }
+
+                        var prefix = isSelected ? "> " : "  ";
+                        var color = isSelected ? Color.Yellow : Color.LightGreen;
+                        DrawText(spriteBatch, $"{prefix}{locOpt.Name} ({locOpt.Type}) - {locOpt.Explored}",
+                            new Vector2(padding + 20, y), color);
+                        y += 22;
+                        itemsDrawn++;
+                    }
                 }
             }
 
@@ -421,5 +494,15 @@ public class NavigationScreen : ScreenBase
             ? "[Up/Down] Navigate  [Enter] Select/Explore  [H] Home  [I] Inventory  [ESC] Back"
             : "[Up/Down] Navigate  [Enter] Select  [H] Home  [I] Inventory  [ESC] Back";
         DrawText(spriteBatch, controlsText, new Vector2(padding, controlsY + 25), Color.Gray);
+    }
+
+    /// <summary>
+    /// Truncates text to a maximum length, adding ".." if truncated.
+    /// </summary>
+    private static string TruncateText(string text, int maxLength)
+    {
+        if (string.IsNullOrEmpty(text) || text.Length <= maxLength)
+            return text ?? "";
+        return text.Substring(0, maxLength - 2) + "..";
     }
 }

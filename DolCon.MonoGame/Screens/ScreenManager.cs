@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using DolCon.Core.Models;
 using DolCon.MonoGame.Input;
 
 namespace DolCon.MonoGame.Screens;
@@ -50,6 +51,40 @@ public class ScreenManager
         _currentScreen = screen;
         CurrentScreenType = type;
         _currentScreen.Initialize();
+        _currentScreen.LoadContent(_content, _graphicsDevice);
+    }
+
+    /// <summary>
+    /// Switch to the shop screen with scene data.
+    /// </summary>
+    public void SwitchToShop(Scene scene)
+    {
+        if (!_screens.TryGetValue(ScreenType.Shop, out var screen) || screen is not ShopScreen shopScreen)
+        {
+            throw new InvalidOperationException("Shop screen is not registered");
+        }
+
+        _currentScreen?.Unload();
+        shopScreen.InitializeWithScene(scene);
+        _currentScreen = shopScreen;
+        CurrentScreenType = ScreenType.Shop;
+        _currentScreen.LoadContent(_content, _graphicsDevice);
+    }
+
+    /// <summary>
+    /// Switch to the battle screen with scene data (for pending exploration tracking).
+    /// </summary>
+    public void SwitchToBattle(Scene scene)
+    {
+        if (!_screens.TryGetValue(ScreenType.Battle, out var screen) || screen is not BattleScreen battleScreen)
+        {
+            throw new InvalidOperationException("Battle screen is not registered");
+        }
+
+        _currentScreen?.Unload();
+        battleScreen.InitializeWithScene(scene);
+        _currentScreen = battleScreen;
+        CurrentScreenType = ScreenType.Battle;
         _currentScreen.LoadContent(_content, _graphicsDevice);
     }
 

@@ -21,6 +21,7 @@ public class BattleScreen : ScreenBase
     private readonly string[] _actions = { "Attack", "Defend", "Flee" };
     private string _lastActionResult = "";
     private InputManager? _lastInput;
+    private Scene? _currentScene;  // Store scene for pending exploration
 
     private enum BattlePhase
     {
@@ -36,6 +37,15 @@ public class BattleScreen : ScreenBase
     public BattleScreen(ICombatService combatService)
     {
         _combatService = combatService;
+    }
+
+    /// <summary>
+    /// Initialize with a scene containing pending exploration data.
+    /// </summary>
+    public void InitializeWithScene(Scene scene)
+    {
+        _currentScene = scene;
+        Initialize();
     }
 
     public override void Initialize()
@@ -139,6 +149,13 @@ public class BattleScreen : ScreenBase
             _ => CombatAction.Attack
         };
 
+        // Bug 8 fix: Check flee eligibility BEFORE processing
+        if (action == CombatAction.Flee && !_combatState.CanFlee)
+        {
+            _lastActionResult = "Cannot flee after the first turn!";
+            return;
+        }
+
         // Get the first enemy that's still alive as target
         var target = _combatState.Enemies.FirstOrDefault(e => e.CurrentHitPoints > 0);
         if (target == null && action == CombatAction.Attack)
@@ -148,6 +165,7 @@ public class BattleScreen : ScreenBase
 
         _combatService.ProcessPlayerAction(_combatState, action, target?.Id ?? Guid.Empty);
 
+        // Check result AFTER processing
         if (_combatState.Result == CombatResult.Fled)
         {
             _phase = BattlePhase.Fled;
@@ -205,7 +223,7 @@ public class BattleScreen : ScreenBase
         // Apply stamina changes based on combat result
         party.Stamina = CombatService.CalculatePostCombatStamina(_combatState, party.Stamina);
 
-        // Apply victory rewards
+        // Apply victory rewards and commit exploration only on victory
         if (_combatState.Result == CombatResult.Victory)
         {
             // Give coin rewards based on XP
@@ -214,7 +232,17 @@ public class BattleScreen : ScreenBase
             {
                 player.coin += coinReward;
             }
+
+            // Bug 9 fix: Only commit exploration progress on victory
+            if (_currentScene != null)
+            {
+                EventService.CommitPendingExploration(_currentScene);
+            }
         }
+        // On Defeat or Fled, pending exploration is discarded (not committed)
+
+        // Clear scene reference
+        _currentScene = null;
 
         // Auto-save after combat
         SaveHelper.TriggerSave();
@@ -225,7 +253,7 @@ public class BattleScreen : ScreenBase
         var padding = 20;
         var viewport = GraphicsDevice.Viewport;
 
-        // Title bar
+        // Title bar (Y=0-50)
         DrawRect(spriteBatch, new Rectangle(0, 0, viewport.Width, 50), new Color(50, 20, 20));
         DrawText(spriteBatch, "COMBAT", new Vector2(padding, 15), Color.Red);
 
@@ -235,31 +263,49 @@ public class BattleScreen : ScreenBase
             return;
         }
 
-        // Player status (left)
-        var playerPanel = new Rectangle(padding, 60, 300, 200);
+        // LEFT COLUMN: Player status (Y=60-180)
+        var playerPanel = new Rectangle(padding, 60, 300, 130);
         DrawBorder(spriteBatch, playerPanel, Color.Blue, 2);
         DrawText(spriteBatch, "Player", new Vector2(playerPanel.X + 10, playerPanel.Y + 10), Color.LightBlue);
 
         var player = _combatState.Players.FirstOrDefault();
         if (player == null) return;
 
-        int y = playerPanel.Y + 40;
+        int y = playerPanel.Y + 35;
         DrawText(spriteBatch, $"HP: {player.CurrentHitPoints}/{player.MaxHitPoints}",
             new Vector2(playerPanel.X + 10, y), Color.White);
-        y += 25;
+        y += 22;
 
         // HP bar
         var hpPercent = (float)player.CurrentHitPoints / player.MaxHitPoints;
-        var hpBarBg = new Rectangle(playerPanel.X + 10, y, 200, 20);
-        var hpBar = new Rectangle(playerPanel.X + 10, y, (int)(200 * hpPercent), 20);
+        var hpBarBg = new Rectangle(playerPanel.X + 10, y, 200, 18);
+        var hpBar = new Rectangle(playerPanel.X + 10, y, (int)(200 * hpPercent), 18);
         DrawRect(spriteBatch, hpBarBg, Color.DarkRed);
         DrawRect(spriteBatch, hpBar, Color.Green);
-        y += 35;
+        y += 28;
 
-        DrawText(spriteBatch, $"AC: {player.ArmorClass}", new Vector2(playerPanel.X + 10, y), Color.LightGray);
+        // Bug 7 fix: Show AC with defend indicator
+        var acText = $"AC: {player.ArmorClass}";
+        DrawText(spriteBatch, acText, new Vector2(playerPanel.X + 10, y), Color.LightGray);
+        if (player.HasUsedDefend)
+        {
+            DrawText(spriteBatch, " (Defending +2)", new Vector2(playerPanel.X + 80, y), Color.Cyan);
+        }
 
-        // Enemies (right)
-        var enemyPanel = new Rectangle(viewport.Width - 350 - padding, 60, 350, 300);
+        // LEFT COLUMN: Combat log (Y=200-400)
+        var logPanel = new Rectangle(padding, 200, 300, 200);
+        DrawBorder(spriteBatch, logPanel, Color.DarkGray, 1);
+        DrawText(spriteBatch, "Combat Log", new Vector2(logPanel.X + 10, logPanel.Y + 5), Color.Gray);
+        y = logPanel.Y + 28;
+        var logEntries = _combatState.CombatLog.TakeLast(7).ToList();
+        foreach (var entry in logEntries)
+        {
+            DrawText(spriteBatch, TruncateText(entry, 38), new Vector2(logPanel.X + 10, y), Color.LightGray);
+            y += 22;
+        }
+
+        // RIGHT COLUMN: Enemies (Y=60-260)
+        var enemyPanel = new Rectangle(viewport.Width - 350 - padding, 60, 350, 200);
         DrawBorder(spriteBatch, enemyPanel, Color.Red, 2);
         DrawText(spriteBatch, "Enemies", new Vector2(enemyPanel.X + 10, enemyPanel.Y + 10), Color.LightCoral);
 
@@ -269,7 +315,7 @@ public class BattleScreen : ScreenBase
             var color = enemy.CurrentHitPoints > 0 ? Color.White : Color.Gray;
             DrawText(spriteBatch, $"{enemy.Name} (CR {enemy.ChallengeRating})",
                 new Vector2(enemyPanel.X + 10, y), color);
-            y += 25;
+            y += 22;
 
             var enemyHpPercent = (float)enemy.CurrentHitPoints / enemy.MaxHitPoints;
             var enemyHpBarBg = new Rectangle(enemyPanel.X + 10, y, 150, 15);
@@ -281,35 +327,34 @@ public class BattleScreen : ScreenBase
             }
             DrawText(spriteBatch, $"{enemy.CurrentHitPoints}/{enemy.MaxHitPoints}",
                 new Vector2(enemyPanel.X + 170, y), color);
-            y += 30;
+            y += 28;
         }
 
-        // Action result / message with formula display
-        DrawAttackResult(spriteBatch, padding, 280);
+        // RIGHT COLUMN: Action result panel (Y=270-400)
+        var resultPanel = new Rectangle(viewport.Width - 350 - padding, 270, 350, 130);
+        DrawBorder(spriteBatch, resultPanel, new Color(80, 80, 40), 1);
+        DrawAttackResult(spriteBatch, resultPanel.X + 10, resultPanel.Y + 10);
 
-        // Combat log
-        var logPanel = new Rectangle(padding, 310, viewport.Width - 2 * padding, 200);
-        DrawBorder(spriteBatch, logPanel, Color.DarkGray, 1);
-        y = logPanel.Y + 10;
-        var logEntries = _combatState.CombatLog.TakeLast(7).ToList();
-        foreach (var entry in logEntries)
-        {
-            DrawText(spriteBatch, entry, new Vector2(logPanel.X + 10, y), Color.LightGray);
-            y += 22;
-        }
-
-        // Actions (bottom)
-        var controlsY = viewport.Height - 120;
+        // Actions (bottom - Y=viewport.Height-100)
+        var controlsY = viewport.Height - 100;
+        DrawRect(spriteBatch, new Rectangle(0, controlsY - 10, viewport.Width, 110), new Color(30, 30, 40));
 
         if (_phase == BattlePhase.PlayerTurn)
         {
             DrawText(spriteBatch, "Choose your action:", new Vector2(padding, controlsY), Color.White);
             for (int i = 0; i < _actions.Length; i++)
             {
-                var color = i == _selectedAction ? Color.Yellow : Color.Gray;
+                var actionColor = i == _selectedAction ? Color.Yellow : Color.Gray;
                 var prefix = i == _selectedAction ? "> " : "  ";
+                var fleeDisabled = i == 2 && !_combatState.CanFlee;
+                if (fleeDisabled) actionColor = Color.DarkGray;
                 DrawText(spriteBatch, $"{prefix}[{_actions[i][0]}] {_actions[i]}",
-                    new Vector2(padding + 200 + i * 150, controlsY), color);
+                    new Vector2(padding + 200 + i * 150, controlsY), actionColor);
+            }
+            // Show flee restriction message
+            if (!_combatState.CanFlee)
+            {
+                DrawText(spriteBatch, "(Can only flee on first turn)", new Vector2(padding + 200, controlsY + 25), Color.DarkGray);
             }
         }
         else if (_phase == BattlePhase.ShowingResult)
@@ -322,22 +367,30 @@ public class BattleScreen : ScreenBase
         }
     }
 
+    private static string TruncateText(string text, int maxLength)
+    {
+        if (string.IsNullOrEmpty(text) || text.Length <= maxLength)
+            return text ?? "";
+        return text.Substring(0, maxLength - 2) + "..";
+    }
+
     private void DrawAttackResult(SpriteBatch spriteBatch, int x, int y)
     {
+        // Bug 6 fix: Show attack result during PlayerTurn as well if there's a result
         if (_combatState?.LastAttackResult != null &&
-            (_phase == BattlePhase.ShowingResult || _phase == BattlePhase.EnemyTurn))
+            (_phase == BattlePhase.ShowingResult || _phase == BattlePhase.EnemyTurn || _phase == BattlePhase.PlayerTurn))
         {
             var result = _combatState.LastAttackResult;
 
             // Attacker and target
             DrawText(spriteBatch, $"{result.AttackerName} attacks {result.TargetName}",
                 new Vector2(x, y), Color.Cyan);
-            y += 25;
+            y += 22;
 
             // Attack formula
             var formula = result.GetAttackFormula();
             DrawText(spriteBatch, $"Roll: {formula}", new Vector2(x, y), Color.White);
-            y += 25;
+            y += 22;
 
             // Hit/Miss result
             var hitColor = result.IsCritical ? Color.Gold :
@@ -346,7 +399,7 @@ public class BattleScreen : ScreenBase
                           result.IsHit ? $"HIT for {result.TotalDamage} damage" :
                           result.IsNatural1 ? "MISS (Natural 1)" : "MISS";
             DrawText(spriteBatch, hitText, new Vector2(x, y), hitColor);
-            y += 25;
+            y += 22;
 
             // Damage formula (if hit)
             if (result.IsHit)

@@ -99,6 +99,7 @@ public class Game1 : Game
         _screenManager.RegisterScreen(ScreenType.Home, new HomeScreen());
         _screenManager.RegisterScreen(ScreenType.Navigation, new NavigationScreen(_moveService, _eventService));
         _screenManager.RegisterScreen(ScreenType.Battle, new BattleScreen(_combatService));
+        _screenManager.RegisterScreen(ScreenType.Shop, new ShopScreen(_shopService));
         _screenManager.RegisterScreen(ScreenType.Inventory, new InventoryScreen());
 
         // Start at main menu

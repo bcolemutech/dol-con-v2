@@ -20,6 +20,11 @@ public class Scene
     public CombatState? CombatState { get; set; }
     public double EncounterCR { get; set; }
 
+    // Pending exploration (only commit on victory, discard on defeat/flee)
+    public double PendingExplorationProgress { get; set; }
+    public bool HasPendingExploration { get; set; }
+    public bool IsLocationExploration { get; set; }  // true = location, false = cell
+
     public void Reset()
     {
         Title = null;
@@ -30,5 +35,8 @@ public class Scene
         Location = null;
         CombatState = null;
         EncounterCR = 0;
+        PendingExplorationProgress = 0;
+        HasPendingExploration = false;
+        IsLocationExploration = false;
     }
 }
