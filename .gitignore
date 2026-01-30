@@ -403,3 +403,6 @@ Maps/
 
 # macOS
 .DS_Store
+
+# Claude
+.claude/
