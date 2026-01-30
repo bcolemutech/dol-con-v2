@@ -243,6 +243,7 @@ public class NavigationScreen : ScreenBase
                 case MoveStatus.Success:
                     _message = "Moved to new cell";
                     ProcessEvent();
+                    SaveHelper.TriggerSave();
                     break;
                 case MoveStatus.Failure:
                     _message = "Not enough stamina!";
@@ -260,6 +261,7 @@ public class NavigationScreen : ScreenBase
             {
                 _message = "Entered location";
                 ProcessEvent();
+                SaveHelper.TriggerSave();
             }
             else
             {

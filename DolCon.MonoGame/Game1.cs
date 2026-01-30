@@ -8,6 +8,34 @@ using DolCon.Core.Services;
 namespace DolCon.MonoGame;
 
 /// <summary>
+/// Helper class to trigger saves without blocking the game loop.
+/// </summary>
+public static class SaveHelper
+{
+    private static readonly ISaveGameService _saveService = new SaveGameService();
+
+    /// <summary>
+    /// Trigger a background save without blocking.
+    /// </summary>
+    public static void TriggerSave()
+    {
+        if (SaveGameService.CurrentMap.info == null) return;
+
+        Task.Run(async () =>
+        {
+            try
+            {
+                await _saveService.SaveGame();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Auto-save failed: {ex.Message}");
+            }
+        });
+    }
+}
+
+/// <summary>
 /// Main game class for DolCon MonoGame implementation.
 /// </summary>
 public class Game1 : Game

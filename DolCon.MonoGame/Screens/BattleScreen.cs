@@ -215,6 +215,9 @@ public class BattleScreen : ScreenBase
                 player.coin += coinReward;
             }
         }
+
+        // Auto-save after combat
+        SaveHelper.TriggerSave();
     }
 
     public override void Draw(SpriteBatch spriteBatch)
