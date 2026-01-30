@@ -10,6 +10,7 @@ public class InputManager
 {
     private KeyboardState _currentKeyState;
     private KeyboardState _previousKeyState;
+    private bool _inputConsumed;
 
     /// <summary>
     /// Update the input state. Should be called once per frame at the start of Update.
@@ -18,13 +19,24 @@ public class InputManager
     {
         _previousKeyState = _currentKeyState;
         _currentKeyState = Keyboard.GetState();
+        _inputConsumed = false; // Reset consumption flag each frame
     }
 
     /// <summary>
-    /// Returns true if the key was just pressed this frame (was up, now down).
+    /// Consume input for this frame, preventing AnyKeyPressed and IsKeyPressed from returning true.
+    /// Use this after processing an action to prevent the same key press from triggering multiple actions.
+    /// </summary>
+    public void ConsumeInput()
+    {
+        _inputConsumed = true;
+    }
+
+    /// <summary>
+    /// Returns true if the key was just pressed this frame (was up, now down) and input was not consumed.
     /// </summary>
     public bool IsKeyPressed(Keys key)
     {
+        if (_inputConsumed) return false;
         return _currentKeyState.IsKeyDown(key) && _previousKeyState.IsKeyUp(key);
     }
 
@@ -86,10 +98,11 @@ public class InputManager
     }
 
     /// <summary>
-    /// Returns true if any key was pressed this frame.
+    /// Returns true if any key was pressed this frame and input was not consumed.
     /// </summary>
     public bool AnyKeyPressed()
     {
+        if (_inputConsumed) return false;
         return _currentKeyState.GetPressedKeyCount() > 0 && _previousKeyState.GetPressedKeyCount() == 0;
     }
 }
