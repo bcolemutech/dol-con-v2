@@ -106,6 +106,7 @@ public class BattleScreen : ScreenBase
 
     private void UpdatePlayerTurn(InputManager input)
     {
+        // Arrow key navigation (Up/Down or W/S)
         if (input.IsKeyPressed(Keys.Up) || input.IsKeyPressed(Keys.W))
         {
             _selectedAction = (_selectedAction - 1 + _actions.Length) % _actions.Length;
@@ -114,25 +115,18 @@ public class BattleScreen : ScreenBase
         {
             _selectedAction = (_selectedAction + 1) % _actions.Length;
         }
+        // Left/Right also works for horizontal menu
+        else if (input.IsKeyPressed(Keys.Left) || input.IsKeyPressed(Keys.A))
+        {
+            _selectedAction = (_selectedAction - 1 + _actions.Length) % _actions.Length;
+        }
+        else if (input.IsKeyPressed(Keys.Right) || input.IsKeyPressed(Keys.D))
+        {
+            _selectedAction = (_selectedAction + 1) % _actions.Length;
+        }
+        // Enter or Space to select
         else if (input.IsKeyPressed(Keys.Enter) || input.IsKeyPressed(Keys.Space))
         {
-            ExecuteAction();
-        }
-
-        // Quick keys
-        if (input.IsKeyPressed(Keys.A))
-        {
-            _selectedAction = 0;
-            ExecuteAction();
-        }
-        else if (input.IsKeyPressed(Keys.D))
-        {
-            _selectedAction = 1;
-            ExecuteAction();
-        }
-        else if (input.IsKeyPressed(Keys.F))
-        {
-            _selectedAction = 2;
             ExecuteAction();
         }
     }
@@ -348,13 +342,15 @@ public class BattleScreen : ScreenBase
                 var prefix = i == _selectedAction ? "> " : "  ";
                 var fleeDisabled = i == 2 && !_combatState.CanFlee;
                 if (fleeDisabled) actionColor = Color.DarkGray;
-                DrawText(spriteBatch, $"{prefix}[{_actions[i][0]}] {_actions[i]}",
-                    new Vector2(padding + 200 + i * 150, controlsY), actionColor);
+                DrawText(spriteBatch, $"{prefix}{_actions[i]}",
+                    new Vector2(padding + 200 + i * 120, controlsY), actionColor);
             }
-            // Show flee restriction message
+            // Show controls hint and flee restriction
+            var hintY = controlsY + 30;
+            DrawText(spriteBatch, "[Arrow Keys] Select  [Enter] Confirm", new Vector2(padding, hintY), Color.Gray);
             if (!_combatState.CanFlee)
             {
-                DrawText(spriteBatch, "(Can only flee on first turn)", new Vector2(padding + 200, controlsY + 25), Color.DarkGray);
+                DrawText(spriteBatch, "(Can only flee on first turn)", new Vector2(padding + 350, hintY), Color.DarkGray);
             }
         }
         else if (_phase == BattlePhase.ShowingResult)
