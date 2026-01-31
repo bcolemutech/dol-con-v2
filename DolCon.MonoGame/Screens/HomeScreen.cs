@@ -52,14 +52,27 @@ public class HomeScreen : ScreenBase
         y += 25;
         DrawText(spriteBatch, $"Biome: {biome}", new Vector2(locationPanel.X + 10, y), Color.LightGray);
         y += 25;
+
+        // Show burg info - either the one we're in, or one nearby in the cell
         if (burg != null)
         {
-            DrawText(spriteBatch, $"Burg: {burg.name}", new Vector2(locationPanel.X + 10, y), Color.LightGray);
+            DrawText(spriteBatch, $"In Burg: {burg.name} ({burg.size})", new Vector2(locationPanel.X + 10, y), Color.LightBlue);
             y += 25;
         }
+        else
+        {
+            // Check if there's a burg in this cell we could enter
+            var cellBurg = SaveGameService.GetBurg(cell.burg);
+            if (cellBurg != null)
+            {
+                DrawText(spriteBatch, $"Nearby: {cellBurg.name} ({cellBurg.size})", new Vector2(locationPanel.X + 10, y), Color.Cyan);
+                y += 25;
+            }
+        }
+
         if (location != null)
         {
-            DrawText(spriteBatch, $"Location: {location.Name}", new Vector2(locationPanel.X + 10, y), Color.LightGray);
+            DrawText(spriteBatch, $"Location: {location.Name}", new Vector2(locationPanel.X + 10, y), Color.LightGreen);
         }
 
         // Party status panel (left side)

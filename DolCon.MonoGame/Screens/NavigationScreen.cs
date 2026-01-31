@@ -24,7 +24,7 @@ public class NavigationScreen : ScreenBase
     private string _message = "";
     private Scene _currentScene = new();
 
-    private record NavigationOption(string Label, int? CellId, Guid? LocationId, bool IsExplore = false, bool IsCamp = false);
+    private record NavigationOption(string Label, int? CellId, Guid? LocationId, bool IsExplore = false, bool IsCamp = false, bool IsEnterBurg = false);
 
     // Separate lists for cells and locations
     private List<CellOption> _cellOptions = new();
@@ -100,13 +100,20 @@ public class NavigationScreen : ScreenBase
         }
         else
         {
-            // In a cell - show explore option, camp option, directions to neighboring cells, and local locations
+            // In a cell - show explore option, camp option, enter burg option, directions to neighboring cells, and local locations
             if (cell.ExploredPercent < 1)
             {
                 _options.Add(new NavigationOption($"Explore area ({cell.ExploredPercent:P0} explored)", null, null, IsExplore: true));
             }
             // Add camp option in wilderness
             _options.Add(new NavigationOption("Camp in wilderness (restore stamina to 50%)", null, null, IsCamp: true));
+
+            // Check if there's a burg in this cell that we can enter
+            var cellBurg = SaveGameService.GetBurg(cell.burg);
+            if (cellBurg != null)
+            {
+                _options.Add(new NavigationOption($"Enter {cellBurg.name} ({cellBurg.size})", null, null, IsEnterBurg: true));
+            }
 
             // Add directions to neighboring cells with direction info
             foreach (var neighbor in cell.c)
@@ -221,6 +228,10 @@ public class NavigationScreen : ScreenBase
                 {
                     ProcessCamp();
                 }
+                else if (option.IsEnterBurg)
+                {
+                    ProcessEnterBurg();
+                }
                 else
                 {
                     ProcessSelection();
@@ -269,6 +280,21 @@ public class NavigationScreen : ScreenBase
             _message = "You're not tired enough to camp here. (Stamina must be below 50%)";
         }
         BuildOptions();
+    }
+
+    private void ProcessEnterBurg()
+    {
+        var cell = SaveGameService.CurrentCell;
+        var cellBurg = SaveGameService.GetBurg(cell.burg);
+        if (cellBurg != null)
+        {
+            // Enter the burg by setting the party's burg
+            var party = SaveGameService.Party;
+            party.Burg = cellBurg.i;
+            _message = $"Entered {cellBurg.name}";
+            SaveHelper.TriggerSave();
+            BuildOptions();
+        }
     }
 
     private void EnsureVisible()
@@ -391,6 +417,16 @@ public class NavigationScreen : ScreenBase
         {
             DrawText(spriteBatch, $"In Burg: {burg.name} ({burg.size})", new Vector2(padding, y), Color.LightBlue);
             y += 30;
+        }
+        else
+        {
+            // Check if there's a burg in this cell we could enter
+            var cellBurg = SaveGameService.GetBurg(cell.burg);
+            if (cellBurg != null)
+            {
+                DrawText(spriteBatch, $"Nearby Burg: {cellBurg.name} ({cellBurg.size})", new Vector2(padding, y), Color.Cyan);
+                y += 30;
+            }
         }
 
         if (location != null)
