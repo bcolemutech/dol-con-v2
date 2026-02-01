@@ -447,20 +447,26 @@ public class NavigationScreen : ScreenBase
             var visibleEnd = Math.Min(_options.Count, _scrollOffset + VisibleItems);
             var itemsDrawn = 0;
 
-            // Check if explore option is available
-            var hasExploreOption = _options.Any(o => o.IsExplore);
-            var cellStartIndex = hasExploreOption ? 1 : 0;
+            // Count special options (explore, camp, enter burg) that come before cell/location options
+            var specialOptions = _options.Where(o => !o.CellId.HasValue && !o.LocationId.HasValue).ToList();
+            var specialOptionsCount = specialOptions.Count;
+            var cellStartIndex = specialOptionsCount;
             var locStartIndex = cellStartIndex + _cellOptions.Count;
 
-            // Draw explore option if visible (index 0)
-            if (hasExploreOption && visibleStart == 0)
+            // Draw special options (explore, camp, enter burg)
+            for (int i = 0; i < specialOptions.Count && itemsDrawn < VisibleItems; i++)
             {
-                var exploreOpt = _options.FirstOrDefault(o => o.IsExplore);
-                var isExploreSelected = _selectedIndex == 0;
-                var exploreColor = isExploreSelected ? Color.Yellow : Color.Cyan;
-                var explorePrefix = isExploreSelected ? "> " : "  ";
-                DrawText(spriteBatch, $"{explorePrefix}{exploreOpt?.Label ?? "Explore"}", new Vector2(padding, y), exploreColor);
-                y += 30;
+                if (i < visibleStart || i >= visibleEnd) continue;
+
+                var opt = specialOptions[i];
+                var isSelected = _selectedIndex == i;
+                var optColor = isSelected ? Color.Yellow :
+                               opt.IsExplore ? Color.Cyan :
+                               opt.IsCamp ? Color.LightGreen :
+                               opt.IsEnterBurg ? Color.LightBlue : Color.White;
+                var prefix = isSelected ? "> " : "  ";
+                DrawText(spriteBatch, $"{prefix}{opt.Label}", new Vector2(padding, y), optColor);
+                y += 28;
                 itemsDrawn++;
             }
 
