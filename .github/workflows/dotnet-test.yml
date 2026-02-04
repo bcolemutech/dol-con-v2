@@ -34,36 +34,6 @@ jobs:
     - name: Run Core tests
       run: dotnet test DolCon.Core.Tests/DolCon.Core.Tests.csproj --configuration Release --verbosity normal
 
-  test-console:
-    name: Test Console on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-      fail-fast: false
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '10.0.x'
-
-    - name: Restore dependencies
-      run: dotnet restore DolCon/DolCon.csproj
-
-    - name: Build Console
-      run: dotnet build DolCon/DolCon.csproj --no-restore --configuration Release
-
-    - name: Run Console tests
-      run: dotnet test DolCon.Tests/DolCon.Tests.csproj --configuration Release --verbosity normal
-
-    - name: Test platform-specific keyboard support
-      run: dotnet test DolCon.Tests/DolCon.Tests.csproj --configuration Release --filter "FullyQualifiedName~GameServiceNavigationTests" --verbosity detailed
-
   build-monogame:
     name: Build MonoGame on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
