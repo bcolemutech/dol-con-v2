@@ -12,10 +12,12 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Chance.NET" Version="2.2.0" />
+      <ProjectReference Include="..\DolCon.Core\DolCon.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
       <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.2" />
       <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.2" />
-      <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
       <PackageReference Include="Spectre.Console" Version="0.54.0" />
     </ItemGroup>
 
@@ -23,15 +25,6 @@
       <None Update="PrebuiltMaps\Ouvia Full 2023-07-08-13-04.json">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
-    </ItemGroup>
-
-    <ItemGroup>
-      <EmbeddedResource Include="Resources\Items.json">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </EmbeddedResource>
-      <EmbeddedResource Include="Resources\Services.json">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </EmbeddedResource>
     </ItemGroup>
 
 </Project>

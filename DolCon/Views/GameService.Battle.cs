@@ -1,6 +1,7 @@
+using DolCon.Core.Enums;
+using DolCon.Core.Models.Combat;
+using DolCon.Core.Services;
 using DolCon.Enums;
-using DolCon.Models.Combat;
-using DolCon.Services;
 using Spectre.Console;
 using Spectre.Console.Rendering;
 

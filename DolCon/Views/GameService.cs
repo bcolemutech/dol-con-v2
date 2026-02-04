@@ -1,8 +1,11 @@
 ﻿namespace DolCon.Views;
 
-using Models;
-using Enums;
-using Services;
+using DolCon.Core.Enums;
+using DolCon.Core.Models;
+using DolCon.Core.Services;
+using DolCon.Enums;
+using DolCon.Models;
+using DolCon.Services;
 using Spectre.Console;
 
 public interface IGameService

@@ -1,6 +1,6 @@
 namespace DolCon.Tests;
 
-using DolCon.Enums;
+using DolCon.Core.Enums;
 using DolCon.Models;
 using DolCon.Views;
 using FluentAssertions;
