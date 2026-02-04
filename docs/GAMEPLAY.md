@@ -414,23 +414,36 @@ At vendor locations:
 | Key | Screen | Description |
 |-----|--------|-------------|
 | H | Home | Party status and location overview |
-| N | Navigation | Movement and exploration options |
+| N | Navigation | 3x3 grid for cell movement |
+| L | Location | Location selection and entry |
 | I | Inventory | Item and equipment management |
 | M | Map | Opens the world map image |
-| Esc | Exit | Exit confirmation dialog |
+| Esc | Exit/Back | Exit or return to previous screen |
 
-### Navigation Controls
+### Navigation Screen Controls
 
-When navigating the world:
+The Navigation screen displays a 3x3 spatial grid showing your current cell in the center and adjacent cells around it. Each cell shows its biome color, name, exploration %, and burg indicator.
 
 | Key | Action |
 |-----|--------|
-| 0-9 | Select direction or location |
-| Alt+0-9 (Option on Mac) | Extended selection for many options |
-| Enter | Explore current location |
+| 1-9 | Move to adjacent cell (numpad layout: 7=NW, 8=N, 9=NE, 4=W, 6=E, 1=SW, 2=S, 3=SE) |
+| E | Explore current cell |
 | B | Enter nearby burg |
-| L | Leave current location/burg |
 | C | Camp (when in wilderness) |
+| L | Open Location screen |
+
+### Location Screen Controls
+
+The Location screen shows discovered locations within your current cell or burg.
+
+| Key | Action |
+|-----|--------|
+| 1-9 | Enter selected location |
+| Up/Down | Navigate location list |
+| E | Explore current location |
+| C | Camp (when at explorable location) |
+| N | Return to Navigation screen |
+| Esc | Leave current location |
 
 ### Combat Controls
 
