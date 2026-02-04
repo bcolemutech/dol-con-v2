@@ -2,13 +2,13 @@ name: .NET Tests
 
 on:
   push:
-    branches: [ main, mac-keyboard-support ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
 jobs:
-  test:
-    name: Test on ${{ matrix.os }}
+  test-core:
+    name: Test Core on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -26,13 +26,70 @@ jobs:
         dotnet-version: '10.0.x'
 
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore DolCon.Core/DolCon.Core.csproj
 
-    - name: Build
-      run: dotnet build --no-restore --configuration Release
+    - name: Build Core
+      run: dotnet build DolCon.Core/DolCon.Core.csproj --no-restore --configuration Release
 
-    - name: Run tests
-      run: dotnet test --no-build --configuration Release --verbosity normal
+    - name: Run Core tests
+      run: dotnet test DolCon.Core.Tests/DolCon.Core.Tests.csproj --configuration Release --verbosity normal
+
+  test-console:
+    name: Test Console on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+      fail-fast: false
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore DolCon/DolCon.csproj
+
+    - name: Build Console
+      run: dotnet build DolCon/DolCon.csproj --no-restore --configuration Release
+
+    - name: Run Console tests
+      run: dotnet test DolCon.Tests/DolCon.Tests.csproj --configuration Release --verbosity normal
 
     - name: Test platform-specific keyboard support
-      run: dotnet test --no-build --configuration Release --filter "FullyQualifiedName~GameServiceNavigationTests" --verbosity detailed
+      run: dotnet test DolCon.Tests/DolCon.Tests.csproj --configuration Release --filter "FullyQualifiedName~GameServiceNavigationTests" --verbosity detailed
+
+  build-monogame:
+    name: Build MonoGame on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+      fail-fast: false
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Install MonoGame Content Pipeline (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libopenal1 libsdl2-2.0-0
+
+    - name: Restore dependencies
+      run: dotnet restore DolCon.MonoGame/DolCon.MonoGame.csproj
+
+    - name: Build MonoGame
+      run: dotnet build DolCon.MonoGame/DolCon.MonoGame.csproj --no-restore --configuration Release

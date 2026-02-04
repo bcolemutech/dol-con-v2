@@ -1,12 +1,12 @@
 ﻿namespace DolCon.Views;
 
-using Models;
-using Enums;
-using Models.BaseTypes;
-using Services;
+using DolCon.Core.Enums;
+using DolCon.Core.Models;
+using DolCon.Core.Models.BaseTypes;
+using DolCon.Core.Services;
+using DolCon.Enums;
 using Spectre.Console;
 using Spectre.Console.Rendering;
-using Location = Models.Location;
 
 public partial class GameService
 {

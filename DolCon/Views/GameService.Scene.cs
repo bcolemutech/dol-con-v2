@@ -1,10 +1,11 @@
-using DolCon.Models;
+using DolCon.Core.Enums;
+using DolCon.Core.Models;
+using DolCon.Core.Services;
+using DolCon.Core.Utilities;
+using DolCon.Enums;
 using Spectre.Console;
 
 namespace DolCon.Views;
-
-using Enums;
-using Services;
 
 public partial class GameService
 {

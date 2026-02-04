@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RollForward>Major</RollForward>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <TieredCompilation>false</TieredCompilation>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!-- Skip MonoGame content building for now - using placeholder graphics -->
+    <MonoGameContentBuilderEnabled>false</MonoGameContentBuilderEnabled>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DolCon.Core\DolCon.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.*" />
+    <PackageReference Include="FontStashSharp.MonoGame" Version="1.3.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="PrebuiltMaps\*.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

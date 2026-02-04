@@ -1,7 +1,8 @@
 ﻿namespace DolCon.Views;
 
-using Enums;
-using Services;
+using DolCon.Core.Enums;
+using DolCon.Core.Services;
+using DolCon.Enums;
 using Spectre.Console;
 using Spectre.Console.Rendering;
 
