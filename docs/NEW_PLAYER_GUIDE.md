@@ -20,7 +20,7 @@ Select **New Game** to begin.
 
 ### Choosing a Map
 
-You'll be presented with available world maps. Each map is a unique procedurally-generated world with its own geography, settlements, and challenges.
+You'll be presented with available world maps. Each map is a unique pre-generated world with its own geography, settlements, and challenges.
 
 Select a map to begin your adventure.
 
@@ -113,7 +113,6 @@ As you explore cells and burgs, you'll discover locations:
 - **Ruins** and **dungeons** to explore
 - **Shops** to buy and sell goods
 - **Inns** to rest and recover
-- **Temples** for healing
 
 ### Exploring a Location
 
@@ -158,11 +157,10 @@ When it's your turn, you have three choices:
 
 #### A - Attack
 
-1. Press **A** to attack
-2. Use **W/S** or arrow keys to select a target
-3. Press **Enter** to confirm
-4. The game rolls to hit and calculates damage
-5. Press any key to continue
+1. Use **W/S** or arrow keys to select a target
+2. Press **A** to attack (executes immediately)
+3. The game rolls to hit and calculates damage
+4. Press any key to continue
 
 #### D - Defend
 

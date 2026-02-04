@@ -62,7 +62,7 @@ Every character has six core attributes that define their capabilities:
 | Attribute | Abbr. | Effect in Combat |
 |-----------|-------|------------------|
 | **Strength** | STR | Attack rolls and melee damage |
-| **Dexterity** | DEX | Initiative order and Armor Class |
+| **Dexterity** | DEX | Initiative order |
 | **Constitution** | CON | Hit points and survivability |
 | **Intelligence** | INT | Reserved for future abilities |
 | **Wisdom** | WIS | Reserved for future abilities |
@@ -85,7 +85,7 @@ Your Armor Class (AC) determines how hard you are to hit. The base AC is 10, mod
 | Hand Armor | +1 |
 | Foot Armor | +1 |
 
-Item rarity adds additional bonuses to these base values.
+Item rarity adds additional bonuses to armor pieces (except shields, which are always +2).
 
 ### Stamina
 
@@ -118,7 +118,7 @@ Successful encounters provide:
 
 - **Coin**: Experience points convert directly to currency (2 XP = 1 coin)
 - **Loot**: Enemies may drop equipment based on their loot tables
-- **Exploration**: Victory commits your exploration progress
+- **Exploration**: Victory commits your exploration progress (MonoGame version)
 
 ### Progression
 
@@ -177,10 +177,10 @@ Burgs offer services that enhance your capabilities:
 | Service | Effect |
 |---------|--------|
 | **Lodging** | Superior stamina recovery based on quality |
-| **Healing** | Restore health and cure ailments |
 | **Buy** | Purchase equipment and supplies |
 | **Sell** | Sell unwanted items for coin |
-| **Repair** | Fix damaged equipment |
+
+*Note: Healing and Repair services are planned but not yet available.*
 
 ---
 
@@ -239,7 +239,7 @@ Attempt to escape combat:
 
 | Result | Effect |
 |--------|--------|
-| **Victory** | Restore 50% of lost stamina, earn coin and loot, commit exploration |
+| **Victory** | Restore 50% of lost stamina, earn coin and loot. In MonoGame, also commits exploration progress. |
 | **Defeat** | Suffer 50% stamina penalty, combat ends |
 | **Fled** | Lose 5% stamina, exploration not committed |
 
@@ -438,11 +438,11 @@ During battle:
 
 | Key | Action |
 |-----|--------|
-| A | Attack selected target |
+| A | Attack selected target (executes immediately) |
 | D | Defend (gain +2 AC) |
 | F | Flee (first turn only) |
 | W/S or Arrow Keys | Select target |
-| Enter | Confirm action / Continue |
+| Any key | Continue after result screen |
 
 ### Inventory Controls
 
@@ -483,11 +483,11 @@ Damage = Weapon Base + (Rarity x 2)
 ### AC Formula
 
 ```
-AC = 10 + Armor Bonuses + Dexterity Modifier
+AC = 10 + Armor Bonuses
 
 Body: +3, Shield: +2, Legs: +2
 Head: +1, Hands: +1, Feet: +1
-Add rarity bonus to each piece
+Add rarity bonus to armor (not shields)
 ```
 
 ### Stamina

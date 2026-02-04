@@ -59,7 +59,7 @@ The six core statistics defining a character's capabilities:
 
 ### Armor Class (AC)
 
-A number representing how difficult a character is to hit in combat. Higher AC means attacks are more likely to miss. AC is calculated from base value (10) plus armor bonuses and dexterity modifier.
+A number representing how difficult a character is to hit in combat. Higher AC means attacks are more likely to miss. AC is calculated from base value (10) plus armor bonuses from equipped gear.
 
 ### Hit Points (HP)
 

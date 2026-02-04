@@ -25,11 +25,11 @@
 
 | Key | Action |
 |-----|--------|
-| A | Attack |
+| A | Attack (immediate) |
 | D | Defend (+2 AC) |
 | F | Flee (turn 1 only) |
 | W/S | Select target |
-| Enter | Confirm |
+| Any key | Continue |
 
 ### Inventory
 
@@ -68,7 +68,7 @@ Damage = Base + (Rarity × 2)
 | Hands | +1 |
 | Feet | +1 |
 
-*Add rarity bonus to each*
+*Add rarity bonus (except Shield)*
 
 ---
 
