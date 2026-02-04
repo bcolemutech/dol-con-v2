@@ -65,25 +65,25 @@ public class AttackResult
     }
 
     /// <summary>
-    /// Generate result summary string with Spectre.Console markup
+    /// Generate result summary string
     /// </summary>
     public string GetResultSummary()
     {
         if (IsNatural1)
         {
-            return "[red]MISS[/] (Natural 1)";
+            return "MISS (Natural 1)";
         }
 
         if (IsCritical)
         {
-            return $"[green bold]CRITICAL HIT![/] {TotalDamage} damage";
+            return $"CRITICAL HIT! {TotalDamage} damage";
         }
 
         if (IsHit)
         {
-            return $"[green]HIT[/] for {TotalDamage} damage";
+            return $"HIT for {TotalDamage} damage";
         }
 
-        return "[yellow]MISS[/]";
+        return "MISS";
     }
 }

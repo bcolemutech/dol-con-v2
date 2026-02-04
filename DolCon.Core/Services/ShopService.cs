@@ -36,7 +36,7 @@ public class ShopService : IShopService
         if (scene.Selections.Count == 0)
         {
             scene.IsCompleted = false;
-            scene.Title = $"[bold black on white]Welcome to {scene.Location?.Name}[/]";
+            scene.Title = $"Welcome to {scene.Location?.Name}";
             scene.Description = "Select a service.";
             scene.Selections = new Dictionary<int, ShopSelection>();
             var i = 1;
@@ -64,7 +64,7 @@ public class ShopService : IShopService
         if (service == null)
         {
             scene.SelectedService = Enum.Parse<ServiceType>(sceneSelection.Name);
-            scene.Title = $"[bold black on white]{scene.SelectedService}[/]";
+            scene.Title = $"{scene.SelectedService}";
             scene.Description = "Select purchase.";
             scene.Selections = GetServiceSelections(scene);
             scene.Selection = 0;
@@ -103,7 +103,7 @@ public class ShopService : IShopService
         var message = $"You bought a {selection.Name} for {gold} gold, {silver} silver, and {copper} copper.";
         if (playerMoney < selection.Price)
         {
-            return "[red]You don't have enough money.[/]";
+            return "You don't have enough money.";
         }
 
         if (scene.SelectedService == ServiceType.Lodging)
@@ -143,7 +143,7 @@ public class ShopService : IShopService
                 scene.Selection = 0;
             }
 
-            message = $"You sold {item.Name} for [bold gold1]{gold}[/]|[bold silver]{silver}[/]|[bold tan]{copper}[/].";
+            message = $"You sold {item.Name} for {gold}g|{silver}s|{copper}c.";
 
         }
         
