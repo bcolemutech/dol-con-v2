@@ -164,18 +164,18 @@ Each enemy is limited to specific biomes:
 |-------|----------------|
 | Corrupted Wolf | Forest, Plains, CorruptedLands |
 | Dire Bear | Forest, Mountains |
-| Thornling | Forest, Swamp, CorruptedLands |
-| Lesser Fire Elemental | Volcanic, Desert, CorruptedLands |
-| Bandit | Plains, Forest, Mountains, Ruins |
+| Thornling | Forest, Swamp |
+| Lesser Fire Elemental | Volcanic, Ruins |
+| Bandit | Forest, Plains, Mountains |
 | Dark Cultist | Ruins, CorruptedLands, Underground |
-| Corrupted Soldier | Plains, CorruptedLands, Ruins |
+| Corrupted Soldier | CorruptedLands, Ruins |
 | Mercenary Captain | Plains, Mountains, CityOfLight |
 | Zombie | CorruptedLands, Ruins, Swamp |
 | Skeleton Warrior | Ruins, CorruptedLands, Underground |
-| Corrupted Hound | CorruptedLands, Swamp, Ruins |
+| Corrupted Hound | CorruptedLands, Swamp |
 | Wraith | Ruins, CorruptedLands, Underground |
 | Imp | CorruptedLands, Ruins, Volcanic |
-| Possessed Villager | Plains, Forest, CorruptedLands |
+| Possessed Villager | CorruptedLands, Plains |
 | Demon Beast | CorruptedLands, Volcanic |
 | Hell Knight | CorruptedLands, Ruins |
 | Corrupted Arch-Demon | CorruptedLands |
@@ -269,7 +269,7 @@ When a boss needs scaling:
 | Strength | × √(scale factor) |
 | Dexterity | × √(scale factor) |
 | Constitution | × √(scale factor) |
-| AC | +1 per 0.5 CR above original |
+| AC | +1 per 1.0 scale factor above 1.0 |
 | Mental stats | Unchanged |
 
 ### Minions
