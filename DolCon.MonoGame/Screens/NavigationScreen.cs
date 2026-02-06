@@ -68,8 +68,9 @@ public class NavigationScreen : ScreenBase
         var burg = SaveGameService.CurrentBurg;
 
         // Check for special actions at current position
-        _canExplore = location == null && burg == null && cell.ExploredPercent < 1;
-        _canCamp = location == null;
+        // Can explore when in wilderness (not in burg or location) - even fully explored cells can trigger encounters
+        _canExplore = location == null && burg == null;
+        _canCamp = location == null && burg == null;
         var cellBurg = SaveGameService.GetBurg(cell.burg);
         _canEnterBurg = cellBurg != null && burg == null;
         _burgName = cellBurg?.name;
@@ -478,25 +479,42 @@ public class NavigationScreen : ScreenBase
         y += 15;
 
         // Available actions
-        if (_canExplore)
+        var burg = SaveGameService.CurrentBurg;
+
+        if (burg != null)
         {
-            DrawText(spriteBatch, "[E] Explore Area", new Vector2(panelX + 15, y), Color.Cyan);
+            // In a burg - show that exploration is via locations
+            DrawText(spriteBatch, $"In Burg: {burg.name}", new Vector2(panelX + 15, y), Color.Cyan);
+            y += 22;
+            DrawText(spriteBatch, "[L] Explore Locations", new Vector2(panelX + 15, y), Color.Orange);
+            y += 22;
+            DrawText(spriteBatch, "[ESC] Leave Burg", new Vector2(panelX + 15, y), Color.Gray);
             y += 25;
         }
-
-        if (_canCamp)
+        else
         {
-            DrawText(spriteBatch, "[C] Camp (50% stamina)", new Vector2(panelX + 15, y), Color.LightGreen);
-            y += 25;
-        }
+            // In wilderness
+            if (_canExplore)
+            {
+                var exploredText = cell.ExploredPercent < 1 ? $" ({cell.ExploredPercent:P0})" : " (hunt)";
+                DrawText(spriteBatch, $"[E] Explore Area{exploredText}", new Vector2(panelX + 15, y), Color.Cyan);
+                y += 25;
+            }
 
-        if (_canEnterBurg && _burgName != null)
-        {
-            DrawText(spriteBatch, $"[B] Enter {TruncateText(_burgName, 15)}", new Vector2(panelX + 15, y), Color.LightBlue);
-            y += 25;
-        }
+            if (_canCamp)
+            {
+                DrawText(spriteBatch, "[C] Camp (50% stamina)", new Vector2(panelX + 15, y), Color.LightGreen);
+                y += 25;
+            }
 
-        DrawText(spriteBatch, "[L] View Locations", new Vector2(panelX + 15, y), Color.Orange);
+            if (_canEnterBurg && _burgName != null)
+            {
+                DrawText(spriteBatch, $"[B] Enter {TruncateText(_burgName, 15)}", new Vector2(panelX + 15, y), Color.LightBlue);
+                y += 25;
+            }
+
+            DrawText(spriteBatch, "[L] View Locations", new Vector2(panelX + 15, y), Color.Orange);
+        }
         y += 30;
 
         // Draw separator
