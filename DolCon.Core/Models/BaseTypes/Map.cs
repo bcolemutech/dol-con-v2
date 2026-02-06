@@ -11,10 +11,18 @@ public class Map
 
     [JsonPropertyName("cells")]
     public MapCollections Collections { get; set; } = null!;
+    public List<MapVertex> vertices { get; set; } = null!;
     public Biomes biomes { get; set; } = null!;
     public List<NameBasis> nameBases { get; set; } = null!;
     public Party Party { get; set; } = null!;
     public Guid CurrentPlayerId { get; set; }
+}
+
+public class MapVertex
+{
+    public List<double> p { get; set; } = null!;
+    public List<int> v { get; set; } = null!;
+    public List<int> c { get; set; } = null!;
 }
 
 public class MapCollections
