@@ -56,6 +56,7 @@ Shows where you are right now:
 
 At the bottom of the screen:
 - **N** = Navigation (move around)
+- **L** = Locations (view and enter locations)
 - **I** = Inventory (manage items)
 - **Esc** = Exit game
 
@@ -67,39 +68,53 @@ Press **N** to open the Navigation screen.
 
 ### Understanding the Navigation Screen
 
-The Navigation screen shows your options for movement:
+The Navigation screen displays a **3x3 spatial grid** showing your current cell in the center and all adjacent cells around it. Each cell is color-coded by its biome type.
 
-#### When in a Cell (Wilderness)
+#### The Navigation Grid
 
-You'll see a table of adjacent cells showing:
-- **Direction**: Which way to travel (N, NE, E, SE, S, SW, W, NW)
-- **Province/State**: Where you'd be going
-- **Biome**: What terrain you'd enter
-- **Burg**: If there's a settlement nearby
-- **Explored %**: How much you've explored that cell
+The grid uses a numpad-style layout for movement:
 
-**Actions Available**:
-- **Number keys (0-9)**: Select a direction to move
-- **Enter**: Explore the current cell or location
-- **B**: Enter a nearby burg (if one exists)
+```text
+[7] NW    [8] N     [9] NE
+[4] W     [5] YOU   [6] E
+[1] SW    [2] S     [3] SE
+```
+
+Each cell in the grid shows:
+
+- **Biome color**: Background color indicates terrain type
+- **Biome name**: The type of terrain (Forest, Grassland, etc.)
+- **Exploration %**: How much you've explored that cell
+- **Burg indicator**: Shows if there's a settlement (marked with *)
+
+#### Actions Available
+
+- **Number keys 1-9**: Move to a cell in that direction (numpad layout)
+- **E**: Explore the current cell
 - **C**: Camp to rest (when stamina is low)
+- **B**: Enter a nearby burg (if one exists)
+- **L**: Open Location screen to view/enter locations
 
-#### When in a Burg (Settlement)
+#### The Location Screen
 
-You'll see a list of locations within the burg:
-- Shops and vendors
-- Inns and taverns
-- Temples and services
+Press **L** to open the Location screen, which shows:
 
-**Actions Available**:
-- **Number keys**: Enter a specific location
-- **L**: Leave the burg and return to the cell
+- All discovered locations in your current cell or burg
+- Location types (shops, dungeons, services)
+- Exploration progress for each location
+- Services available at unexplorable locations
+
+**Location Actions**:
+
+- **Number keys 1-9**: Enter a specific location
+- **N**: Return to Navigation screen
+- **ESC**: Leave current location
 
 ### Try It: Moving to a New Cell
 
 1. Press **N** to open Navigation
-2. Look at the direction table
-3. Press a number key (1-9) to move in that direction
+2. Look at the 3x3 grid showing adjacent cells
+3. Press a number key (1-9) matching the direction you want to go
 4. Watch your stamina decrease slightly (movement costs energy)
 5. Press **H** to return to Home and see your new location
 
