@@ -16,10 +16,10 @@ public class SaveGameService : ISaveGameService
     public static Location? CurrentLocation =>
         Party switch
         {
-            { Location: not null, Burg: not null } => CurrentMap.Collections.burgs[Party.Burg.Value]
-                .locations.First(x => x.Id == Party.Location.Value),
+            { Location: not null, Burg: not null } => CurrentMap.Collections.burgs
+                .Find(b => b.i == Party.Burg.Value)?.locations.FirstOrDefault(x => x.Id == Party.Location.Value),
             { Location: not null } => CurrentMap.Collections.cells[Party.Cell]
-                .locations.First(x => x.Id == Party.Location.Value),
+                .locations.FirstOrDefault(x => x.Id == Party.Location.Value),
             _ => null
         };
     public static Map CurrentMap { get; set; } = new();
@@ -28,7 +28,9 @@ public class SaveGameService : ISaveGameService
 
     public static Cell CurrentCell => CurrentMap.Collections.cells[Party.Cell];
 
-    public static Burg? CurrentBurg => Party.Burg.HasValue ? CurrentMap.Collections.burgs[Party.Burg.Value] : null;
+    public static Burg? CurrentBurg => Party.Burg.HasValue
+        ? CurrentMap.Collections.burgs.Find(b => b.i == Party.Burg.Value)
+        : null;
 
     public static Province CurrentProvince => CurrentMap.Collections.provinces[CurrentCell.province];
 

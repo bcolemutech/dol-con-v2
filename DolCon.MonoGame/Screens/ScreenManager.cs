@@ -115,5 +115,6 @@ public enum ScreenType
     Navigation,
     Battle,
     Shop,
-    Inventory
+    Inventory,
+    Location
 }

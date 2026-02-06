@@ -214,14 +214,19 @@ Physical and magical damage categories that may interact with enemy resistances 
 A distinct view in the game interface:
 
 - **Home**: Party status and location overview.
-- **Navigation**: Movement and exploration options.
+- **Navigation**: 3x3 spatial grid for cell movement and exploration. Shows adjacent cells with biome colors, exploration progress, and burg indicators.
+- **Location**: List of discovered locations in the current cell or burg. Used to enter specific locations like shops, dungeons, or services.
 - **Inventory**: Item and equipment management.
 - **Scene**: Shop and service interactions.
 - **Battle**: Combat encounters.
 
+### Navigation Grid
+
+The 3x3 spatial display on the Navigation screen showing your current cell (center) surrounded by adjacent cells. Each cell displays its biome color, name, exploration percentage, and any nearby burgs. Uses numpad-style key mapping for movement (7=NW, 8=N, 9=NE, 4=W, 6=E, 1=SW, 2=S, 3=SE).
+
 ### Hotkey
 
-A keyboard shortcut for common actions. Examples: H for Home, N for Navigation, I for Inventory.
+A keyboard shortcut for common actions. Examples: H for Home, N for Navigation, L for Locations, I for Inventory.
 
 ### Modifier Key
 

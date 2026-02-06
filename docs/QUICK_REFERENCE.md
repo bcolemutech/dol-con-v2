@@ -5,21 +5,31 @@
 | Key | Action |
 |-----|--------|
 | **H** | Home Screen |
-| **N** | Navigation |
+| **N** | Navigation (3x3 grid) |
+| **L** | Location Screen |
 | **I** | Inventory |
 | **M** | Open Map |
-| **Esc** | Exit Game |
+| **Esc** | Exit/Back |
 
-### Navigation
+### Navigation (3x3 Grid)
 
 | Key | Action |
 |-----|--------|
-| 0-9 | Select direction/location |
-| Alt/Option + 0-9 | Extended selection |
-| Enter | Explore |
+| 1-9 | Move to cell (numpad layout) |
+| E | Explore cell |
 | B | Enter burg |
-| L | Leave |
 | C | Camp |
+| L | Open locations |
+
+### Location Screen
+
+| Key | Action |
+|-----|--------|
+| 1-9 | Enter location |
+| Up/Down | Navigate list |
+| E | Explore location |
+| N | Return to navigation |
+| Esc | Leave location |
 
 ### Combat
 

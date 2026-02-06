@@ -5,33 +5,43 @@ using DolCon.Core.Enums;
 using DolCon.Core.Models;
 using DolCon.Core.Models.BaseTypes;
 using DolCon.Core.Services;
+using DolCon.Core.Utilities;
 using DolCon.MonoGame.Input;
 using Direction = DolCon.Core.Enums.Direction;
+using GridPosition = DolCon.Core.Utilities.DirectionGridMapper.GridPosition;
 
 namespace DolCon.MonoGame.Screens;
 
 /// <summary>
-/// Navigation screen for moving between cells, burgs, and locations.
+/// Navigation screen showing a 3x3 spatial grid of cells for directional movement.
+/// Uses numpad-style key mapping (7=NW, 8=N, 9=NE, 4=W, 6=E, 1=SW, 2=S, 3=SE).
 /// </summary>
 public class NavigationScreen : ScreenBase
 {
     private readonly IMoveService _moveService;
     private readonly IEventService _eventService;
-    private List<NavigationOption> _options = new();
-    private int _selectedIndex;
-    private int _scrollOffset;
-    private const int VisibleItems = 12;
     private string _message = "";
     private Scene _currentScene = new();
 
-    private record NavigationOption(string Label, int? CellId, Guid? LocationId, bool IsExplore = false, bool IsCamp = false, bool IsEnterBurg = false);
+    // Grid data structure - 9 cells for 3x3 grid
+    private GridCellData?[] _gridCells = new GridCellData?[9];
+    private int? _selectedGridIndex;
 
-    // Separate lists for cells and locations
-    private List<CellOption> _cellOptions = new();
-    private List<LocationOption> _locationOptions = new();
+    // Special action flags for current cell
+    private bool _canExplore;
+    private bool _canCamp;
+    private bool _canEnterBurg;
+    private string? _burgName;
 
-    private record CellOption(int CellId, Direction Direction, string Biome, string Province, string Burg, string Explored);
-    private record LocationOption(Guid LocationId, string Name, string Type, string Explored);
+    private record GridCellData(
+        int CellId,
+        Biome Biome,
+        double ExploredPercent,
+        string? BurgName,
+        string Province,
+        bool IsCurrent,
+        int NumpadKey,
+        bool IsBlocked);
 
     public NavigationScreen(IMoveService moveService, IEventService eventService)
     {
@@ -43,111 +53,67 @@ public class NavigationScreen : ScreenBase
     {
         _message = "";
         _currentScene = new Scene();
-        _selectedIndex = 0;
-        _scrollOffset = 0;
-        BuildOptions();
+        _selectedGridIndex = null;
+        BuildGrid();
     }
 
-    private void BuildOptions()
+    private void BuildGrid()
     {
-        _options.Clear();
-        _cellOptions.Clear();
-        _locationOptions.Clear();
-        _selectedIndex = 0;
-        _scrollOffset = 0;
+        // Clear grid
+        Array.Clear(_gridCells);
+        _selectedGridIndex = null;
 
         var cell = SaveGameService.CurrentCell;
-        var burg = SaveGameService.CurrentBurg;
         var location = SaveGameService.CurrentLocation;
+        var burg = SaveGameService.CurrentBurg;
 
-        if (location != null)
+        // Check for special actions at current position
+        // Can explore when in wilderness (not in burg or location) - even fully explored cells can trigger encounters
+        _canExplore = location == null && burg == null;
+        _canCamp = location == null && burg == null;
+        var cellBurg = SaveGameService.GetBurg(cell.burg);
+        _canEnterBurg = cellBurg != null && burg == null;
+        _burgName = cellBurg?.name;
+
+        // Center cell (grid position 5, array index 4)
+        var centerProvince = SaveGameService.GetProvince(cell.province);
+        _gridCells[4] = new GridCellData(
+            cell.i,
+            cell.Biome,
+            cell.ExploredPercent,
+            cellBurg?.name,
+            centerProvince.fullName,
+            true,
+            5,
+            false);
+
+        // Map neighbors to grid positions
+        foreach (var neighborId in cell.c)
         {
-            // Only show explore option for explorable locations
-            if (location.Type.Size != LocationSize.unexplorable)
-            {
-                if (location.ExploredPercent < 1)
-                {
-                    _options.Add(new NavigationOption($"Explore {location.Name} ({location.ExploredPercent:P0} explored)", null, null, IsExplore: true));
-                }
-                else
-                {
-                    _options.Add(new NavigationOption($"{location.Name} - Fully explored", null, null, IsExplore: false));
-                }
-                // Add camp option at explorable locations
-                _options.Add(new NavigationOption("Camp here (restore stamina to 50%)", null, null, IsCamp: true));
-            }
-            else
-            {
-                // Unexplorable location - show services available (use lodging instead of camping)
-                _options.Add(new NavigationOption($"{location.Name} - Services available", null, null, IsExplore: false));
-            }
-            return;
-        }
+            if (neighborId < 0) continue;
 
-        if (burg != null)
-        {
-            // In a burg - show locations (burgs are settlements, exploration is via locations)
-            foreach (var loc in burg.locations)
-            {
-                // Show "Services" for unexplorable locations instead of exploration percentage
-                var exploredStr = loc.Type.Size == LocationSize.unexplorable
-                    ? "Services"
-                    : (loc.ExploredPercent > 0 ? $"{loc.ExploredPercent:P0}" : "Unexplored");
-                var typeStr = loc.Type.Size.ToString();
-                _locationOptions.Add(new LocationOption(loc.Id, loc.Name, typeStr, exploredStr));
-                _options.Add(new NavigationOption($"{loc.Name} ({typeStr})", null, loc.Id));
-            }
-        }
-        else
-        {
-            // In a cell - show explore option, camp option, enter burg option, directions to neighboring cells, and local locations
-            if (cell.ExploredPercent < 1)
-            {
-                _options.Add(new NavigationOption($"Explore area ({cell.ExploredPercent:P0} explored)", null, null, IsExplore: true));
-            }
-            // Add camp option in wilderness
-            _options.Add(new NavigationOption("Camp in wilderness (restore stamina to 50%)", null, null, IsCamp: true));
+            var neighbor = SaveGameService.GetCell(neighborId);
+            var direction = MapService.GetDirection(
+                cell.p[0], cell.p[1],
+                neighbor.p[0], neighbor.p[1]);
 
-            // Check if there's a burg in this cell that we can enter
-            var cellBurg = SaveGameService.GetBurg(cell.burg);
-            if (cellBurg != null)
-            {
-                _options.Add(new NavigationOption($"Enter {cellBurg.name} ({cellBurg.size})", null, null, IsEnterBurg: true));
-            }
+            var gridPos = DirectionGridMapper.MapDirectionToGrid(direction);
+            if (gridPos == null || gridPos == GridPosition.Center) continue;
 
-            // Add directions to neighboring cells with direction info
-            foreach (var neighbor in cell.c)
-            {
-                if (neighbor >= 0)
-                {
-                    var targetCell = SaveGameService.GetCell(neighbor);
-                    var biome = SaveGameService.GetBiome(targetCell.biome);
-                    var province = SaveGameService.GetProvince(targetCell.province);
-                    var targetBurg = SaveGameService.GetBurg(targetCell.burg);
-                    var burgName = targetBurg?.name ?? "None";
-                    var exploredStr = targetCell.ExploredPercent < 1 ? $"{targetCell.ExploredPercent:P0}" : "Explored";
+            var arrayIndex = DirectionGridMapper.GetArrayIndex(gridPos.Value);
+            var neighborBurg = SaveGameService.GetBurg(neighbor.burg);
+            var province = SaveGameService.GetProvince(neighbor.province);
+            var isBlocked = neighbor.Biome == Biome.Marine;
 
-                    // Get direction from current cell to target cell
-                    var direction = MapService.GetDirection(
-                        cell.p[0], cell.p[1],
-                        targetCell.p[0], targetCell.p[1]);
-
-                    _cellOptions.Add(new CellOption(neighbor, direction, biome, province.fullName, burgName, exploredStr));
-                    _options.Add(new NavigationOption($"{direction} - {biome} ({province.fullName})", neighbor, null));
-                }
-            }
-
-            // Add discovered cell locations
-            foreach (var loc in cell.locations.Where(l => l.Discovered))
-            {
-                // Show "Services" for unexplorable locations instead of exploration percentage
-                var exploredStr = loc.Type.Size == LocationSize.unexplorable
-                    ? "Services"
-                    : (loc.ExploredPercent > 0 ? $"{loc.ExploredPercent:P0}" : "Unexplored");
-                var typeStr = loc.Type.Size.ToString();
-                _locationOptions.Add(new LocationOption(loc.Id, loc.Name, typeStr, exploredStr));
-                _options.Add(new NavigationOption($"{loc.Name} ({typeStr})", null, loc.Id));
-            }
+            _gridCells[arrayIndex] = new GridCellData(
+                neighbor.i,
+                neighbor.Biome,
+                neighbor.ExploredPercent,
+                neighborBurg?.name,
+                province.fullName,
+                false,
+                DirectionGridMapper.GetNumpadKey(gridPos.Value),
+                isBlocked);
         }
     }
 
@@ -159,26 +125,26 @@ public class NavigationScreen : ScreenBase
             ScreenManager.SwitchTo(ScreenType.Home);
             return;
         }
-        else if (input.IsKeyPressed(Keys.I))
+        if (input.IsKeyPressed(Keys.I))
         {
             ScreenManager.SwitchTo(ScreenType.Inventory);
             return;
         }
-        else if (input.IsKeyPressed(Keys.Escape))
+        if (input.IsKeyPressed(Keys.L))
         {
-            // Leave current location/burg
+            ScreenManager.SwitchTo(ScreenType.Location);
+            return;
+        }
+
+        if (input.IsKeyPressed(Keys.Escape))
+        {
+            // Leave current burg
             var party = SaveGameService.Party;
-            if (party.Location.HasValue)
-            {
-                party.Location = null;
-                _message = "Left location";
-                BuildOptions();
-            }
-            else if (party.Burg.HasValue)
+            if (party.Burg.HasValue)
             {
                 party.Burg = null;
                 _message = "Left burg";
-                BuildOptions();
+                BuildGrid();
             }
             else
             {
@@ -187,57 +153,67 @@ public class NavigationScreen : ScreenBase
             return;
         }
 
-        if (_options.Count == 0) return;
-
-        // Arrow key navigation
-        if (input.IsKeyPressed(Keys.Up) || input.IsKeyPressed(Keys.W))
+        // Quick actions
+        if (input.IsKeyPressed(Keys.E) && _canExplore)
         {
-            _selectedIndex = Math.Max(0, _selectedIndex - 1);
-            EnsureVisible();
+            ProcessExploration();
+            return;
         }
-        else if (input.IsKeyPressed(Keys.Down) || input.IsKeyPressed(Keys.S))
+        if (input.IsKeyPressed(Keys.C) && _canCamp)
         {
-            _selectedIndex = Math.Min(_options.Count - 1, _selectedIndex + 1);
-            EnsureVisible();
-        }
-        else if (input.IsKeyPressed(Keys.PageUp))
-        {
-            _selectedIndex = Math.Max(0, _selectedIndex - VisibleItems);
-            EnsureVisible();
-        }
-        else if (input.IsKeyPressed(Keys.PageDown))
-        {
-            _selectedIndex = Math.Min(_options.Count - 1, _selectedIndex + VisibleItems);
-            EnsureVisible();
-        }
-        else if (input.IsKeyPressed(Keys.C))
-        {
-            // Quick camp hotkey
             ProcessCamp();
+            return;
         }
-        else if (input.IsKeyPressed(Keys.Enter) || input.IsKeyPressed(Keys.Space))
+        if (input.IsKeyPressed(Keys.B) && _canEnterBurg)
         {
-            if (_options.Count > 0 && _selectedIndex < _options.Count)
+            ProcessEnterBurg();
+            return;
+        }
+
+        // Number key selection (1-9 using numpad layout)
+        var numKey = input.GetPressedNumericKey();
+        if (numKey.HasValue && numKey.Value >= 1 && numKey.Value <= 9)
+        {
+            var gridPos = DirectionGridMapper.GetGridPosition(numKey.Value);
+            if (gridPos.HasValue)
             {
-                var option = _options[_selectedIndex];
-                if (option.IsExplore)
+                var arrayIndex = DirectionGridMapper.GetArrayIndex(gridPos.Value);
+                var cellData = _gridCells[arrayIndex];
+
+                if (cellData != null && !cellData.IsCurrent)
                 {
-                    ProcessExploration();
-                }
-                else if (option.IsCamp)
-                {
-                    ProcessCamp();
-                }
-                else if (option.IsEnterBurg)
-                {
-                    ProcessEnterBurg();
-                }
-                else
-                {
-                    ProcessSelection();
+                    if (cellData.IsBlocked)
+                    {
+                        _message = "Cannot travel to water!";
+                    }
+                    else
+                    {
+                        _selectedGridIndex = arrayIndex;
+                        ProcessMovement(cellData.CellId);
+                    }
                 }
             }
         }
+    }
+
+    private void ProcessMovement(int targetCellId)
+    {
+        var result = _moveService.MoveToCell(targetCellId);
+        switch (result)
+        {
+            case MoveStatus.Success:
+                _message = "Moved to new cell";
+                ProcessEvent();
+                SaveHelper.TriggerSave();
+                break;
+            case MoveStatus.Failure:
+                _message = "Not enough stamina!";
+                break;
+            case MoveStatus.Blocked:
+                _message = "Cannot move there!";
+                break;
+        }
+        BuildGrid();
     }
 
     private void ProcessExploration()
@@ -249,7 +225,6 @@ public class NavigationScreen : ScreenBase
 
         if (_currentScene.Type == SceneType.Battle)
         {
-            // Use SwitchToBattle to pass scene with pending exploration
             ScreenManager.SwitchToBattle(_currentScene);
         }
         else if (_currentScene.Type == SceneType.Shop)
@@ -259,7 +234,7 @@ public class NavigationScreen : ScreenBase
         else
         {
             _message = _currentScene.Message ?? "Exploration complete";
-            BuildOptions();
+            BuildGrid();
         }
     }
 
@@ -268,7 +243,6 @@ public class NavigationScreen : ScreenBase
         var party = SaveGameService.Party;
         var previousStamina = party.Stamina;
 
-        // Sleep with no quality = wilderness camping (restores to 50%)
         if (_moveService.Sleep())
         {
             var newStamina = party.Stamina;
@@ -279,7 +253,6 @@ public class NavigationScreen : ScreenBase
         {
             _message = "You're not tired enough to camp here. (Stamina must be below 50%)";
         }
-        BuildOptions();
     }
 
     private void ProcessEnterBurg()
@@ -288,76 +261,11 @@ public class NavigationScreen : ScreenBase
         var cellBurg = SaveGameService.GetBurg(cell.burg);
         if (cellBurg != null)
         {
-            // Enter the burg by setting the party's burg
             var party = SaveGameService.Party;
             party.Burg = cellBurg.i;
             _message = $"Entered {cellBurg.name}";
             SaveHelper.TriggerSave();
-            BuildOptions();
-        }
-    }
-
-    private void EnsureVisible()
-    {
-        if (_selectedIndex < _scrollOffset)
-        {
-            _scrollOffset = _selectedIndex;
-        }
-        else if (_selectedIndex >= _scrollOffset + VisibleItems)
-        {
-            _scrollOffset = _selectedIndex - VisibleItems + 1;
-        }
-    }
-
-    private void ProcessSelection()
-    {
-        if (_selectedIndex < 0 || _selectedIndex >= _options.Count) return;
-
-        var option = _options[_selectedIndex];
-
-        try
-        {
-            if (option.CellId.HasValue)
-            {
-                // Move to cell
-                var result = _moveService.MoveToCell(option.CellId.Value);
-                switch (result)
-                {
-                    case MoveStatus.Success:
-                        _message = "Moved to new cell";
-                        ProcessEvent();
-                        SaveHelper.TriggerSave();
-                        break;
-                    case MoveStatus.Failure:
-                        _message = "Not enough stamina!";
-                        break;
-                    case MoveStatus.Blocked:
-                        _message = "Cannot move there!";
-                        break;
-                }
-                BuildOptions();
-            }
-            else if (option.LocationId.HasValue)
-            {
-                // Move to location
-                if (_moveService.MoveToLocation(option.LocationId.Value))
-                {
-                    _message = "Entered location";
-                    ProcessEvent();
-                    SaveHelper.TriggerSave();
-                }
-                else
-                {
-                    _message = "Not enough stamina!";
-                }
-                BuildOptions();
-            }
-        }
-        catch (Exception ex)
-        {
-            _message = $"Error: {ex.Message}";
-            System.Diagnostics.Debug.WriteLine($"NavigationScreen.ProcessSelection error: {ex}");
-            BuildOptions();
+            BuildGrid();
         }
     }
 
@@ -372,232 +280,293 @@ public class NavigationScreen : ScreenBase
 
             if (_currentScene.Type == SceneType.Battle)
             {
-                // Switch to battle screen
-                ScreenManager.SwitchTo(ScreenType.Battle);
+                ScreenManager.SwitchToBattle(_currentScene);
             }
             else if (_currentScene.Type == SceneType.Shop)
             {
-                // Switch to shop screen
                 ScreenManager.SwitchToShop(_currentScene);
             }
         }
         catch (Exception ex)
         {
-            _message = $"Error entering location: {ex.Message}";
+            _message = $"Error: {ex.Message}";
             System.Diagnostics.Debug.WriteLine($"NavigationScreen.ProcessEvent error: {ex}");
         }
     }
 
     public override void Draw(SpriteBatch spriteBatch)
     {
-        var padding = 20;
         var viewport = GraphicsDevice.Viewport;
+        var padding = 20;
 
         // Title bar
         DrawRect(spriteBatch, new Rectangle(0, 0, viewport.Width, 50), new Color(30, 30, 50));
-        DrawText(spriteBatch, "DOMINION OF LIGHT - Navigation", new Vector2(padding, 15), Color.Gold);
+        DrawCenteredText(spriteBatch, "DOMINION OF LIGHT - Navigation", 15, Color.Gold);
 
-        // Message
+        // Stamina display (top right)
+        var party = SaveGameService.Party;
+        DrawText(spriteBatch, $"Stamina: {party.Stamina:P0}",
+            new Vector2(viewport.Width - 150, 15), Color.LightGreen);
+
+        // Message display
         if (!string.IsNullOrEmpty(_message))
         {
             DrawText(spriteBatch, _message, new Vector2(padding, 60), Color.Yellow);
         }
 
-        // Current location info
+        // Current status info
         var cell = SaveGameService.CurrentCell;
         var burg = SaveGameService.CurrentBurg;
-        var location = SaveGameService.CurrentLocation;
-
-        int y = 100;
-        DrawText(spriteBatch, $"Current Cell: {cell.i} ({SaveGameService.CurrentBiome})",
-            new Vector2(padding, y), Color.White);
-        y += 30;
+        var y = 95;
 
         if (burg != null)
         {
-            DrawText(spriteBatch, $"In Burg: {burg.name} ({burg.size})", new Vector2(padding, y), Color.LightBlue);
-            y += 30;
-        }
-        else
-        {
-            // Check if there's a burg in this cell we could enter
-            var cellBurg = SaveGameService.GetBurg(cell.burg);
-            if (cellBurg != null)
-            {
-                DrawText(spriteBatch, $"Nearby Burg: {cellBurg.name} ({cellBurg.size})", new Vector2(padding, y), Color.Cyan);
-                y += 30;
-            }
+            DrawText(spriteBatch, $"In Burg: {burg.name} ({burg.size})", new Vector2(padding, y), Color.Cyan);
+            y += 25;
         }
 
-        if (location != null)
-        {
-            DrawText(spriteBatch, $"At Location: {location.Name}", new Vector2(padding, y), Color.LightGreen);
-            y += 30;
-            DrawText(spriteBatch, "Press ESC to leave", new Vector2(padding, y), Color.Gray);
-            y += 30;
-        }
+        // Draw the 3x3 grid
+        DrawNavigationGrid(spriteBatch);
 
-        y += 20;
-
-        // Options header
-        if (_options.Count > 0)
-        {
-            // Calculate visible range based on scroll offset
-            var visibleStart = _scrollOffset;
-            var visibleEnd = Math.Min(_options.Count, _scrollOffset + VisibleItems);
-            var itemsDrawn = 0;
-
-            // Count special options (explore, camp, enter burg) that come before cell/location options
-            var specialOptions = _options.Where(o => !o.CellId.HasValue && !o.LocationId.HasValue).ToList();
-            var specialOptionsCount = specialOptions.Count;
-            var cellStartIndex = specialOptionsCount;
-            var locStartIndex = cellStartIndex + _cellOptions.Count;
-
-            // Draw special options (explore, camp, enter burg)
-            for (int i = 0; i < specialOptions.Count && itemsDrawn < VisibleItems; i++)
-            {
-                if (i < visibleStart || i >= visibleEnd) continue;
-
-                var opt = specialOptions[i];
-                var isSelected = _selectedIndex == i;
-                var optColor = isSelected ? Color.Yellow :
-                               opt.IsExplore ? Color.Cyan :
-                               opt.IsCamp ? Color.LightGreen :
-                               opt.IsEnterBurg ? Color.LightBlue : Color.White;
-                var prefix = isSelected ? "> " : "  ";
-                DrawText(spriteBatch, $"{prefix}{opt.Label}", new Vector2(padding, y), optColor);
-                y += 28;
-                itemsDrawn++;
-            }
-
-            // Draw cells section if we have cell options and any are visible
-            if (_cellOptions.Count > 0)
-            {
-                var cellEndIndex = cellStartIndex + _cellOptions.Count;
-
-                // Check if any cells fall within visible range
-                if (visibleStart < cellEndIndex && visibleEnd > cellStartIndex)
-                {
-                    // Column positions for table layout - expanded to use more width
-                    var colDirection = padding + 40;
-                    var colBiome = padding + 170;
-                    var colProvince = padding + 340;
-                    var colBurg = padding + 560;
-
-                    DrawText(spriteBatch, "Nearby Cells:", new Vector2(padding, y), Color.White);
-                    y += 25;
-
-                    // Header row
-                    DrawText(spriteBatch, "Direction", new Vector2(colDirection, y), Color.Gray);
-                    DrawText(spriteBatch, "Biome", new Vector2(colBiome, y), Color.Gray);
-                    DrawText(spriteBatch, "Province", new Vector2(colProvince, y), Color.Gray);
-                    DrawText(spriteBatch, "Burg", new Vector2(colBurg, y), Color.Gray);
-                    y += 22;
-
-                    // Separator line - extended to match wider table
-                    DrawRect(spriteBatch, new Rectangle(padding + 15, y, viewport.Width - 100, 1), Color.DarkGray);
-                    y += 5;
-
-                    // Calculate which cells are visible
-                    var cellVisibleStart = Math.Max(0, visibleStart - cellStartIndex);
-                    var cellVisibleEnd = Math.Min(_cellOptions.Count, visibleEnd - cellStartIndex);
-
-                    for (int i = cellVisibleStart; i < cellVisibleEnd && itemsDrawn < VisibleItems; i++)
-                    {
-                        var actualIndex = cellStartIndex + i;
-                        var cellOpt = _cellOptions[i];
-                        var isSelected = actualIndex == _selectedIndex;
-
-                        if (isSelected)
-                        {
-                            DrawRect(spriteBatch, new Rectangle(padding + 15, y - 2, viewport.Width - 100, 22), new Color(60, 60, 80));
-                        }
-
-                        var prefix = isSelected ? "> " : "  ";
-                        var color = isSelected ? Color.Yellow : Color.LightGray;
-
-                        // Draw each column separately for proper alignment
-                        DrawText(spriteBatch, prefix, new Vector2(padding + 20, y), color);
-                        DrawText(spriteBatch, cellOpt.Direction.ToString(), new Vector2(colDirection, y), color);
-                        DrawText(spriteBatch, TruncateText(cellOpt.Biome, 16), new Vector2(colBiome, y), color);
-                        DrawText(spriteBatch, TruncateText(cellOpt.Province, 22), new Vector2(colProvince, y), color);
-                        DrawText(spriteBatch, TruncateText(cellOpt.Burg, 25), new Vector2(colBurg, y), color);
-                        y += 22;
-                        itemsDrawn++;
-                    }
-                    y += 10;
-                }
-            }
-
-            // Draw locations section if we have location options and any are visible
-            if (_locationOptions.Count > 0)
-            {
-                var locEndIndex = locStartIndex + _locationOptions.Count;
-
-                // Check if any locations fall within visible range
-                if (visibleStart < locEndIndex && visibleEnd > locStartIndex)
-                {
-                    DrawText(spriteBatch, "Discovered Locations:", new Vector2(padding, y), Color.White);
-                    y += 25;
-
-                    // Calculate which locations are visible
-                    var locVisibleStart = Math.Max(0, visibleStart - locStartIndex);
-                    var locVisibleEnd = Math.Min(_locationOptions.Count, visibleEnd - locStartIndex);
-
-                    for (int i = locVisibleStart; i < locVisibleEnd && itemsDrawn < VisibleItems; i++)
-                    {
-                        var actualIndex = locStartIndex + i;
-                        var locOpt = _locationOptions[i];
-                        var isSelected = actualIndex == _selectedIndex;
-
-                        if (isSelected)
-                        {
-                            DrawRect(spriteBatch, new Rectangle(padding + 15, y - 2, viewport.Width - 100, 22), new Color(60, 60, 80));
-                        }
-
-                        var prefix = isSelected ? "> " : "  ";
-                        var color = isSelected ? Color.Yellow : Color.LightGreen;
-                        DrawText(spriteBatch, $"{prefix}{locOpt.Name} ({locOpt.Type}) - {locOpt.Explored}",
-                            new Vector2(padding + 20, y), color);
-                        y += 22;
-                        itemsDrawn++;
-                    }
-                }
-            }
-
-            // Scroll indicator
-            if (_options.Count > VisibleItems)
-            {
-                var scrollText = $"({_scrollOffset + 1}-{Math.Min(_scrollOffset + VisibleItems, _options.Count)} of {_options.Count})";
-                DrawText(spriteBatch, scrollText, new Vector2(viewport.Width - 200, 180), Color.Gray);
-            }
-        }
-        else
-        {
-            DrawText(spriteBatch, "No options available", new Vector2(padding, y), Color.Gray);
-        }
-
-        // Stamina display
-        var party = SaveGameService.Party;
-        DrawText(spriteBatch, $"Stamina: {party.Stamina:P0}",
-            new Vector2(viewport.Width - 200, 100), Color.Green);
+        // Draw action panel (right side)
+        DrawActionPanel(spriteBatch);
 
         // Controls panel (bottom)
-        var controlsY = viewport.Height - 80;
-        DrawRect(spriteBatch, new Rectangle(0, controlsY, viewport.Width, 80), new Color(30, 30, 50));
-        var canCamp = _options.Any(o => o.IsCamp);
-        var canExplore = _options.Any(o => o.IsExplore);
-        var controlsText = canExplore && canCamp
-            ? "[Up/Down] Navigate  [Enter] Select  [C] Camp  [H] Home  [I] Inventory  [ESC] Back"
-            : canCamp
-            ? "[Up/Down] Navigate  [Enter] Select  [C] Camp  [H] Home  [I] Inventory  [ESC] Back"
-            : "[Up/Down] Navigate  [Enter] Select  [H] Home  [I] Inventory  [ESC] Back";
-        DrawText(spriteBatch, controlsText, new Vector2(padding, controlsY + 25), Color.Gray);
+        var controlsRect = new Rectangle(0, viewport.Height - 70, viewport.Width, 70);
+        DrawRect(spriteBatch, controlsRect, new Color(30, 30, 50));
+
+        var controls = "[1-9] Move to cell  [L] Locations";
+        if (_canExplore) controls += "  [E] Explore";
+        if (_canCamp) controls += "  [C] Camp";
+        if (_canEnterBurg) controls += "  [B] Enter Burg";
+        controls += "  [H] Home  [I] Inventory  [ESC] Back";
+        DrawCenteredText(spriteBatch, controls, viewport.Height - 45, Color.LightGray);
     }
 
-    /// <summary>
-    /// Truncates text to a maximum length, adding ".." if truncated.
-    /// </summary>
+    private void DrawNavigationGrid(SpriteBatch spriteBatch)
+    {
+        var viewport = GraphicsDevice.Viewport;
+
+        // Grid dimensions
+        int cellWidth = 200;
+        int cellHeight = 140;
+        int gridWidth = cellWidth * 3 + 20; // 3 cells + gaps
+        int gridHeight = cellHeight * 3 + 20;
+        int gridStartX = (viewport.Width - gridWidth) / 2 - 100; // Shifted left to make room for action panel
+        int gridStartY = 130;
+
+        // Draw each grid cell
+        for (int row = 0; row < 3; row++)
+        {
+            for (int col = 0; col < 3; col++)
+            {
+                int arrayIndex = row * 3 + col;
+                var cellData = _gridCells[arrayIndex];
+
+                int x = gridStartX + col * (cellWidth + 10);
+                int y = gridStartY + row * (cellHeight + 10);
+                var rect = new Rectangle(x, y, cellWidth, cellHeight);
+
+                DrawGridCell(spriteBatch, rect, cellData, arrayIndex);
+            }
+        }
+
+        // Draw numpad key legend
+        var legendY = gridStartY + gridHeight + 10;
+        DrawText(spriteBatch, "Numpad Keys:", new Vector2(gridStartX, legendY), Color.Gray);
+        legendY += 20;
+        DrawText(spriteBatch, "7=NW  8=N   9=NE", new Vector2(gridStartX, legendY), Color.DarkGray);
+        legendY += 18;
+        DrawText(spriteBatch, "4=W   5=C   6=E", new Vector2(gridStartX, legendY), Color.DarkGray);
+        legendY += 18;
+        DrawText(spriteBatch, "1=SW  2=S   3=SE", new Vector2(gridStartX, legendY), Color.DarkGray);
+    }
+
+    private void DrawGridCell(SpriteBatch spriteBatch, Rectangle rect, GridCellData? cellData, int arrayIndex)
+    {
+        if (cellData == null)
+        {
+            // Empty cell - draw dark background
+            DrawRect(spriteBatch, rect, new Color(20, 20, 30));
+            DrawBorder(spriteBatch, rect, new Color(40, 40, 50), 2);
+            return;
+        }
+
+        // Get biome color
+        var biomeColor = GetBiomeColor(cellData.Biome);
+
+        // Adjust color for blocked (water) cells
+        if (cellData.IsBlocked)
+        {
+            biomeColor = new Color(biomeColor.R / 2, biomeColor.G / 2, biomeColor.B / 2);
+        }
+
+        // Draw cell background
+        DrawRect(spriteBatch, rect, biomeColor);
+
+        // Draw border (highlight for current cell)
+        var borderColor = cellData.IsCurrent ? Color.Gold : new Color(60, 60, 80);
+        var borderThickness = cellData.IsCurrent ? 3 : 2;
+        DrawBorder(spriteBatch, rect, borderColor, borderThickness);
+
+        // Text color based on background brightness
+        var textColor = GetContrastingTextColor(biomeColor);
+        var shadowColor = new Color(0, 0, 0, 150);
+
+        // Draw numpad key indicator (top-left corner)
+        var keyText = cellData.NumpadKey.ToString();
+        DrawTextWithShadow(spriteBatch, $"[{keyText}]", new Vector2(rect.X + 5, rect.Y + 3), Color.Yellow, shadowColor);
+
+        // Draw biome name
+        var biomeName = FormatBiomeName(cellData.Biome);
+        DrawTextWithShadow(spriteBatch, biomeName, new Vector2(rect.X + 8, rect.Y + 25), textColor, shadowColor);
+
+        // Draw exploration percentage
+        var exploredText = cellData.ExploredPercent >= 1 ? "Explored" : $"{cellData.ExploredPercent:P0}";
+        DrawTextWithShadow(spriteBatch, exploredText, new Vector2(rect.X + 8, rect.Y + 48), textColor, shadowColor);
+
+        // Draw province (truncated)
+        var provinceText = TruncateText(cellData.Province, 20);
+        DrawTextWithShadow(spriteBatch, provinceText, new Vector2(rect.X + 8, rect.Y + 71), new Color(textColor, 180), shadowColor);
+
+        // Draw burg indicator if present
+        if (!string.IsNullOrEmpty(cellData.BurgName))
+        {
+            var burgText = $"* {TruncateText(cellData.BurgName, 18)}";
+            DrawTextWithShadow(spriteBatch, burgText, new Vector2(rect.X + 8, rect.Y + 94), Color.White, shadowColor);
+        }
+
+        // Draw "CURRENT" label for center cell
+        if (cellData.IsCurrent)
+        {
+            DrawTextWithShadow(spriteBatch, "CURRENT", new Vector2(rect.X + rect.Width - 70, rect.Y + rect.Height - 20), Color.Gold, shadowColor);
+        }
+
+        // Draw blocked indicator for water
+        if (cellData.IsBlocked)
+        {
+            DrawTextWithShadow(spriteBatch, "BLOCKED", new Vector2(rect.X + rect.Width / 2 - 30, rect.Y + rect.Height - 20), Color.Red, shadowColor);
+        }
+    }
+
+    private void DrawActionPanel(SpriteBatch spriteBatch)
+    {
+        var viewport = GraphicsDevice.Viewport;
+        int panelX = viewport.Width - 280;
+        int panelY = 130;
+        int panelWidth = 260;
+        int panelHeight = 350;
+
+        // Panel background
+        DrawRect(spriteBatch, new Rectangle(panelX, panelY, panelWidth, panelHeight), new Color(25, 25, 40));
+        DrawBorder(spriteBatch, new Rectangle(panelX, panelY, panelWidth, panelHeight), new Color(60, 60, 80), 2);
+
+        var y = panelY + 15;
+        DrawText(spriteBatch, "Actions", new Vector2(panelX + 15, y), Color.White);
+        y += 30;
+
+        // Current cell info
+        var cell = SaveGameService.CurrentCell;
+        DrawText(spriteBatch, $"Cell: {cell.i}", new Vector2(panelX + 15, y), Color.LightGray);
+        y += 22;
+        DrawText(spriteBatch, $"Biome: {FormatBiomeName(cell.Biome)}", new Vector2(panelX + 15, y), Color.LightGray);
+        y += 22;
+        DrawText(spriteBatch, $"Explored: {cell.ExploredPercent:P0}", new Vector2(panelX + 15, y), Color.LightGray);
+        y += 30;
+
+        // Draw separator
+        DrawRect(spriteBatch, new Rectangle(panelX + 10, y, panelWidth - 20, 1), Color.Gray);
+        y += 15;
+
+        // Available actions
+        var burg = SaveGameService.CurrentBurg;
+
+        if (burg != null)
+        {
+            // In a burg - show that exploration is via locations
+            DrawText(spriteBatch, $"In Burg: {burg.name}", new Vector2(panelX + 15, y), Color.Cyan);
+            y += 22;
+            DrawText(spriteBatch, "[L] Explore Locations", new Vector2(panelX + 15, y), Color.Orange);
+            y += 22;
+            DrawText(spriteBatch, "[ESC] Leave Burg", new Vector2(panelX + 15, y), Color.Gray);
+            y += 25;
+        }
+        else
+        {
+            // In wilderness
+            if (_canExplore)
+            {
+                var exploredText = cell.ExploredPercent < 1 ? $" ({cell.ExploredPercent:P0})" : " (hunt)";
+                DrawText(spriteBatch, $"[E] Explore Area{exploredText}", new Vector2(panelX + 15, y), Color.Cyan);
+                y += 25;
+            }
+
+            if (_canCamp)
+            {
+                DrawText(spriteBatch, "[C] Camp (50% stamina)", new Vector2(panelX + 15, y), Color.LightGreen);
+                y += 25;
+            }
+
+            if (_canEnterBurg && _burgName != null)
+            {
+                DrawText(spriteBatch, $"[B] Enter {TruncateText(_burgName, 15)}", new Vector2(panelX + 15, y), Color.LightBlue);
+                y += 25;
+            }
+
+            DrawText(spriteBatch, "[L] View Locations", new Vector2(panelX + 15, y), Color.Orange);
+        }
+        y += 30;
+
+        // Draw separator
+        DrawRect(spriteBatch, new Rectangle(panelX + 10, y, panelWidth - 20, 1), Color.Gray);
+        y += 15;
+
+        // Navigation hints
+        DrawText(spriteBatch, "Navigation:", new Vector2(panelX + 15, y), Color.White);
+        y += 22;
+        DrawText(spriteBatch, "Press 1-9 to move", new Vector2(panelX + 15, y), Color.Gray);
+        y += 20;
+        DrawText(spriteBatch, "(numpad layout)", new Vector2(panelX + 15, y), Color.DarkGray);
+    }
+
+    private void DrawTextWithShadow(SpriteBatch spriteBatch, string text, Vector2 position, Color color, Color shadowColor)
+    {
+        // Draw shadow
+        DrawText(spriteBatch, text, position + new Vector2(1, 1), shadowColor);
+        // Draw text
+        DrawText(spriteBatch, text, position, color);
+    }
+
+    private Color GetBiomeColor(Biome biome)
+    {
+        var hex = BiomeColors.GetHexColor(biome);
+        var (r, g, b) = BiomeColors.ParseHexColor(hex);
+        return new Color(r, g, b);
+    }
+
+    private Color GetContrastingTextColor(Color backgroundColor)
+    {
+        // Calculate perceived brightness
+        var brightness = (backgroundColor.R * 299 + backgroundColor.G * 587 + backgroundColor.B * 114) / 1000;
+        return brightness > 128 ? Color.Black : Color.White;
+    }
+
+    private static string FormatBiomeName(Biome biome)
+    {
+        // Insert spaces before capital letters for readability
+        var name = biome.ToString();
+        var result = "";
+        foreach (var c in name)
+        {
+            if (char.IsUpper(c) && result.Length > 0)
+            {
+                result += " ";
+            }
+            result += c;
+        }
+        return result;
+    }
+
     private static string TruncateText(string text, int maxLength)
     {
         if (string.IsNullOrEmpty(text) || text.Length <= maxLength)
