@@ -100,14 +100,8 @@ public class WorldMapScreen : ScreenBase
                 // Adjacent to visible cell -> at least 0.30
                 float neighborMin = sourceVisibility >= 1.0f ? 0.50f : 0.30f;
 
-                if (_cellVisibility.TryGetValue(neighborId, out float existing))
-                {
-                    _cellVisibility[neighborId] = Math.Max(existing, neighborMin);
-                }
-                else
-                {
-                    _cellVisibility[neighborId] = neighborMin;
-                }
+                float existing = _cellVisibility.GetValueOrDefault(neighborId, 0f);
+                _cellVisibility[neighborId] = Math.Max(existing, neighborMin);
             }
         }
     }
