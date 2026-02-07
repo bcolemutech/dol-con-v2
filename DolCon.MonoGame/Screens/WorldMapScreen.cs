@@ -32,6 +32,9 @@ public class WorldMapScreen : ScreenBase
     private Burg? _cityOfLight;
     private bool _needsCenter = true;
     private BasicEffect? _basicEffect;
+    private DynamicVertexBuffer? _vertexBuffer;
+    private VertexPositionColor[] _vertexArray = Array.Empty<VertexPositionColor>();
+    private int _primitiveCount;
 
     public override void Initialize()
     {
@@ -50,7 +53,9 @@ public class WorldMapScreen : ScreenBase
         _basicEffect = new BasicEffect(graphicsDevice)
         {
             VertexColorEnabled = true,
-            LightingEnabled = false
+            LightingEnabled = false,
+            TextureEnabled = false,
+            FogEnabled = false
         };
 
         if (_needsCenter)
@@ -64,33 +69,36 @@ public class WorldMapScreen : ScreenBase
     {
         _cellVisibility.Clear();
         var cells = SaveGameService.CurrentMap.Collections.cells;
+        var currentCellId = SaveGameService.Party.Cell;
+
+        // Always show the player's current cell at full visibility
+        _cellVisibility[currentCellId] = 1.0f;
 
         // First pass: set visibility for explored cells
         foreach (var cell in cells)
         {
             if (cell.ExploredPercent > 0)
             {
-                _cellVisibility[cell.i] = (float)cell.ExploredPercent;
+                _cellVisibility[cell.i] = (float)Math.Max(
+                    cell.ExploredPercent,
+                    _cellVisibility.GetValueOrDefault(cell.i, 0f));
             }
         }
 
         // Second pass: propagate to unexplored neighbors
-        foreach (var cell in cells)
+        var cellsToPropagate = _cellVisibility.Keys.ToList();
+        foreach (var cellId in cellsToPropagate)
         {
-            if (cell.ExploredPercent <= 0) continue;
+            if (cellId < 0 || cellId >= cells.Count) continue;
+            var cell = cells[cellId];
+            float sourceVisibility = _cellVisibility[cellId];
 
             foreach (var neighborId in cell.c)
             {
                 if (neighborId < 0 || neighborId >= cells.Count) continue;
 
-                var neighbor = cells[neighborId];
-
-                // Skip already-explored cells
-                if (neighbor.ExploredPercent > 0) continue;
-
-                // Adjacent to fully explored -> at least 0.50
-                // Adjacent to partially explored -> at least 0.10
-                float neighborMin = cell.ExploredPercent >= 1.0 ? 0.50f : 0.10f;
+                // Adjacent to visible cell -> at least 0.30
+                float neighborMin = sourceVisibility >= 1.0f ? 0.50f : 0.30f;
 
                 if (_cellVisibility.TryGetValue(neighborId, out float existing))
                 {
@@ -159,7 +167,7 @@ public class WorldMapScreen : ScreenBase
         // Black background for map area
         DrawRect(spriteBatch, mapViewport, Color.Black);
 
-        // End SpriteBatch to draw polygons with DrawUserPrimitives
+        // End SpriteBatch to draw polygons with vertex buffer
         spriteBatch.End();
 
         DrawCellPolygons(mapViewport);
@@ -252,6 +260,22 @@ public class WorldMapScreen : ScreenBase
 
         if (triangleVerts.Count < 3) return;
 
+        _vertexArray = triangleVerts.ToArray();
+        _primitiveCount = _vertexArray.Length / 3;
+
+        // Create or resize the vertex buffer
+        if (_vertexBuffer == null || _vertexBuffer.VertexCount < _vertexArray.Length)
+        {
+            _vertexBuffer?.Dispose();
+            _vertexBuffer = new DynamicVertexBuffer(
+                GraphicsDevice,
+                VertexPositionColor.VertexDeclaration,
+                _vertexArray.Length,
+                BufferUsage.WriteOnly);
+        }
+
+        _vertexBuffer.SetData(_vertexArray, 0, _vertexArray.Length, SetDataOptions.Discard);
+
         // Set up BasicEffect for 2D rendering
         var viewport = GraphicsDevice.Viewport;
         _basicEffect.Projection = Matrix.CreateOrthographicOffCenter(
@@ -259,17 +283,21 @@ public class WorldMapScreen : ScreenBase
         _basicEffect.View = Matrix.Identity;
         _basicEffect.World = Matrix.Identity;
 
-        var vertArray = triangleVerts.ToArray();
+        // Reset all render state for proper cross-platform rendering
+        GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+        GraphicsDevice.DepthStencilState = DepthStencilState.None;
+        GraphicsDevice.BlendState = BlendState.AlphaBlend;
+        GraphicsDevice.Textures[0] = null;
+        GraphicsDevice.SetVertexBuffer(_vertexBuffer);
 
         foreach (var pass in _basicEffect.CurrentTechnique.Passes)
         {
             pass.Apply();
-            GraphicsDevice.DrawUserPrimitives(
-                PrimitiveType.TriangleList,
-                vertArray,
-                0,
-                vertArray.Length / 3);
+            GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, _primitiveCount);
         }
+
+        // Clear vertex buffer binding before SpriteBatch resumes
+        GraphicsDevice.SetVertexBuffer(null);
     }
 
     private void DrawPlayerIndicator(SpriteBatch spriteBatch, Rectangle mapViewport)
@@ -365,5 +393,12 @@ public class WorldMapScreen : ScreenBase
         var hex = BiomeColors.GetHexColor(biome);
         var (r, g, b) = BiomeColors.ParseHexColor(hex);
         return new Color(r, g, b);
+    }
+
+    public override void Unload()
+    {
+        _vertexBuffer?.Dispose();
+        _vertexBuffer = null;
+        base.Unload();
     }
 }
