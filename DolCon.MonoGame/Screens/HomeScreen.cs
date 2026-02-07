@@ -26,6 +26,10 @@ public class HomeScreen : ScreenBase
         {
             ScreenManager.SwitchTo(ScreenType.Location);
         }
+        else if (input.IsKeyPressed(Keys.M))
+        {
+            ScreenManager.SwitchTo(ScreenType.WorldMap);
+        }
         else if (input.IsKeyPressed(Keys.Escape))
         {
             ScreenManager.SwitchTo(ScreenType.MainMenu);
@@ -112,7 +116,7 @@ public class HomeScreen : ScreenBase
         // Controls panel (bottom)
         var controlsY = viewport.Height - 80;
         DrawRect(spriteBatch, new Rectangle(0, controlsY, viewport.Width, 80), new Color(30, 30, 50));
-        DrawText(spriteBatch, "[N] Navigation  [L] Locations  [I] Inventory  [ESC] Main Menu",
+        DrawText(spriteBatch, "[N] Navigation  [L] Locations  [I] Inventory  [M] World Map  [ESC] Main Menu",
             new Vector2(padding, controlsY + 25), Color.Gray);
     }
 }
