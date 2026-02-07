@@ -116,5 +116,6 @@ public enum ScreenType
     Battle,
     Shop,
     Inventory,
-    Location
+    Location,
+    WorldMap
 }

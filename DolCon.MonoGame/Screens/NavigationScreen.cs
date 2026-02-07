@@ -135,6 +135,11 @@ public class NavigationScreen : ScreenBase
             ScreenManager.SwitchTo(ScreenType.Location);
             return;
         }
+        if (input.IsKeyPressed(Keys.M))
+        {
+            ScreenManager.SwitchTo(ScreenType.WorldMap);
+            return;
+        }
 
         if (input.IsKeyPressed(Keys.Escape))
         {
@@ -335,7 +340,7 @@ public class NavigationScreen : ScreenBase
         var controlsRect = new Rectangle(0, viewport.Height - 70, viewport.Width, 70);
         DrawRect(spriteBatch, controlsRect, new Color(30, 30, 50));
 
-        var controls = "[1-9] Move to cell  [L] Locations";
+        var controls = "[1-9] Move to cell  [L] Locations  [M] Map";
         if (_canExplore) controls += "  [E] Explore";
         if (_canCamp) controls += "  [C] Camp";
         if (_canEnterBurg) controls += "  [B] Enter Burg";
