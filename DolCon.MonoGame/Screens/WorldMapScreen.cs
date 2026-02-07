@@ -7,6 +7,7 @@ using DolCon.Core.Models.BaseTypes;
 using DolCon.Core.Services;
 using DolCon.Core.Utilities;
 using DolCon.MonoGame.Input;
+using DolCon.MonoGame.Rendering;
 
 namespace DolCon.MonoGame.Screens;
 
@@ -31,10 +32,7 @@ public class WorldMapScreen : ScreenBase
     private readonly Dictionary<int, float> _cellVisibility = new();
     private Burg? _cityOfLight;
     private bool _needsCenter = true;
-    private BasicEffect? _basicEffect;
-    private DynamicVertexBuffer? _vertexBuffer;
-    private VertexPositionColor[] _vertexArray = Array.Empty<VertexPositionColor>();
-    private int _primitiveCount;
+    private PolygonRenderer? _polygonRenderer;
 
     public override void Initialize()
     {
@@ -50,13 +48,7 @@ public class WorldMapScreen : ScreenBase
     {
         base.LoadContent(content, graphicsDevice);
 
-        _basicEffect = new BasicEffect(graphicsDevice)
-        {
-            VertexColorEnabled = true,
-            LightingEnabled = false,
-            TextureEnabled = false,
-            FogEnabled = false
-        };
+        _polygonRenderer = new PolygonRenderer(graphicsDevice);
 
         if (_needsCenter)
         {
@@ -191,7 +183,7 @@ public class WorldMapScreen : ScreenBase
 
     private void DrawCellPolygons(Rectangle mapViewport)
     {
-        if (_basicEffect == null) return;
+        if (_polygonRenderer == null) return;
 
         var map = SaveGameService.CurrentMap;
         var cells = map.Collections.cells;
@@ -205,8 +197,7 @@ public class WorldMapScreen : ScreenBase
         float worldTop = _cameraOffset.Y - CullMargin;
         float worldBottom = _cameraOffset.Y + mapViewport.Height / _zoom + CullMargin;
 
-        // Build triangle list for all visible cells
-        var triangleVerts = new List<VertexPositionColor>();
+        _polygonRenderer.Clear();
 
         foreach (var cell in cells)
         {
@@ -228,76 +219,23 @@ public class WorldMapScreen : ScreenBase
                 (int)(baseColor.G * visibility),
                 (int)(baseColor.B * visibility));
 
-            // Fan triangulation: center -> v[i] -> v[i+1]
+            // Convert vertices to screen space
             var centerScreen = WorldToScreen(cx, cy, mapViewport);
-            var centerVert = new VertexPositionColor(new Vector3(centerScreen, 0), dimmedColor);
+            var screenVerts = new Vector2[cell.v.Count];
 
             for (int i = 0; i < cell.v.Count; i++)
             {
                 int vi = cell.v[i];
-                int viNext = cell.v[(i + 1) % cell.v.Count];
+                if (vi < 0 || vi >= vertices.Count) continue;
 
-                if (vi < 0 || vi >= vertices.Count || viNext < 0 || viNext >= vertices.Count)
-                    continue;
-
-                var v1 = vertices[vi];
-                var v2 = vertices[viNext];
-
-                var s1 = WorldToScreen((float)v1.p[0], (float)v1.p[1], mapViewport);
-                var s2 = WorldToScreen((float)v2.p[0], (float)v2.p[1], mapViewport);
-
-                triangleVerts.Add(centerVert);
-                triangleVerts.Add(new VertexPositionColor(new Vector3(s1, 0), dimmedColor));
-                triangleVerts.Add(new VertexPositionColor(new Vector3(s2, 0), dimmedColor));
+                var v = vertices[vi];
+                screenVerts[i] = WorldToScreen((float)v.p[0], (float)v.p[1], mapViewport);
             }
+
+            _polygonRenderer.AddPolygon(centerScreen, screenVerts, dimmedColor);
         }
 
-        if (triangleVerts.Count < 3) return;
-
-        int vertexCount = triangleVerts.Count;
-        if (_vertexArray.Length < vertexCount)
-        {
-            _vertexArray = new VertexPositionColor[vertexCount];
-        }
-
-        triangleVerts.CopyTo(_vertexArray);
-        _primitiveCount = vertexCount / 3;
-
-        // Create or resize the vertex buffer
-        if (_vertexBuffer == null || _vertexBuffer.VertexCount < vertexCount)
-        {
-            _vertexBuffer?.Dispose();
-            _vertexBuffer = new DynamicVertexBuffer(
-                GraphicsDevice,
-                VertexPositionColor.VertexDeclaration,
-                vertexCount,
-                BufferUsage.WriteOnly);
-        }
-
-        _vertexBuffer.SetData(_vertexArray, 0, vertexCount, SetDataOptions.Discard);
-
-        // Set up BasicEffect for 2D rendering
-        var viewport = GraphicsDevice.Viewport;
-        _basicEffect.Projection = Matrix.CreateOrthographicOffCenter(
-            0, viewport.Width, viewport.Height, 0, 0, 1);
-        _basicEffect.View = Matrix.Identity;
-        _basicEffect.World = Matrix.Identity;
-
-        // Reset all render state for proper cross-platform rendering
-        GraphicsDevice.RasterizerState = RasterizerState.CullNone;
-        GraphicsDevice.DepthStencilState = DepthStencilState.None;
-        GraphicsDevice.BlendState = BlendState.AlphaBlend;
-        GraphicsDevice.Textures[0] = null;
-        GraphicsDevice.SetVertexBuffer(_vertexBuffer);
-
-        foreach (var pass in _basicEffect.CurrentTechnique.Passes)
-        {
-            pass.Apply();
-            GraphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, _primitiveCount);
-        }
-
-        // Clear vertex buffer binding before SpriteBatch resumes
-        GraphicsDevice.SetVertexBuffer(null);
+        _polygonRenderer.Render(mapViewport);
     }
 
     private void DrawPlayerIndicator(SpriteBatch spriteBatch, Rectangle mapViewport)
@@ -397,10 +335,8 @@ public class WorldMapScreen : ScreenBase
 
     public override void Unload()
     {
-        _vertexBuffer?.Dispose();
-        _vertexBuffer = null;
-        _basicEffect?.Dispose();
-        _basicEffect = null;
+        _polygonRenderer?.Dispose();
+        _polygonRenderer = null;
         base.Unload();
     }
 }
