@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using DolCon.Core.Enums;
@@ -7,14 +8,13 @@ using DolCon.Core.Models.BaseTypes;
 using DolCon.Core.Services;
 using DolCon.Core.Utilities;
 using DolCon.MonoGame.Input;
-using Direction = DolCon.Core.Enums.Direction;
-using GridPosition = DolCon.Core.Utilities.DirectionGridMapper.GridPosition;
+using DolCon.MonoGame.Rendering;
 
 namespace DolCon.MonoGame.Screens;
 
 /// <summary>
-/// Navigation screen showing a 3x3 spatial grid of cells for directional movement.
-/// Uses numpad-style key mapping (7=NW, 8=N, 9=NE, 4=W, 6=E, 1=SW, 2=S, 3=SE).
+/// Navigation screen showing the current cell and adjacent cells as Voronoi polygons.
+/// Players press number keys (1-N) to move to adjacent cells, numbered clockwise from north.
 /// </summary>
 public class NavigationScreen : ScreenBase
 {
@@ -23,9 +23,11 @@ public class NavigationScreen : ScreenBase
     private string _message = "";
     private Scene _currentScene = new();
 
-    // Grid data structure - 9 cells for 3x3 grid
-    private GridCellData?[] _gridCells = new GridCellData?[9];
-    private int? _selectedGridIndex;
+    // Polygon data for current cell + neighbors
+    private List<PolygonCellData> _cellPolygons = new();
+    private CellClusterViewport? _viewport;
+    private PolygonRenderer? _polygonRenderer;
+    private int _maxSelectionNumber;
 
     // Special action flags for current cell
     private bool _canExplore;
@@ -33,15 +35,21 @@ public class NavigationScreen : ScreenBase
     private bool _canEnterBurg;
     private string? _burgName;
 
-    private record GridCellData(
+    private const int TitleBarHeight = 50;
+    private const int ControlsBarHeight = 70;
+    private const int ActionPanelWidth = 260;
+
+    private record PolygonCellData(
         int CellId,
         Biome Biome,
         double ExploredPercent,
         string? BurgName,
         string Province,
         bool IsCurrent,
-        int NumpadKey,
-        bool IsBlocked);
+        int? SelectionNumber,
+        bool IsBlocked,
+        Vector2[] WorldVertices,
+        Vector2 WorldCenter);
 
     public NavigationScreen(IMoveService moveService, IEventService eventService)
     {
@@ -49,72 +57,124 @@ public class NavigationScreen : ScreenBase
         _eventService = eventService;
     }
 
+    public override void LoadContent(ContentManager content, GraphicsDevice graphicsDevice)
+    {
+        base.LoadContent(content, graphicsDevice);
+        _polygonRenderer = new PolygonRenderer(graphicsDevice);
+    }
+
     public override void Initialize()
     {
         _message = "";
         _currentScene = new Scene();
-        _selectedGridIndex = null;
-        BuildGrid();
+        BuildPolygonData();
     }
 
-    private void BuildGrid()
+    private void BuildPolygonData()
     {
-        // Clear grid
-        Array.Clear(_gridCells);
-        _selectedGridIndex = null;
+        _cellPolygons.Clear();
+        _maxSelectionNumber = 0;
 
+        var map = SaveGameService.CurrentMap;
         var cell = SaveGameService.CurrentCell;
         var location = SaveGameService.CurrentLocation;
         var burg = SaveGameService.CurrentBurg;
 
         // Check for special actions at current position
-        // Can explore when in wilderness (not in burg or location) - even fully explored cells can trigger encounters
         _canExplore = location == null && burg == null;
         _canCamp = location == null && burg == null;
         var cellBurg = SaveGameService.GetBurg(cell.burg);
         _canEnterBurg = cellBurg != null && burg == null;
         _burgName = cellBurg?.name;
 
-        // Center cell (grid position 5, array index 4)
+        // Collect all vertices for viewport calculation
+        var allVertices = new List<(double X, double Y)>();
+
+        // Add current cell
+        var currentVerts = GetCellVertices(cell, map);
         var centerProvince = SaveGameService.GetProvince(cell.province);
-        _gridCells[4] = new GridCellData(
+        allVertices.AddRange(currentVerts.Select(v => ((double)v.X, (double)v.Y)));
+
+        _cellPolygons.Add(new PolygonCellData(
             cell.i,
             cell.Biome,
             cell.ExploredPercent,
             cellBurg?.name,
             centerProvince.fullName,
             true,
-            5,
-            false);
+            null,
+            false,
+            currentVerts,
+            new Vector2((float)cell.p[0], (float)cell.p[1])));
 
-        // Map neighbors to grid positions
+        // Build neighbor inputs for clockwise sorting
+        var neighborInputs = new List<ClockwiseNeighborSorter.NeighborInput>();
+        var neighborData = new Dictionary<int, (Cell Cell, Vector2[] Verts, Burg? Burg, Province Province)>();
+
         foreach (var neighborId in cell.c)
         {
             if (neighborId < 0) continue;
 
             var neighbor = SaveGameService.GetCell(neighborId);
-            var direction = MapService.GetDirection(
-                cell.p[0], cell.p[1],
-                neighbor.p[0], neighbor.p[1]);
-
-            var gridPos = DirectionGridMapper.MapDirectionToGrid(direction);
-            if (gridPos == null || gridPos == GridPosition.Center) continue;
-
-            var arrayIndex = DirectionGridMapper.GetArrayIndex(gridPos.Value);
-            var neighborBurg = SaveGameService.GetBurg(neighbor.burg);
-            var province = SaveGameService.GetProvince(neighbor.province);
+            var nVerts = GetCellVertices(neighbor, map);
+            var nBurg = SaveGameService.GetBurg(neighbor.burg);
+            var nProvince = SaveGameService.GetProvince(neighbor.province);
             var isBlocked = neighbor.Biome == Biome.Marine;
 
-            _gridCells[arrayIndex] = new GridCellData(
+            neighborData[neighborId] = (neighbor, nVerts, nBurg, nProvince);
+            neighborInputs.Add(new ClockwiseNeighborSorter.NeighborInput(
+                neighborId, neighbor.p[0], neighbor.p[1], isBlocked));
+
+            allVertices.AddRange(nVerts.Select(v => ((double)v.X, (double)v.Y)));
+        }
+
+        // Sort neighbors clockwise from north
+        var sorted = ClockwiseNeighborSorter.SortNeighborsClockwise(
+            cell.p[0], cell.p[1], neighborInputs);
+
+        foreach (var entry in sorted)
+        {
+            var (neighbor, verts, nBurg, province) = neighborData[entry.CellId];
+
+            _cellPolygons.Add(new PolygonCellData(
                 neighbor.i,
                 neighbor.Biome,
                 neighbor.ExploredPercent,
-                neighborBurg?.name,
+                nBurg?.name,
                 province.fullName,
                 false,
-                DirectionGridMapper.GetNumpadKey(gridPos.Value),
-                isBlocked);
+                entry.SelectionNumber,
+                neighbor.Biome == Biome.Marine,
+                verts,
+                new Vector2((float)neighbor.p[0], (float)neighbor.p[1])));
+
+            if (entry.SelectionNumber.HasValue)
+                _maxSelectionNumber = entry.SelectionNumber.Value;
         }
+
+        // Compute viewport transform
+        var screenViewport = GraphicsDevice.Viewport;
+        int polyAreaWidth = screenViewport.Width - ActionPanelWidth - 20;
+        int polyAreaHeight = screenViewport.Height - TitleBarHeight - ControlsBarHeight - 20;
+        _viewport = new CellClusterViewport(allVertices, polyAreaWidth, polyAreaHeight);
+    }
+
+    private Vector2[] GetCellVertices(Cell cell, Map map)
+    {
+        if (cell.v == null || cell.v.Count < 3)
+            return Array.Empty<Vector2>();
+
+        var vertices = new Vector2[cell.v.Count];
+        for (int i = 0; i < cell.v.Count; i++)
+        {
+            int vi = cell.v[i];
+            if (vi >= 0 && vi < map.vertices.Count)
+            {
+                var v = map.vertices[vi];
+                vertices[i] = new Vector2((float)v.p[0], (float)v.p[1]);
+            }
+        }
+        return vertices;
     }
 
     public override void Update(GameTime gameTime, InputManager input)
@@ -149,7 +209,7 @@ public class NavigationScreen : ScreenBase
             {
                 party.Burg = null;
                 _message = "Left burg";
-                BuildGrid();
+                BuildPolygonData();
             }
             else
             {
@@ -175,27 +235,20 @@ public class NavigationScreen : ScreenBase
             return;
         }
 
-        // Number key selection (1-9 using numpad layout)
+        // Number key selection (1-N, mapped to clockwise-sorted neighbors)
         var numKey = input.GetPressedNumericKey();
-        if (numKey.HasValue && numKey.Value >= 1 && numKey.Value <= 9)
+        if (numKey.HasValue && numKey.Value >= 1 && numKey.Value <= _maxSelectionNumber)
         {
-            var gridPos = DirectionGridMapper.GetGridPosition(numKey.Value);
-            if (gridPos.HasValue)
+            var target = _cellPolygons.FirstOrDefault(c => c.SelectionNumber == numKey.Value);
+            if (target != null)
             {
-                var arrayIndex = DirectionGridMapper.GetArrayIndex(gridPos.Value);
-                var cellData = _gridCells[arrayIndex];
-
-                if (cellData != null && !cellData.IsCurrent)
+                if (target.IsBlocked)
                 {
-                    if (cellData.IsBlocked)
-                    {
-                        _message = "Cannot travel to water!";
-                    }
-                    else
-                    {
-                        _selectedGridIndex = arrayIndex;
-                        ProcessMovement(cellData.CellId);
-                    }
+                    _message = "Cannot travel to water!";
+                }
+                else
+                {
+                    ProcessMovement(target.CellId);
                 }
             }
         }
@@ -218,7 +271,7 @@ public class NavigationScreen : ScreenBase
                 _message = "Cannot move there!";
                 break;
         }
-        BuildGrid();
+        BuildPolygonData();
     }
 
     private void ProcessExploration()
@@ -239,7 +292,7 @@ public class NavigationScreen : ScreenBase
         else
         {
             _message = _currentScene.Message ?? "Exploration complete";
-            BuildGrid();
+            BuildPolygonData();
         }
     }
 
@@ -270,7 +323,7 @@ public class NavigationScreen : ScreenBase
             party.Burg = cellBurg.i;
             _message = $"Entered {cellBurg.name}";
             SaveHelper.TriggerSave();
-            BuildGrid();
+            BuildPolygonData();
         }
     }
 
@@ -302,10 +355,9 @@ public class NavigationScreen : ScreenBase
     public override void Draw(SpriteBatch spriteBatch)
     {
         var viewport = GraphicsDevice.Viewport;
-        var padding = 20;
 
         // Title bar
-        DrawRect(spriteBatch, new Rectangle(0, 0, viewport.Width, 50), new Color(30, 30, 50));
+        DrawRect(spriteBatch, new Rectangle(0, 0, viewport.Width, TitleBarHeight), new Color(30, 30, 50));
         DrawCenteredText(spriteBatch, "DOMINION OF LIGHT - Navigation", 15, Color.Gold);
 
         // Stamina display (top right)
@@ -316,31 +368,39 @@ public class NavigationScreen : ScreenBase
         // Message display
         if (!string.IsNullOrEmpty(_message))
         {
-            DrawText(spriteBatch, _message, new Vector2(padding, 60), Color.Yellow);
+            DrawText(spriteBatch, _message, new Vector2(20, 60), Color.Yellow);
         }
 
-        // Current status info
-        var cell = SaveGameService.CurrentCell;
+        // Current burg status
         var burg = SaveGameService.CurrentBurg;
-        var y = 95;
-
         if (burg != null)
         {
-            DrawText(spriteBatch, $"In Burg: {burg.name} ({burg.size})", new Vector2(padding, y), Color.Cyan);
-            y += 25;
+            DrawText(spriteBatch, $"In Burg: {burg.name} ({burg.size})", new Vector2(20, 85), Color.Cyan);
         }
 
-        // Draw the 3x3 grid
-        DrawNavigationGrid(spriteBatch);
+        // Polygon area background
+        int polyAreaX = 0;
+        int polyAreaY = TitleBarHeight;
+        int polyAreaWidth = viewport.Width - ActionPanelWidth - 20;
+        int polyAreaHeight = viewport.Height - TitleBarHeight - ControlsBarHeight;
+        DrawRect(spriteBatch, new Rectangle(polyAreaX, polyAreaY, polyAreaWidth, polyAreaHeight), new Color(10, 10, 20));
+
+        // Draw polygons
+        spriteBatch.End();
+        DrawCellPolygons(polyAreaX, polyAreaY, polyAreaWidth, polyAreaHeight);
+        spriteBatch.Begin();
+
+        // Draw text overlays on polygons
+        DrawCellTextOverlays(spriteBatch, polyAreaX, polyAreaY);
 
         // Draw action panel (right side)
         DrawActionPanel(spriteBatch);
 
         // Controls panel (bottom)
-        var controlsRect = new Rectangle(0, viewport.Height - 70, viewport.Width, 70);
+        var controlsRect = new Rectangle(0, viewport.Height - ControlsBarHeight, viewport.Width, ControlsBarHeight);
         DrawRect(spriteBatch, controlsRect, new Color(30, 30, 50));
 
-        var controls = "[1-9] Move to cell  [L] Locations  [M] Map";
+        var controls = $"[1-{_maxSelectionNumber}] Move to cell  [L] Locations  [M] Map";
         if (_canExplore) controls += "  [E] Explore";
         if (_canCamp) controls += "  [C] Camp";
         if (_canEnterBurg) controls += "  [B] Enter Burg";
@@ -348,123 +408,131 @@ public class NavigationScreen : ScreenBase
         DrawCenteredText(spriteBatch, controls, viewport.Height - 45, Color.LightGray);
     }
 
-    private void DrawNavigationGrid(SpriteBatch spriteBatch)
+    private void DrawCellPolygons(int areaX, int areaY, int areaWidth, int areaHeight)
     {
-        var viewport = GraphicsDevice.Viewport;
+        if (_polygonRenderer == null || _viewport == null) return;
 
-        // Grid dimensions
-        int cellWidth = 200;
-        int cellHeight = 140;
-        int gridWidth = cellWidth * 3 + 20; // 3 cells + gaps
-        int gridHeight = cellHeight * 3 + 20;
-        int gridStartX = (viewport.Width - gridWidth) / 2 - 100; // Shifted left to make room for action panel
-        int gridStartY = 130;
+        _polygonRenderer.Clear();
 
-        // Draw each grid cell
-        for (int row = 0; row < 3; row++)
+        foreach (var cellData in _cellPolygons)
         {
-            for (int col = 0; col < 3; col++)
+            if (cellData.WorldVertices.Length < 3) continue;
+
+            var biomeColor = GetBiomeColor(cellData.Biome);
+
+            // Dim marine/blocked cells
+            if (cellData.IsBlocked)
             {
-                int arrayIndex = row * 3 + col;
-                var cellData = _gridCells[arrayIndex];
+                biomeColor = new Color(biomeColor.R / 2, biomeColor.G / 2, biomeColor.B / 2, 150);
+            }
 
-                int x = gridStartX + col * (cellWidth + 10);
-                int y = gridStartY + row * (cellHeight + 10);
-                var rect = new Rectangle(x, y, cellWidth, cellHeight);
+            // Convert to screen space
+            var screenVerts = new Vector2[cellData.WorldVertices.Length];
+            for (int i = 0; i < cellData.WorldVertices.Length; i++)
+            {
+                var (sx, sy) = _viewport.WorldToScreen(
+                    cellData.WorldVertices[i].X, cellData.WorldVertices[i].Y);
+                screenVerts[i] = new Vector2(sx + areaX, sy + areaY);
+            }
 
-                DrawGridCell(spriteBatch, rect, cellData, arrayIndex);
+            var (cx, cy) = _viewport.WorldToScreen(
+                cellData.WorldCenter.X, cellData.WorldCenter.Y);
+            var screenCenter = new Vector2(cx + areaX, cy + areaY);
+
+            _polygonRenderer.AddPolygon(screenCenter, screenVerts, biomeColor);
+
+            // Add outline
+            if (cellData.IsCurrent)
+            {
+                _polygonRenderer.AddOutline(screenVerts, Color.Gold, 3f);
+            }
+            else if (!cellData.IsBlocked)
+            {
+                _polygonRenderer.AddOutline(screenVerts, new Color(60, 60, 80), 1.5f);
             }
         }
 
-        // Draw numpad key legend
-        var legendY = gridStartY + gridHeight + 10;
-        DrawText(spriteBatch, "Numpad Keys:", new Vector2(gridStartX, legendY), Color.Gray);
-        legendY += 20;
-        DrawText(spriteBatch, "7=NW  8=N   9=NE", new Vector2(gridStartX, legendY), Color.DarkGray);
-        legendY += 18;
-        DrawText(spriteBatch, "4=W   5=C   6=E", new Vector2(gridStartX, legendY), Color.DarkGray);
-        legendY += 18;
-        DrawText(spriteBatch, "1=SW  2=S   3=SE", new Vector2(gridStartX, legendY), Color.DarkGray);
+        var renderViewport = new Rectangle(areaX, areaY, areaWidth, areaHeight);
+        _polygonRenderer.Render(renderViewport);
     }
 
-    private void DrawGridCell(SpriteBatch spriteBatch, Rectangle rect, GridCellData? cellData, int arrayIndex)
+    private void DrawCellTextOverlays(SpriteBatch spriteBatch, int areaX, int areaY)
     {
-        if (cellData == null)
+        if (_viewport == null) return;
+
+        var shadowColor = new Color(0, 0, 0, 180);
+
+        foreach (var cellData in _cellPolygons)
         {
-            // Empty cell - draw dark background
-            DrawRect(spriteBatch, rect, new Color(20, 20, 30));
-            DrawBorder(spriteBatch, rect, new Color(40, 40, 50), 2);
-            return;
-        }
+            if (cellData.WorldVertices.Length < 3) continue;
 
-        // Get biome color
-        var biomeColor = GetBiomeColor(cellData.Biome);
+            var (cx, cy) = _viewport.WorldToScreen(
+                cellData.WorldCenter.X, cellData.WorldCenter.Y);
+            float screenX = cx + areaX;
+            float screenY = cy + areaY;
 
-        // Adjust color for blocked (water) cells
-        if (cellData.IsBlocked)
-        {
-            biomeColor = new Color(biomeColor.R / 2, biomeColor.G / 2, biomeColor.B / 2);
-        }
+            var biomeColor = GetBiomeColor(cellData.Biome);
+            var textColor = GetContrastingTextColor(biomeColor);
 
-        // Draw cell background
-        DrawRect(spriteBatch, rect, biomeColor);
+            if (cellData.IsCurrent)
+            {
+                // Current cell: "YOU" label + info
+                DrawTextWithShadow(spriteBatch, "YOU",
+                    new Vector2(screenX - 15, screenY - 40), Color.Gold, shadowColor);
+                DrawTextWithShadow(spriteBatch, FormatBiomeName(cellData.Biome),
+                    new Vector2(screenX - 30, screenY - 18), textColor, shadowColor);
 
-        // Draw border (highlight for current cell)
-        var borderColor = cellData.IsCurrent ? Color.Gold : new Color(60, 60, 80);
-        var borderThickness = cellData.IsCurrent ? 3 : 2;
-        DrawBorder(spriteBatch, rect, borderColor, borderThickness);
+                var exploredText = cellData.ExploredPercent >= 1 ? "Explored" : $"{cellData.ExploredPercent:P0}";
+                DrawTextWithShadow(spriteBatch, exploredText,
+                    new Vector2(screenX - 25, screenY + 4), textColor, shadowColor);
 
-        // Text color based on background brightness
-        var textColor = GetContrastingTextColor(biomeColor);
-        var shadowColor = new Color(0, 0, 0, 150);
+                if (!string.IsNullOrEmpty(cellData.BurgName))
+                {
+                    DrawTextWithShadow(spriteBatch, $"* {cellData.BurgName}",
+                        new Vector2(screenX - 30, screenY + 26), Color.White, shadowColor);
+                }
+            }
+            else if (cellData.IsBlocked)
+            {
+                // Marine cell: just "Ocean" label
+                DrawTextWithShadow(spriteBatch, "Ocean",
+                    new Vector2(screenX - 20, screenY - 8), new Color(150, 150, 180), shadowColor);
+            }
+            else
+            {
+                // Adjacent selectable cell
+                if (cellData.SelectionNumber.HasValue)
+                {
+                    DrawTextWithShadow(spriteBatch, $"[{cellData.SelectionNumber}]",
+                        new Vector2(screenX - 10, screenY - 35), Color.Yellow, shadowColor);
+                }
 
-        // Draw numpad key indicator (top-left corner)
-        var keyText = cellData.NumpadKey.ToString();
-        DrawTextWithShadow(spriteBatch, $"[{keyText}]", new Vector2(rect.X + 5, rect.Y + 3), Color.Yellow, shadowColor);
+                DrawTextWithShadow(spriteBatch, FormatBiomeName(cellData.Biome),
+                    new Vector2(screenX - 30, screenY - 13), textColor, shadowColor);
 
-        // Draw biome name
-        var biomeName = FormatBiomeName(cellData.Biome);
-        DrawTextWithShadow(spriteBatch, biomeName, new Vector2(rect.X + 8, rect.Y + 25), textColor, shadowColor);
+                var exploredText = cellData.ExploredPercent >= 1 ? "Explored" : $"{cellData.ExploredPercent:P0}";
+                DrawTextWithShadow(spriteBatch, exploredText,
+                    new Vector2(screenX - 25, screenY + 9), textColor, shadowColor);
 
-        // Draw exploration percentage
-        var exploredText = cellData.ExploredPercent >= 1 ? "Explored" : $"{cellData.ExploredPercent:P0}";
-        DrawTextWithShadow(spriteBatch, exploredText, new Vector2(rect.X + 8, rect.Y + 48), textColor, shadowColor);
-
-        // Draw province (truncated)
-        var provinceText = TruncateText(cellData.Province, 20);
-        DrawTextWithShadow(spriteBatch, provinceText, new Vector2(rect.X + 8, rect.Y + 71), new Color(textColor, 180), shadowColor);
-
-        // Draw burg indicator if present
-        if (!string.IsNullOrEmpty(cellData.BurgName))
-        {
-            var burgText = $"* {TruncateText(cellData.BurgName, 18)}";
-            DrawTextWithShadow(spriteBatch, burgText, new Vector2(rect.X + 8, rect.Y + 94), Color.White, shadowColor);
-        }
-
-        // Draw "CURRENT" label for center cell
-        if (cellData.IsCurrent)
-        {
-            DrawTextWithShadow(spriteBatch, "CURRENT", new Vector2(rect.X + rect.Width - 70, rect.Y + rect.Height - 20), Color.Gold, shadowColor);
-        }
-
-        // Draw blocked indicator for water
-        if (cellData.IsBlocked)
-        {
-            DrawTextWithShadow(spriteBatch, "BLOCKED", new Vector2(rect.X + rect.Width / 2 - 30, rect.Y + rect.Height - 20), Color.Red, shadowColor);
+                if (!string.IsNullOrEmpty(cellData.BurgName))
+                {
+                    DrawTextWithShadow(spriteBatch, $"* {cellData.BurgName}",
+                        new Vector2(screenX - 30, screenY + 31), Color.White, shadowColor);
+                }
+            }
         }
     }
 
     private void DrawActionPanel(SpriteBatch spriteBatch)
     {
         var viewport = GraphicsDevice.Viewport;
-        int panelX = viewport.Width - 280;
-        int panelY = 130;
-        int panelWidth = 260;
-        int panelHeight = 350;
+        int panelX = viewport.Width - ActionPanelWidth - 10;
+        int panelY = TitleBarHeight + 10;
+        int panelHeight = viewport.Height - TitleBarHeight - ControlsBarHeight - 20;
 
         // Panel background
-        DrawRect(spriteBatch, new Rectangle(panelX, panelY, panelWidth, panelHeight), new Color(25, 25, 40));
-        DrawBorder(spriteBatch, new Rectangle(panelX, panelY, panelWidth, panelHeight), new Color(60, 60, 80), 2);
+        DrawRect(spriteBatch, new Rectangle(panelX, panelY, ActionPanelWidth, panelHeight), new Color(25, 25, 40));
+        DrawBorder(spriteBatch, new Rectangle(panelX, panelY, ActionPanelWidth, panelHeight), new Color(60, 60, 80), 2);
 
         var y = panelY + 15;
         DrawText(spriteBatch, "Actions", new Vector2(panelX + 15, y), Color.White);
@@ -480,7 +548,7 @@ public class NavigationScreen : ScreenBase
         y += 30;
 
         // Draw separator
-        DrawRect(spriteBatch, new Rectangle(panelX + 10, y, panelWidth - 20, 1), Color.Gray);
+        DrawRect(spriteBatch, new Rectangle(panelX + 10, y, ActionPanelWidth - 20, 1), Color.Gray);
         y += 15;
 
         // Available actions
@@ -488,7 +556,6 @@ public class NavigationScreen : ScreenBase
 
         if (burg != null)
         {
-            // In a burg - show that exploration is via locations
             DrawText(spriteBatch, $"In Burg: {burg.name}", new Vector2(panelX + 15, y), Color.Cyan);
             y += 22;
             DrawText(spriteBatch, "[L] Explore Locations", new Vector2(panelX + 15, y), Color.Orange);
@@ -498,7 +565,6 @@ public class NavigationScreen : ScreenBase
         }
         else
         {
-            // In wilderness
             if (_canExplore)
             {
                 var exploredText = cell.ExploredPercent < 1 ? $" ({cell.ExploredPercent:P0})" : " (hunt)";
@@ -523,22 +589,20 @@ public class NavigationScreen : ScreenBase
         y += 30;
 
         // Draw separator
-        DrawRect(spriteBatch, new Rectangle(panelX + 10, y, panelWidth - 20, 1), Color.Gray);
+        DrawRect(spriteBatch, new Rectangle(panelX + 10, y, ActionPanelWidth - 20, 1), Color.Gray);
         y += 15;
 
         // Navigation hints
         DrawText(spriteBatch, "Navigation:", new Vector2(panelX + 15, y), Color.White);
         y += 22;
-        DrawText(spriteBatch, "Press 1-9 to move", new Vector2(panelX + 15, y), Color.Gray);
+        DrawText(spriteBatch, $"Press 1-{_maxSelectionNumber} to move", new Vector2(panelX + 15, y), Color.Gray);
         y += 20;
-        DrawText(spriteBatch, "(numpad layout)", new Vector2(panelX + 15, y), Color.DarkGray);
+        DrawText(spriteBatch, "(clockwise from north)", new Vector2(panelX + 15, y), Color.DarkGray);
     }
 
     private void DrawTextWithShadow(SpriteBatch spriteBatch, string text, Vector2 position, Color color, Color shadowColor)
     {
-        // Draw shadow
         DrawText(spriteBatch, text, position + new Vector2(1, 1), shadowColor);
-        // Draw text
         DrawText(spriteBatch, text, position, color);
     }
 
@@ -551,14 +615,12 @@ public class NavigationScreen : ScreenBase
 
     private Color GetContrastingTextColor(Color backgroundColor)
     {
-        // Calculate perceived brightness
         var brightness = (backgroundColor.R * 299 + backgroundColor.G * 587 + backgroundColor.B * 114) / 1000;
         return brightness > 128 ? Color.Black : Color.White;
     }
 
     private static string FormatBiomeName(Biome biome)
     {
-        // Insert spaces before capital letters for readability
         var name = biome.ToString();
         var result = "";
         foreach (var c in name)
@@ -577,5 +639,12 @@ public class NavigationScreen : ScreenBase
         if (string.IsNullOrEmpty(text) || text.Length <= maxLength)
             return text ?? "";
         return text.Substring(0, maxLength - 2) + "..";
+    }
+
+    public override void Unload()
+    {
+        _polygonRenderer?.Dispose();
+        _polygonRenderer = null;
+        base.Unload();
     }
 }
