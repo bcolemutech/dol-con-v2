@@ -11,9 +11,9 @@ public class Map
 
     [JsonPropertyName("cells")]
     public MapCollections Collections { get; set; } = null!;
-    public List<MapVertex> vertices { get; set; } = null!;
+    public List<MapVertex> vertices { get; set; } = new();
     public Biomes biomes { get; set; } = null!;
-    public List<NameBasis> nameBases { get; set; } = null!;
+    public List<NameBasis> nameBases { get; set; } = new();
     public Party Party { get; set; } = null!;
     public Guid CurrentPlayerId { get; set; }
 }

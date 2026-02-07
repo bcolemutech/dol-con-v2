@@ -28,7 +28,7 @@ public class WorldMapScreen : ScreenBase
     private const int TitleBarHeight = 50;
     private const int ControlsBarHeight = 70;
 
-    private Dictionary<int, float> _cellVisibility = new();
+    private readonly Dictionary<int, float> _cellVisibility = new();
     private Burg? _cityOfLight;
     private bool _needsCenter = true;
     private BasicEffect? _basicEffect;
@@ -97,8 +97,8 @@ public class WorldMapScreen : ScreenBase
             {
                 if (neighborId < 0 || neighborId >= cells.Count) continue;
 
-                // Adjacent to visible cell -> at least 0.30
-                float neighborMin = sourceVisibility >= 1.0f ? 0.50f : 0.30f;
+                // Adjacent to fully explored -> 0.50, partially explored -> 0.10
+                float neighborMin = sourceVisibility >= 1.0f ? 0.50f : 0.10f;
 
                 float existing = _cellVisibility.GetValueOrDefault(neighborId, 0f);
                 _cellVisibility[neighborId] = Math.Max(existing, neighborMin);
@@ -254,21 +254,27 @@ public class WorldMapScreen : ScreenBase
 
         if (triangleVerts.Count < 3) return;
 
-        _vertexArray = triangleVerts.ToArray();
-        _primitiveCount = _vertexArray.Length / 3;
+        int vertexCount = triangleVerts.Count;
+        if (_vertexArray.Length < vertexCount)
+        {
+            _vertexArray = new VertexPositionColor[vertexCount];
+        }
+
+        triangleVerts.CopyTo(_vertexArray);
+        _primitiveCount = vertexCount / 3;
 
         // Create or resize the vertex buffer
-        if (_vertexBuffer == null || _vertexBuffer.VertexCount < _vertexArray.Length)
+        if (_vertexBuffer == null || _vertexBuffer.VertexCount < vertexCount)
         {
             _vertexBuffer?.Dispose();
             _vertexBuffer = new DynamicVertexBuffer(
                 GraphicsDevice,
                 VertexPositionColor.VertexDeclaration,
-                _vertexArray.Length,
+                vertexCount,
                 BufferUsage.WriteOnly);
         }
 
-        _vertexBuffer.SetData(_vertexArray, 0, _vertexArray.Length, SetDataOptions.Discard);
+        _vertexBuffer.SetData(_vertexArray, 0, vertexCount, SetDataOptions.Discard);
 
         // Set up BasicEffect for 2D rendering
         var viewport = GraphicsDevice.Viewport;
@@ -393,6 +399,8 @@ public class WorldMapScreen : ScreenBase
     {
         _vertexBuffer?.Dispose();
         _vertexBuffer = null;
+        _basicEffect?.Dispose();
+        _basicEffect = null;
         base.Unload();
     }
 }
