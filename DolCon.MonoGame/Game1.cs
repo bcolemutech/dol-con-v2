@@ -53,6 +53,7 @@ public class Game1 : Game
     private readonly IMoveService _moveService;
     private readonly IMapService _mapService;
     private readonly IPlayerService _playerService;
+    private readonly ISkillService _skillService = new SkillService();
 
     public const int ScreenWidth = 1280;
     public const int ScreenHeight = 720;
@@ -98,7 +99,7 @@ public class Game1 : Game
         _screenManager.RegisterScreen(ScreenType.MainMenu, new MainMenuScreen(_mapService, _saveGameService));
         _screenManager.RegisterScreen(ScreenType.Home, new HomeScreen());
         _screenManager.RegisterScreen(ScreenType.Navigation, new NavigationScreen(_moveService, _eventService));
-        _screenManager.RegisterScreen(ScreenType.Battle, new BattleScreen(_combatService));
+        _screenManager.RegisterScreen(ScreenType.Battle, new BattleScreen(_combatService, _skillService));
         _screenManager.RegisterScreen(ScreenType.Shop, new ShopScreen(_shopService));
         _screenManager.RegisterScreen(ScreenType.Inventory, new InventoryScreen());
         _screenManager.RegisterScreen(ScreenType.Location, new LocationScreen(_moveService, _eventService));

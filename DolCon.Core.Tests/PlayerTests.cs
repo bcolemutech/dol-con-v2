@@ -1,5 +1,6 @@
 ﻿namespace DolCon.Core.Tests;
 
+using System.Text.Json;
 using FluentAssertions;
 using Models;
 
@@ -32,5 +33,45 @@ public class PlayerTests
         player.silver.Should().Be(silver);
         player.gold.Should().Be(gold);
     }
-    
+
+    [Fact]
+    public void NewPlayer_HasNonNullSkillsWithZeroValues()
+    {
+        var player = new Player();
+
+        player.Skills.Should().NotBeNull();
+        player.Skills.Unarmed.Should().Be(0.0);
+        player.Skills.OneHanded.Should().Be(0.0);
+        player.Skills.TwoHanded.Should().Be(0.0);
+        player.Skills.Armor.Should().Be(0.0);
+        player.Skills.Shield.Should().Be(0.0);
+        player.Skills.LightAptitude.Should().Be(0.0);
+    }
+
+    [Fact]
+    public void Player_SkillsSerializeAndDeserialize_WithSystemTextJson()
+    {
+        var player = new Player { Name = "Test" };
+        player.Skills.OneHanded = 5.5;
+        player.Skills.LightAptitude = 12.3;
+
+        var json = JsonSerializer.Serialize(player);
+        var deserialized = JsonSerializer.Deserialize<Player>(json);
+
+        deserialized!.Skills.OneHanded.Should().Be(5.5);
+        deserialized.Skills.LightAptitude.Should().Be(12.3);
+        deserialized.Skills.Unarmed.Should().Be(0.0);
+    }
+
+    [Fact]
+    public void Player_DeserializeWithoutSkills_DefaultsToZero()
+    {
+        var json = """{"Id":"00000000-0000-0000-0000-000000000001","Name":"Old","coin":0,"Inventory":[]}""";
+
+        var player = JsonSerializer.Deserialize<Player>(json);
+
+        player!.Skills.Should().NotBeNull();
+        player.Skills.Unarmed.Should().Be(0.0);
+        player.Skills.LightAptitude.Should().Be(0.0);
+    }
 }

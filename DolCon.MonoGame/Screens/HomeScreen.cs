@@ -84,7 +84,7 @@ public class HomeScreen : ScreenBase
         }
 
         // Party status panel (left side)
-        var partyPanel = new Rectangle(padding, 60, 300, 300);
+        var partyPanel = new Rectangle(padding, 60, 300, 450);
         DrawBorder(spriteBatch, partyPanel, Color.DarkGray, 2);
         DrawText(spriteBatch, "Party Status", new Vector2(partyPanel.X + 10, partyPanel.Y + 10), Color.White);
 
@@ -111,6 +111,28 @@ public class HomeScreen : ScreenBase
             y += 25;
             DrawText(spriteBatch, $"Inventory: {player.Inventory.Count}/50 items",
                 new Vector2(partyPanel.X + 10, y), Color.LightGray);
+            y += 35;
+
+            // Skills display
+            DrawText(spriteBatch, "Skills", new Vector2(partyPanel.X + 10, y), Color.White);
+            y += 25;
+            DrawText(spriteBatch, $"  Unarmed:    {player.Skills.Unarmed:F1}",
+                new Vector2(partyPanel.X + 10, y), Color.LightGray);
+            y += 20;
+            DrawText(spriteBatch, $"  One-Handed: {player.Skills.OneHanded:F1}",
+                new Vector2(partyPanel.X + 10, y), Color.LightGray);
+            y += 20;
+            DrawText(spriteBatch, $"  Two-Handed: {player.Skills.TwoHanded:F1}",
+                new Vector2(partyPanel.X + 10, y), Color.LightGray);
+            y += 20;
+            DrawText(spriteBatch, $"  Armor:      {player.Skills.Armor:F1}",
+                new Vector2(partyPanel.X + 10, y), Color.LightGray);
+            y += 20;
+            DrawText(spriteBatch, $"  Shield:     {player.Skills.Shield:F1}",
+                new Vector2(partyPanel.X + 10, y), Color.LightGray);
+            y += 20;
+            DrawText(spriteBatch, $"  Light Apt.: {player.Skills.LightAptitude:F1}",
+                new Vector2(partyPanel.X + 10, y), Color.LightYellow);
         }
 
         // Controls panel (bottom)
