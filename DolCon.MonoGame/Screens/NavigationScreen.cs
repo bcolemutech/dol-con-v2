@@ -57,16 +57,16 @@ public class NavigationScreen : ScreenBase
         _eventService = eventService;
     }
 
-    public override void LoadContent(ContentManager content, GraphicsDevice graphicsDevice)
-    {
-        base.LoadContent(content, graphicsDevice);
-        _polygonRenderer = new PolygonRenderer(graphicsDevice);
-    }
-
     public override void Initialize()
     {
         _message = "";
         _currentScene = new Scene();
+    }
+
+    public override void LoadContent(ContentManager content, GraphicsDevice graphicsDevice)
+    {
+        base.LoadContent(content, graphicsDevice);
+        _polygonRenderer ??= new PolygonRenderer(graphicsDevice);
         BuildPolygonData();
     }
 
