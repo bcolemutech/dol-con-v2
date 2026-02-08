@@ -10,6 +10,10 @@ public class Party
     
     public bool TryMove(double cost)
     {
+#if DEBUG
+        // Infinite stamina in debug builds for easier testing
+        return true;
+#else
         if (Stamina < cost)
         {
             return false;
@@ -17,5 +21,6 @@ public class Party
 
         Stamina -= cost;
         return true;
+#endif
     }
 }
