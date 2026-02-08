@@ -262,9 +262,11 @@ public class BattleScreen : ScreenBase
         {
             // Give coin rewards based on XP
             var coinReward = _combatState.TotalXPEarned / 2;
+            var skillService = new SkillService();
             foreach (var player in party.Players)
             {
                 player.coin += coinReward;
+                skillService.ApplySkillGains(player, _combatState);
             }
 
             // Only commit exploration progress on victory
