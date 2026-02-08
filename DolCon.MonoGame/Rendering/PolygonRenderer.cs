@@ -101,9 +101,9 @@ public class PolygonRenderer : IDisposable
     /// <summary>
     /// Renders all queued polygons to the screen.
     /// Call between SpriteBatch.End() and SpriteBatch.Begin().
+    /// Vertices should already be in screen coordinates.
     /// </summary>
-    /// <param name="viewport">The screen viewport rectangle for orthographic projection.</param>
-    public void Render(Rectangle viewport)
+    public void Render()
     {
         if (_triangleVerts.Count < 3) return;
 
@@ -131,7 +131,8 @@ public class PolygonRenderer : IDisposable
 
         _vertexBuffer.SetData(_vertexArray, 0, vertexCount, SetDataOptions.Discard);
 
-        // Set up orthographic projection
+        // Set up orthographic projection over the full device viewport
+        // (vertices are already in screen coordinates)
         _basicEffect.Projection = Matrix.CreateOrthographicOffCenter(
             0, _graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height, 0, 0, 1);
         _basicEffect.View = Matrix.Identity;

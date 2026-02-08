@@ -164,17 +164,17 @@ public class NavigationScreen : ScreenBase
         if (cell.v == null || cell.v.Count < 3)
             return Array.Empty<Vector2>();
 
-        var vertices = new Vector2[cell.v.Count];
+        var vertices = new List<Vector2>(cell.v.Count);
         for (int i = 0; i < cell.v.Count; i++)
         {
             int vi = cell.v[i];
             if (vi >= 0 && vi < map.vertices.Count)
             {
                 var v = map.vertices[vi];
-                vertices[i] = new Vector2((float)v.p[0], (float)v.p[1]);
+                vertices.Add(new Vector2((float)v.p[0], (float)v.p[1]));
             }
         }
-        return vertices;
+        return vertices.ToArray();
     }
 
     public override void Update(GameTime gameTime, InputManager input)
@@ -382,7 +382,7 @@ public class NavigationScreen : ScreenBase
         int polyAreaX = 0;
         int polyAreaY = TitleBarHeight;
         int polyAreaWidth = viewport.Width - ActionPanelWidth - 20;
-        int polyAreaHeight = viewport.Height - TitleBarHeight - ControlsBarHeight;
+        int polyAreaHeight = viewport.Height - TitleBarHeight - ControlsBarHeight - 20;
         DrawRect(spriteBatch, new Rectangle(polyAreaX, polyAreaY, polyAreaWidth, polyAreaHeight), new Color(10, 10, 20));
 
         // Draw polygons
@@ -400,7 +400,9 @@ public class NavigationScreen : ScreenBase
         var controlsRect = new Rectangle(0, viewport.Height - ControlsBarHeight, viewport.Width, ControlsBarHeight);
         DrawRect(spriteBatch, controlsRect, new Color(30, 30, 50));
 
-        var controls = $"[1-{_maxSelectionNumber}] Move to cell  [L] Locations  [M] Map";
+        var controls = _maxSelectionNumber > 0
+            ? $"[1-{_maxSelectionNumber}] Move to cell  [L] Locations  [M] Map"
+            : "[L] Locations  [M] Map";
         if (_canExplore) controls += "  [E] Explore";
         if (_canCamp) controls += "  [C] Camp";
         if (_canEnterBurg) controls += "  [B] Enter Burg";
@@ -452,8 +454,7 @@ public class NavigationScreen : ScreenBase
             }
         }
 
-        var renderViewport = new Rectangle(areaX, areaY, areaWidth, areaHeight);
-        _polygonRenderer.Render(renderViewport);
+        _polygonRenderer.Render();
     }
 
     private void DrawCellTextOverlays(SpriteBatch spriteBatch, int areaX, int areaY)
@@ -630,9 +631,16 @@ public class NavigationScreen : ScreenBase
         // Navigation hints
         DrawText(spriteBatch, "Navigation:", new Vector2(panelX + 15, y), Color.White);
         y += 22;
-        DrawText(spriteBatch, $"Press 1-{_maxSelectionNumber} to move", new Vector2(panelX + 15, y), Color.Gray);
-        y += 20;
-        DrawText(spriteBatch, "(clockwise from north)", new Vector2(panelX + 15, y), Color.DarkGray);
+        if (_maxSelectionNumber > 0)
+        {
+            DrawText(spriteBatch, $"Press 1-{_maxSelectionNumber} to move", new Vector2(panelX + 15, y), Color.Gray);
+            y += 20;
+            DrawText(spriteBatch, "(clockwise from north)", new Vector2(panelX + 15, y), Color.DarkGray);
+        }
+        else
+        {
+            DrawText(spriteBatch, "No traversable neighbors", new Vector2(panelX + 15, y), Color.Gray);
+        }
     }
 
     private void DrawTextWithShadow(SpriteBatch spriteBatch, string text, Vector2 position, Color color, Color shadowColor)

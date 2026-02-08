@@ -219,9 +219,9 @@ public class WorldMapScreen : ScreenBase
                 (int)(baseColor.G * visibility),
                 (int)(baseColor.B * visibility));
 
-            // Convert vertices to screen space
+            // Convert vertices to screen space, skipping invalid indices
             var centerScreen = WorldToScreen(cx, cy, mapViewport);
-            var screenVerts = new Vector2[cell.v.Count];
+            var screenVertList = new List<Vector2>(cell.v.Count);
 
             for (int i = 0; i < cell.v.Count; i++)
             {
@@ -229,13 +229,14 @@ public class WorldMapScreen : ScreenBase
                 if (vi < 0 || vi >= vertices.Count) continue;
 
                 var v = vertices[vi];
-                screenVerts[i] = WorldToScreen((float)v.p[0], (float)v.p[1], mapViewport);
+                screenVertList.Add(WorldToScreen((float)v.p[0], (float)v.p[1], mapViewport));
             }
 
-            _polygonRenderer.AddPolygon(centerScreen, screenVerts, dimmedColor);
+            if (screenVertList.Count < 3) continue;
+            _polygonRenderer.AddPolygon(centerScreen, screenVertList.ToArray(), dimmedColor);
         }
 
-        _polygonRenderer.Render(mapViewport);
+        _polygonRenderer.Render();
     }
 
     private void DrawPlayerIndicator(SpriteBatch spriteBatch, Rectangle mapViewport)
