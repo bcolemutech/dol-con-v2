@@ -506,9 +506,21 @@ public class NavigationScreen : ScreenBase
             }
 
             // Only show lines that fit within polygon radius
+            float maxWidth = polyRadius * 1.6f;
             int maxLines = Math.Max(1, (int)(polyRadius * 2 / lineHeight));
             if (lines.Count > maxLines)
                 lines = lines.Take(maxLines).ToList();
+
+            // Truncate lines that are too wide for the polygon
+            for (int i = 0; i < lines.Count; i++)
+            {
+                var (text, color) = lines[i];
+                var measured = Font.MeasureString(text);
+                if (measured.X > maxWidth)
+                {
+                    lines[i] = (FitTextToWidth(text, maxWidth), color);
+                }
+            }
 
             // Center the block of text vertically on the cell center
             float totalHeight = lines.Count * lineHeight;
@@ -655,6 +667,24 @@ public class NavigationScreen : ScreenBase
             result += c;
         }
         return result;
+    }
+
+    private string FitTextToWidth(string text, float maxWidth)
+    {
+        if (Font == null || string.IsNullOrEmpty(text)) return text ?? "";
+        if (Font.MeasureString(text).X <= maxWidth) return text;
+
+        // Binary search for the longest substring that fits with ".."
+        int lo = 1, hi = text.Length - 1;
+        while (lo < hi)
+        {
+            int mid = (lo + hi + 1) / 2;
+            if (Font.MeasureString(text.Substring(0, mid) + "..").X <= maxWidth)
+                lo = mid;
+            else
+                hi = mid - 1;
+        }
+        return text.Substring(0, lo) + "..";
     }
 
     private static string TruncateText(string text, int maxLength)
