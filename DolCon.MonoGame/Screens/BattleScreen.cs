@@ -15,6 +15,7 @@ namespace DolCon.MonoGame.Screens;
 public class BattleScreen : ScreenBase
 {
     private readonly ICombatService _combatService;
+    private readonly ISkillService _skillService;
     private CombatState? _combatState;
     private BattlePhase _phase = BattlePhase.Init;
     private int _selectedAction;
@@ -40,9 +41,10 @@ public class BattleScreen : ScreenBase
         Fled
     }
 
-    public BattleScreen(ICombatService combatService)
+    public BattleScreen(ICombatService combatService, ISkillService skillService)
     {
         _combatService = combatService;
+        _skillService = skillService;
     }
 
     /// <summary>
@@ -262,11 +264,10 @@ public class BattleScreen : ScreenBase
         {
             // Give coin rewards based on XP
             var coinReward = _combatState.TotalXPEarned / 2;
-            var skillService = new SkillService();
             foreach (var player in party.Players)
             {
                 player.coin += coinReward;
-                skillService.ApplySkillGains(player, _combatState);
+                _skillService.ApplySkillGains(player, _combatState);
             }
 
             // Only commit exploration progress on victory
