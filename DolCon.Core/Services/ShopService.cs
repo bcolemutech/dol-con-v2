@@ -101,10 +101,12 @@ public class ShopService : IShopService
         var silver = selection.Price / 10 % 10;
         var gold = selection.Price / 100;
         var message = $"You bought a {selection.Name} for {gold} gold, {silver} silver, and {copper} copper.";
+#if !DEBUG
         if (playerMoney < selection.Price)
         {
             return "You don't have enough money.";
         }
+#endif
 
         if (scene.SelectedService == ServiceType.Lodging)
         {
@@ -177,7 +179,14 @@ public class ShopService : IShopService
                 {
                     selections.Add(i,
                         new ShopSelection
-                            { Name = service.Name, Price = service.Price, Afford = service.Price <= playersCoin });
+                        {
+                            Name = service.Name, Price = service.Price,
+#if DEBUG
+                            Afford = true
+#else
+                            Afford = service.Price <= playersCoin
+#endif
+                        });
                     i++;
                 }
 
@@ -206,7 +215,14 @@ public class ShopService : IShopService
                 {
                     selections.Add(i,
                         new ShopSelection
-                            { Name = item.Name, Price = item.Price, Afford = item.Price <= playersCoin });
+                        {
+                            Name = item.Name, Price = item.Price,
+#if DEBUG
+                            Afford = true
+#else
+                            Afford = item.Price <= playersCoin
+#endif
+                        });
                     i++;
                 }
 
