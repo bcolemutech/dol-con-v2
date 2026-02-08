@@ -74,4 +74,45 @@ public class PlayerTests
         player.Skills.Unarmed.Should().Be(0.0);
         player.Skills.LightAptitude.Should().Be(0.0);
     }
+
+    [Fact]
+    public void NewPlayer_HasNonNullAbilitiesWithDefaultValues()
+    {
+        var player = new Player();
+
+        player.Abilities.Should().NotBeNull();
+        player.Abilities.Strength.Should().Be(10);
+        player.Abilities.Dexterity.Should().Be(10);
+        player.Abilities.Constitution.Should().Be(10);
+        player.Abilities.Intelligence.Should().Be(10);
+        player.Abilities.Wisdom.Should().Be(10);
+        player.Abilities.Charisma.Should().Be(10);
+    }
+
+    [Fact]
+    public void Player_AbilitiesSerializeAndDeserialize_WithSystemTextJson()
+    {
+        var player = new Player { Name = "Test" };
+        player.Abilities.Strength = 18;
+        player.Abilities.Dexterity = 14;
+
+        var json = JsonSerializer.Serialize(player);
+        var deserialized = JsonSerializer.Deserialize<Player>(json);
+
+        deserialized!.Abilities.Strength.Should().Be(18);
+        deserialized.Abilities.Dexterity.Should().Be(14);
+        deserialized.Abilities.Constitution.Should().Be(10);
+    }
+
+    [Fact]
+    public void Player_DeserializeWithoutAbilities_DefaultsToTen()
+    {
+        var json = """{"Id":"00000000-0000-0000-0000-000000000001","Name":"Old","coin":0,"Inventory":[]}""";
+
+        var player = JsonSerializer.Deserialize<Player>(json);
+
+        player!.Abilities.Should().NotBeNull();
+        player.Abilities.Strength.Should().Be(10);
+        player.Abilities.Charisma.Should().Be(10);
+    }
 }
