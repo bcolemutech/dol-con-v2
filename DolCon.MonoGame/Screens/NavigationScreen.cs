@@ -458,9 +458,10 @@ public class NavigationScreen : ScreenBase
 
     private void DrawCellTextOverlays(SpriteBatch spriteBatch, int areaX, int areaY)
     {
-        if (_viewport == null) return;
+        if (_viewport == null || Font == null) return;
 
         var shadowColor = new Color(0, 0, 0, 180);
+        const float lineHeight = 20f;
 
         foreach (var cellData in _cellPolygons)
         {
@@ -471,56 +472,78 @@ public class NavigationScreen : ScreenBase
             float screenX = cx + areaX;
             float screenY = cy + areaY;
 
+            // Estimate polygon radius to limit text to what fits
+            float polyRadius = EstimatePolygonRadius(cellData);
+
             var biomeColor = GetBiomeColor(cellData.Biome);
             var textColor = GetContrastingTextColor(biomeColor);
 
+            // Build lines to render
+            var lines = new List<(string Text, Color Color)>();
+
             if (cellData.IsCurrent)
             {
-                // Current cell: "YOU" label + info
-                DrawTextWithShadow(spriteBatch, "YOU",
-                    new Vector2(screenX - 15, screenY - 40), Color.Gold, shadowColor);
-                DrawTextWithShadow(spriteBatch, FormatBiomeName(cellData.Biome),
-                    new Vector2(screenX - 30, screenY - 18), textColor, shadowColor);
-
+                lines.Add(("YOU", Color.Gold));
+                lines.Add((FormatBiomeName(cellData.Biome), textColor));
                 var exploredText = cellData.ExploredPercent >= 1 ? "Explored" : $"{cellData.ExploredPercent:P0}";
-                DrawTextWithShadow(spriteBatch, exploredText,
-                    new Vector2(screenX - 25, screenY + 4), textColor, shadowColor);
-
+                lines.Add((exploredText, textColor));
                 if (!string.IsNullOrEmpty(cellData.BurgName))
-                {
-                    DrawTextWithShadow(spriteBatch, $"* {cellData.BurgName}",
-                        new Vector2(screenX - 30, screenY + 26), Color.White, shadowColor);
-                }
+                    lines.Add(($"* {cellData.BurgName}", Color.White));
             }
             else if (cellData.IsBlocked)
             {
-                // Marine cell: just "Ocean" label
-                DrawTextWithShadow(spriteBatch, "Ocean",
-                    new Vector2(screenX - 20, screenY - 8), new Color(150, 150, 180), shadowColor);
+                lines.Add(("Ocean", new Color(150, 150, 180)));
             }
             else
             {
-                // Adjacent selectable cell
                 if (cellData.SelectionNumber.HasValue)
-                {
-                    DrawTextWithShadow(spriteBatch, $"[{cellData.SelectionNumber}]",
-                        new Vector2(screenX - 10, screenY - 35), Color.Yellow, shadowColor);
-                }
-
-                DrawTextWithShadow(spriteBatch, FormatBiomeName(cellData.Biome),
-                    new Vector2(screenX - 30, screenY - 13), textColor, shadowColor);
-
+                    lines.Add(($"[{cellData.SelectionNumber}]", Color.Yellow));
+                lines.Add((FormatBiomeName(cellData.Biome), textColor));
                 var exploredText = cellData.ExploredPercent >= 1 ? "Explored" : $"{cellData.ExploredPercent:P0}";
-                DrawTextWithShadow(spriteBatch, exploredText,
-                    new Vector2(screenX - 25, screenY + 9), textColor, shadowColor);
-
+                lines.Add((exploredText, textColor));
                 if (!string.IsNullOrEmpty(cellData.BurgName))
-                {
-                    DrawTextWithShadow(spriteBatch, $"* {cellData.BurgName}",
-                        new Vector2(screenX - 30, screenY + 31), Color.White, shadowColor);
-                }
+                    lines.Add(($"* {cellData.BurgName}", Color.White));
+            }
+
+            // Only show lines that fit within polygon radius
+            int maxLines = Math.Max(1, (int)(polyRadius * 2 / lineHeight));
+            if (lines.Count > maxLines)
+                lines = lines.Take(maxLines).ToList();
+
+            // Center the block of text vertically on the cell center
+            float totalHeight = lines.Count * lineHeight;
+            float startY = screenY - totalHeight / 2;
+
+            for (int i = 0; i < lines.Count; i++)
+            {
+                var (text, color) = lines[i];
+                var textSize = Font.MeasureString(text);
+                float textX = screenX - textSize.X / 2;
+                float textY = startY + i * lineHeight;
+
+                DrawTextWithShadow(spriteBatch, text, new Vector2(textX, textY), color, shadowColor);
             }
         }
+    }
+
+    private float EstimatePolygonRadius(PolygonCellData cellData)
+    {
+        if (_viewport == null) return 50f;
+
+        var (cx, cy) = _viewport.WorldToScreen(
+            cellData.WorldCenter.X, cellData.WorldCenter.Y);
+
+        float minDist = float.MaxValue;
+        foreach (var vert in cellData.WorldVertices)
+        {
+            var (vx, vy) = _viewport.WorldToScreen(vert.X, vert.Y);
+            float dx = vx - cx;
+            float dy = vy - cy;
+            float dist = MathF.Sqrt(dx * dx + dy * dy);
+            if (dist < minDist) minDist = dist;
+        }
+
+        return minDist;
     }
 
     private void DrawActionPanel(SpriteBatch spriteBatch)
