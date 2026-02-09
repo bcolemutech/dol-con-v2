@@ -39,6 +39,7 @@ public class MainMenuScreen : ScreenBase
         _selectedIndex = 0;
         _state = MenuState.MainMenu;
         _statusMessage = "";
+        SaveGameService.CurrentSaveName = null;
     }
 
     public override void Update(GameTime gameTime, InputManager input)
@@ -176,7 +177,12 @@ public class MainMenuScreen : ScreenBase
                 break;
             case MenuState.SelectSave:
                 DrawCenteredText(spriteBatch, "Select a Save", 150, Color.White);
-                var saveNames = _availableSaves.Select(s => s.Name).ToArray();
+                var saveNames = _availableSaves.Select(s =>
+                {
+                    var name = Path.GetFileNameWithoutExtension(s.Name);
+                    var parts = name.Split('.', 2);
+                    return parts.Length == 2 ? $"{parts[1]} ({parts[0]})" : name;
+                }).ToArray();
                 DrawMenu(spriteBatch, saveNames, centerX, startY);
                 DrawCenteredText(spriteBatch, "Press ESC to go back", 500, Color.Gray);
                 break;
