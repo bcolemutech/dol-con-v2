@@ -83,6 +83,7 @@ public class SaveGameService : ISaveGameService
         CurrentMap = map ?? throw new DolSaveGameException("Failed to load game");
         Party = CurrentMap.Party;
         CurrentPlayerId = CurrentMap.CurrentPlayerId;
+        CurrentSaveName = Path.GetFileNameWithoutExtension(saveFile.Name);
     }
 
     public static Cell GetCell(int cellId)
