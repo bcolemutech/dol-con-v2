@@ -27,7 +27,7 @@ public class PlayerService : IPlayerService
         {
             Name = name,
             Npc = npc,
-            Abilities = abilities
+            Abilities = abilities ?? new PlayerAbilities()
         };
         SaveGameService.Party.Players.Add(newPlayer);
         return newPlayer;

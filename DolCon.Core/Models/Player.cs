@@ -15,7 +15,12 @@ public class Player
     public long coin { get; set; }
     public List<Item> Inventory { get; set; } = new();
     public PlayerSkills Skills { get; set; } = new();
-    public PlayerAbilities Abilities { get; set; } = new();
+    private PlayerAbilities _abilities = new();
+    public PlayerAbilities Abilities
+    {
+        get => _abilities;
+        set => _abilities = value ?? new PlayerAbilities();
+    }
 
     [JsonIgnore]
     public long copper => coin % 10; // 1 copper = 1 coin

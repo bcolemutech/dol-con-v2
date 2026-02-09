@@ -115,4 +115,16 @@ public class PlayerTests
         player.Abilities.Strength.Should().Be(10);
         player.Abilities.Charisma.Should().Be(10);
     }
+
+    [Fact]
+    public void Player_DeserializeWithExplicitNullAbilities_DefaultsToTen()
+    {
+        var json = """{"Id":"00000000-0000-0000-0000-000000000001","Name":"Old","coin":0,"Inventory":[],"Abilities":null}""";
+
+        var player = JsonSerializer.Deserialize<Player>(json);
+
+        player!.Abilities.Should().NotBeNull();
+        player.Abilities.Strength.Should().Be(10);
+        player.Abilities.Charisma.Should().Be(10);
+    }
 }
