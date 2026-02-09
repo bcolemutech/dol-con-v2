@@ -6,7 +6,7 @@ using DolCon.Core.Models.BaseTypes;
 
 public interface ISaveGameService
 {
-    Task<string> SaveGame(string saveName = "AutoSave");
+    Task<string> SaveGame();
     IEnumerable<FileInfo> GetSaves();
     Task LoadGame(FileInfo saveFile);
 }
@@ -50,9 +50,19 @@ public class SaveGameService : ISaveGameService
         Directory.CreateDirectory(_savesPath);
     }
 
-    public async Task<string> SaveGame(string saveName = "AutoSave")
+    public async Task<string> SaveGame()
     {
-        var saveGamePath = Path.Combine(_savesPath, $"{CurrentMap.info?.mapName ?? "unknown"}.{saveName}.json");
+        if (CurrentSaveName == null)
+        {
+            var existingFiles = Directory.GetFiles(_savesPath, "*.json")
+                .Select(Path.GetFileName).ToArray();
+            var mapName = CurrentMap.info?.mapName ?? "unknown";
+            var player = Party.Players.FirstOrDefault(p => p.Id == CurrentPlayerId);
+            var playerName = SanitizePlayerName(player?.Name ?? "Unknown");
+            CurrentSaveName = GenerateSaveName(mapName, playerName, existingFiles!);
+        }
+
+        var saveGamePath = Path.Combine(_savesPath, $"{CurrentSaveName}.json");
         CurrentMap.Party = Party;
         CurrentMap.CurrentPlayerId = CurrentPlayerId;
         await File.WriteAllTextAsync(saveGamePath, JsonSerializer.Serialize(CurrentMap));
