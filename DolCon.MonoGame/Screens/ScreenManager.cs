@@ -89,6 +89,25 @@ public class ScreenManager
     }
 
     /// <summary>
+    /// Switch to the character creation screen with the selected map.
+    /// </summary>
+    public void SwitchToCharacterCreation(FileInfo selectedMap)
+    {
+        if (!_screens.TryGetValue(ScreenType.CharacterCreation, out var screen) ||
+            screen is not CharacterCreationScreen creationScreen)
+        {
+            throw new InvalidOperationException("Character creation screen is not registered");
+        }
+
+        _currentScreen?.Unload();
+        creationScreen.SetSelectedMap(selectedMap);
+        _currentScreen = creationScreen;
+        CurrentScreenType = ScreenType.CharacterCreation;
+        _currentScreen.Initialize();
+        _currentScreen.LoadContent(_content, _graphicsDevice);
+    }
+
+    /// <summary>
     /// Update the current screen.
     /// </summary>
     public void Update(GameTime gameTime, InputManager input)
@@ -117,5 +136,6 @@ public enum ScreenType
     Shop,
     Inventory,
     Location,
-    WorldMap
+    WorldMap,
+    CharacterCreation
 }
