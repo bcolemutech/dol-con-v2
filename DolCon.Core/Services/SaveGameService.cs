@@ -6,9 +6,10 @@ using DolCon.Core.Models.BaseTypes;
 
 public interface ISaveGameService
 {
-    Task<string> SaveGame(string saveName = "AutoSave");
+    Task<string> SaveGame();
     IEnumerable<FileInfo> GetSaves();
     Task LoadGame(FileInfo saveFile);
+    void DeleteSave(FileInfo saveFile);
 }
 
 public class SaveGameService : ISaveGameService
@@ -38,6 +39,8 @@ public class SaveGameService : ISaveGameService
 
     public static string CurrentBiome => CurrentMap.biomes.name[CurrentCell.biome];
 
+    public static string? CurrentSaveName { get; set; }
+
     private readonly string _savesPath;
 
     public SaveGameService()
@@ -48,9 +51,19 @@ public class SaveGameService : ISaveGameService
         Directory.CreateDirectory(_savesPath);
     }
 
-    public async Task<string> SaveGame(string saveName = "AutoSave")
+    public async Task<string> SaveGame()
     {
-        var saveGamePath = Path.Combine(_savesPath, $"{CurrentMap.info?.mapName ?? "unknown"}.{saveName}.json");
+        if (CurrentSaveName == null)
+        {
+            var existingFiles = Directory.GetFiles(_savesPath, "*.json")
+                .Select(Path.GetFileName).ToArray();
+            var mapName = CurrentMap.info?.mapName ?? "unknown";
+            var player = Party.Players.FirstOrDefault(p => p.Id == CurrentPlayerId);
+            var playerName = SanitizeFileComponent(player?.Name ?? "Unknown");
+            CurrentSaveName = GenerateSaveName(mapName, playerName, existingFiles!);
+        }
+
+        var saveGamePath = Path.Combine(_savesPath, $"{CurrentSaveName}.json");
         CurrentMap.Party = Party;
         CurrentMap.CurrentPlayerId = CurrentPlayerId;
         await File.WriteAllTextAsync(saveGamePath, JsonSerializer.Serialize(CurrentMap));
@@ -71,6 +84,19 @@ public class SaveGameService : ISaveGameService
         CurrentMap = map ?? throw new DolSaveGameException("Failed to load game");
         Party = CurrentMap.Party;
         CurrentPlayerId = CurrentMap.CurrentPlayerId;
+        CurrentSaveName = Path.GetFileNameWithoutExtension(saveFile.Name);
+    }
+
+    public void DeleteSave(FileInfo saveFile)
+    {
+        var savesFullPath = Path.GetFullPath(_savesPath);
+        var fileFullPath = Path.GetFullPath(saveFile.FullName);
+
+        if (!fileFullPath.StartsWith(savesFullPath, StringComparison.OrdinalIgnoreCase))
+            throw new DolSaveGameException("Cannot delete files outside the saves directory");
+
+        if (saveFile.Exists)
+            saveFile.Delete();
     }
 
     public static Cell GetCell(int cellId)
@@ -96,5 +122,40 @@ public class SaveGameService : ISaveGameService
     public static State GetState(int cellState)
     {
         return CurrentMap.Collections.states[cellState];
+    }
+
+    public static string SanitizeFileComponent(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "Unknown";
+
+        var invalidChars = Path.GetInvalidFileNameChars();
+        var sanitized = new string(name.Where(c => !invalidChars.Contains(c)).ToArray()).Trim();
+
+        return string.IsNullOrWhiteSpace(sanitized) ? "Unknown" : sanitized;
+    }
+
+    public static string GenerateSaveName(string mapName, string playerName, string[] existingFileNames)
+    {
+        var sanitizedPlayer = SanitizeFileComponent(playerName);
+        var sanitizedMap = SanitizeFileComponent(mapName);
+        var baseName = $"{sanitizedMap}.{sanitizedPlayer}";
+
+        var existing = new HashSet<string>(existingFileNames, StringComparer.OrdinalIgnoreCase);
+
+        if (!existing.Contains($"{baseName}.json"))
+            return baseName;
+
+        var counter = 2;
+        while (existing.Contains($"{baseName}-{counter}.json"))
+            counter++;
+
+        return $"{baseName}-{counter}";
+    }
+
+    public static string FormatSaveDisplayName(string fileName)
+    {
+        var name = Path.GetFileNameWithoutExtension(fileName);
+        var parts = name.Split('.', 2);
+        return parts.Length == 2 ? $"{parts[1]} ({parts[0]})" : name;
     }
 }

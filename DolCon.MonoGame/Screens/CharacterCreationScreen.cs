@@ -233,6 +233,13 @@ public class CharacterCreationScreen : ScreenBase
     {
         _mapService.LoadMap(_selectedMap, _playerName.Trim(), _abilities);
 
+        var existingFiles = _saveGameService.GetSaves()
+            .Select(f => f.Name).ToArray();
+        var mapName = SaveGameService.CurrentMap.info?.mapName ?? "unknown";
+        var sanitizedName = SaveGameService.SanitizeFileComponent(_playerName.Trim());
+        SaveGameService.CurrentSaveName = SaveGameService.GenerateSaveName(
+            mapName, sanitizedName, existingFiles);
+
         var path = _saveGameService.SaveGame().Result;
         _saveGameService.LoadGame(new FileInfo(path)).Wait();
 
