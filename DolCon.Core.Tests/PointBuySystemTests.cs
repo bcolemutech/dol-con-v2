@@ -92,6 +92,30 @@ public class PointBuySystemTests
     }
 
     [Fact]
+    public void IsValid_returns_false_when_score_below_minimum()
+    {
+        var abilities = new PlayerAbilities
+        {
+            Strength = 7, Dexterity = 14, Constitution = 13,
+            Intelligence = 12, Wisdom = 10, Charisma = 8
+        };
+
+        PointBuySystem.IsValid(abilities).Should().BeFalse();
+    }
+
+    [Fact]
+    public void IsValid_returns_false_when_score_above_maximum()
+    {
+        var abilities = new PlayerAbilities
+        {
+            Strength = 16, Dexterity = 8, Constitution = 8,
+            Intelligence = 8, Wisdom = 8, Charisma = 8
+        };
+
+        PointBuySystem.IsValid(abilities).Should().BeFalse();
+    }
+
+    [Fact]
     public void IsValid_returns_false_when_points_remain()
     {
         var abilities = new PlayerAbilities

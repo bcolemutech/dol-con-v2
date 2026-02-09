@@ -305,7 +305,7 @@ public class CharacterCreationScreen : ScreenBase
             var leftArrow = canDecrease ? "<" : " ";
             var rightArrow = canIncrease ? ">" : " ";
 
-            var modifier = (score - 10) / 2;
+            var modifier = (int)Math.Floor((score - 10) / 2.0);
             var modStr = modifier >= 0 ? $"+{modifier}" : $"{modifier}";
 
             var line = $"{prefix}{AbilityNames[i]}:  {leftArrow} {score,2} {rightArrow}  ({modStr})";

@@ -37,8 +37,17 @@ public static class PointBuySystem
 
     public static bool IsValid(PlayerAbilities abilities)
     {
+        if (!IsInRange(abilities.Strength) || !IsInRange(abilities.Dexterity) ||
+            !IsInRange(abilities.Constitution) || !IsInRange(abilities.Intelligence) ||
+            !IsInRange(abilities.Wisdom) || !IsInRange(abilities.Charisma))
+        {
+            return false;
+        }
+
         return GetRemainingPoints(abilities) == 0;
     }
+
+    private static bool IsInRange(int score) => score >= MinScore && score <= MaxScore;
 
     public static bool CanIncrease(int score) => score < MaxScore;
 
