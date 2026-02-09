@@ -25,6 +25,7 @@ public class MainMenuScreen : ScreenBase
         MainMenu,
         SelectMap,
         SelectSave,
+        ConfirmDelete,
         Loading
     }
 
@@ -54,6 +55,9 @@ public class MainMenuScreen : ScreenBase
                 break;
             case MenuState.SelectSave:
                 UpdateSaveSelection(input);
+                break;
+            case MenuState.ConfirmDelete:
+                UpdateConfirmDelete(input);
                 break;
         }
     }
@@ -154,6 +158,35 @@ public class MainMenuScreen : ScreenBase
             // Switch to home screen
             ScreenManager.SwitchTo(ScreenType.Home);
         }
+        else if (input.IsKeyPressed(Keys.Delete) || input.IsKeyPressed(Keys.X))
+        {
+            _state = MenuState.ConfirmDelete;
+        }
+    }
+
+    private void UpdateConfirmDelete(InputManager input)
+    {
+        if (input.IsKeyPressed(Keys.Enter))
+        {
+            _saveGameService.DeleteSave(_availableSaves[_selectedIndex]);
+            _availableSaves = _saveGameService.GetSaves().ToArray();
+
+            if (_availableSaves.Length == 0)
+            {
+                _state = MenuState.MainMenu;
+                _selectedIndex = 1;
+                _statusMessage = "No saves found!";
+            }
+            else
+            {
+                _state = MenuState.SelectSave;
+                _selectedIndex = Math.Min(_selectedIndex, _availableSaves.Length - 1);
+            }
+        }
+        else if (input.IsKeyPressed(Keys.Escape))
+        {
+            _state = MenuState.SelectSave;
+        }
     }
 
     public override void Draw(SpriteBatch spriteBatch)
@@ -184,7 +217,15 @@ public class MainMenuScreen : ScreenBase
                     return parts.Length == 2 ? $"{parts[1]} ({parts[0]})" : name;
                 }).ToArray();
                 DrawMenu(spriteBatch, saveNames, centerX, startY);
-                DrawCenteredText(spriteBatch, "Press ESC to go back", 500, Color.Gray);
+                DrawCenteredText(spriteBatch, "[X] Delete  |  [ESC] Back", 500, Color.Gray);
+                break;
+            case MenuState.ConfirmDelete:
+                DrawCenteredText(spriteBatch, "Delete Save?", 150, Color.Red);
+                var deleteName = Path.GetFileNameWithoutExtension(_availableSaves[_selectedIndex].Name);
+                var deleteParts = deleteName.Split('.', 2);
+                var displayName = deleteParts.Length == 2 ? $"{deleteParts[1]} ({deleteParts[0]})" : deleteName;
+                DrawCenteredText(spriteBatch, displayName, startY, Color.Yellow);
+                DrawCenteredText(spriteBatch, "[ENTER] Confirm  |  [ESC] Cancel", 500, Color.Gray);
                 break;
             case MenuState.Loading:
                 DrawCenteredText(spriteBatch, _statusMessage, 300, Color.Yellow);

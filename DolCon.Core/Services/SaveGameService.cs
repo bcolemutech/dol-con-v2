@@ -9,6 +9,7 @@ public interface ISaveGameService
     Task<string> SaveGame();
     IEnumerable<FileInfo> GetSaves();
     Task LoadGame(FileInfo saveFile);
+    void DeleteSave(FileInfo saveFile);
 }
 
 public class SaveGameService : ISaveGameService
@@ -84,6 +85,12 @@ public class SaveGameService : ISaveGameService
         Party = CurrentMap.Party;
         CurrentPlayerId = CurrentMap.CurrentPlayerId;
         CurrentSaveName = Path.GetFileNameWithoutExtension(saveFile.Name);
+    }
+
+    public void DeleteSave(FileInfo saveFile)
+    {
+        if (saveFile.Exists)
+            saveFile.Delete();
     }
 
     public static Cell GetCell(int cellId)
