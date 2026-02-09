@@ -10,6 +10,8 @@ public interface IMapService
     IEnumerable<FileInfo> GetMaps();
     void LoadMap(FileInfo mapFile);
     void LoadMap(FileInfo mapFile, IMapProvisioningCallback callback);
+    void LoadMap(FileInfo mapFile, string playerName, PlayerAbilities abilities);
+    void LoadMap(FileInfo mapFile, IMapProvisioningCallback callback, string playerName, PlayerAbilities abilities);
 }
 
 public class MapService : IMapService
@@ -73,7 +75,22 @@ public class MapService : IMapService
         SaveGameService.CurrentMap = map;
     }
 
-    private void ProvisionMap(IMapProvisioningCallback callback, Map map)
+    public void LoadMap(FileInfo mapFile, string playerName, PlayerAbilities abilities)
+    {
+        LoadMap(mapFile, new NoOpMapProvisioningCallback(), playerName, abilities);
+    }
+
+    public void LoadMap(FileInfo mapFile, IMapProvisioningCallback callback, string playerName, PlayerAbilities abilities)
+    {
+        callback.OnStatus("Loading map...");
+        var map = DeserializeMap(mapFile).Result ?? throw new DolMapException("Failed to load map");
+        callback.OnEvent($"Loaded map {mapFile.Name}");
+        ProvisionMap(callback, map, playerName, abilities);
+        SaveGameService.CurrentMap = map;
+    }
+
+    private void ProvisionMap(IMapProvisioningCallback callback, Map map,
+        string? playerName = null, PlayerAbilities? abilities = null)
     {
         callback.OnStatus("Identifying City of Light...");
 
@@ -125,7 +142,9 @@ public class MapService : IMapService
             Burg = cityOfLight.i,
             Stamina = 1
         };
-        var player = _playerService.SetPlayer("Player 1", false);
+        var player = abilities != null
+            ? _playerService.SetPlayer(playerName ?? "Player 1", false, abilities)
+            : _playerService.SetPlayer(playerName ?? "Player 1", false);
         SaveGameService.CurrentPlayerId = player.Id;
         _positionUpdateHandler.OnPositionUpdated();
 
