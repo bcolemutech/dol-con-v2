@@ -5,7 +5,7 @@ namespace DolCon.Core.Tests;
 
 public class SaveGameServiceTests
 {
-    public class SanitizePlayerNameTests
+    public class SanitizeFileComponentTests
     {
         [Theory]
         [InlineData("Gandalf", "Gandalf")]
@@ -13,24 +13,24 @@ public class SaveGameServiceTests
         [InlineData("   Spaces   ", "Spaces")]
         [InlineData("", "Unknown")]
         [InlineData("   ", "Unknown")]
-        public void SanitizePlayerName_ReturnsExpectedResult(string input, string expected)
+        public void SanitizeFileComponent_ReturnsExpectedResult(string input, string expected)
         {
-            SaveGameService.SanitizePlayerName(input).Should().Be(expected);
+            SaveGameService.SanitizeFileComponent(input).Should().Be(expected);
         }
 
         [Fact]
-        public void SanitizePlayerName_StripsInvalidFileNameCharacters()
+        public void SanitizeFileComponent_StripsInvalidFileNameCharacters()
         {
             var invalidChars = Path.GetInvalidFileNameChars();
             var input = $"Player{invalidChars[0]}Name";
-            var result = SaveGameService.SanitizePlayerName(input);
+            var result = SaveGameService.SanitizeFileComponent(input);
             result.Should().Be("PlayerName");
         }
 
         [Fact]
-        public void SanitizePlayerName_HandlesNull()
+        public void SanitizeFileComponent_HandlesNull()
         {
-            SaveGameService.SanitizePlayerName(null!).Should().Be("Unknown");
+            SaveGameService.SanitizeFileComponent(null!).Should().Be("Unknown");
         }
     }
 
@@ -67,11 +67,59 @@ public class SaveGameServiceTests
         }
 
         [Fact]
+        public void GenerateSaveName_SanitizesMapName()
+        {
+            var invalidChars = Path.GetInvalidFileNameChars();
+            var result = SaveGameService.GenerateSaveName($"my{invalidChars[0]}map", "Gandalf", Array.Empty<string>());
+            result.Should().Be("mymap.Gandalf");
+        }
+
+        [Fact]
         public void GenerateSaveName_DoesNotCollideWithDifferentMap()
         {
             var existing = new[] { "other-world.Gandalf.json" };
             var result = SaveGameService.GenerateSaveName("mythical-world", "Gandalf", existing);
             result.Should().Be("mythical-world.Gandalf");
+        }
+
+        [Fact]
+        public void GenerateSaveName_DetectsCaseInsensitiveCollision()
+        {
+            var existing = new[] { "mythical-world.gandalf.json" };
+            var result = SaveGameService.GenerateSaveName("mythical-world", "Gandalf", existing);
+            result.Should().Be("mythical-world.Gandalf-2");
+        }
+
+        [Fact]
+        public void GenerateSaveName_DetectsCaseInsensitiveCollisionWithSuffix()
+        {
+            var existing = new[] { "Mythical-World.Gandalf.json", "mythical-world.gandalf-2.json" };
+            var result = SaveGameService.GenerateSaveName("mythical-world", "Gandalf", existing);
+            result.Should().Be("mythical-world.Gandalf-3");
+        }
+    }
+
+    public class FormatSaveDisplayNameTests
+    {
+        [Fact]
+        public void FormatSaveDisplayName_ShowsPlayerAndMap()
+        {
+            var result = SaveGameService.FormatSaveDisplayName("mythical-world.Gandalf.json");
+            result.Should().Be("Gandalf (mythical-world)");
+        }
+
+        [Fact]
+        public void FormatSaveDisplayName_HandlesNoDelimiter()
+        {
+            var result = SaveGameService.FormatSaveDisplayName("oldsave.json");
+            result.Should().Be("oldsave");
+        }
+
+        [Fact]
+        public void FormatSaveDisplayName_HandlesSuffixedName()
+        {
+            var result = SaveGameService.FormatSaveDisplayName("mythical-world.Gandalf-2.json");
+            result.Should().Be("Gandalf-2 (mythical-world)");
         }
     }
 }

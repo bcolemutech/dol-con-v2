@@ -236,7 +236,7 @@ public class CharacterCreationScreen : ScreenBase
         var existingFiles = _saveGameService.GetSaves()
             .Select(f => f.Name).ToArray();
         var mapName = SaveGameService.CurrentMap.info?.mapName ?? "unknown";
-        var sanitizedName = SaveGameService.SanitizePlayerName(_playerName.Trim());
+        var sanitizedName = SaveGameService.SanitizeFileComponent(_playerName.Trim());
         SaveGameService.CurrentSaveName = SaveGameService.GenerateSaveName(
             mapName, sanitizedName, existingFiles);
 

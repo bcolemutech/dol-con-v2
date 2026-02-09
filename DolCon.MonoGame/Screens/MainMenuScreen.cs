@@ -210,20 +210,14 @@ public class MainMenuScreen : ScreenBase
                 break;
             case MenuState.SelectSave:
                 DrawCenteredText(spriteBatch, "Select a Save", 150, Color.White);
-                var saveNames = _availableSaves.Select(s =>
-                {
-                    var name = Path.GetFileNameWithoutExtension(s.Name);
-                    var parts = name.Split('.', 2);
-                    return parts.Length == 2 ? $"{parts[1]} ({parts[0]})" : name;
-                }).ToArray();
+                var saveNames = _availableSaves
+                    .Select(s => SaveGameService.FormatSaveDisplayName(s.Name)).ToArray();
                 DrawMenu(spriteBatch, saveNames, centerX, startY);
                 DrawCenteredText(spriteBatch, "[X] Delete  |  [ESC] Back", 500, Color.Gray);
                 break;
             case MenuState.ConfirmDelete:
                 DrawCenteredText(spriteBatch, "Delete Save?", 150, Color.Red);
-                var deleteName = Path.GetFileNameWithoutExtension(_availableSaves[_selectedIndex].Name);
-                var deleteParts = deleteName.Split('.', 2);
-                var displayName = deleteParts.Length == 2 ? $"{deleteParts[1]} ({deleteParts[0]})" : deleteName;
+                var displayName = SaveGameService.FormatSaveDisplayName(_availableSaves[_selectedIndex].Name);
                 DrawCenteredText(spriteBatch, displayName, startY, Color.Yellow);
                 DrawCenteredText(spriteBatch, "[ENTER] Confirm  |  [ESC] Cancel", 500, Color.Gray);
                 break;

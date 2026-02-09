@@ -59,7 +59,7 @@ public class SaveGameService : ISaveGameService
                 .Select(Path.GetFileName).ToArray();
             var mapName = CurrentMap.info?.mapName ?? "unknown";
             var player = Party.Players.FirstOrDefault(p => p.Id == CurrentPlayerId);
-            var playerName = SanitizePlayerName(player?.Name ?? "Unknown");
+            var playerName = SanitizeFileComponent(player?.Name ?? "Unknown");
             CurrentSaveName = GenerateSaveName(mapName, playerName, existingFiles!);
         }
 
@@ -89,6 +89,12 @@ public class SaveGameService : ISaveGameService
 
     public void DeleteSave(FileInfo saveFile)
     {
+        var savesFullPath = Path.GetFullPath(_savesPath);
+        var fileFullPath = Path.GetFullPath(saveFile.FullName);
+
+        if (!fileFullPath.StartsWith(savesFullPath, StringComparison.OrdinalIgnoreCase))
+            throw new DolSaveGameException("Cannot delete files outside the saves directory");
+
         if (saveFile.Exists)
             saveFile.Delete();
     }
@@ -118,7 +124,7 @@ public class SaveGameService : ISaveGameService
         return CurrentMap.Collections.states[cellState];
     }
 
-    public static string SanitizePlayerName(string name)
+    public static string SanitizeFileComponent(string name)
     {
         if (string.IsNullOrWhiteSpace(name)) return "Unknown";
 
@@ -130,16 +136,26 @@ public class SaveGameService : ISaveGameService
 
     public static string GenerateSaveName(string mapName, string playerName, string[] existingFileNames)
     {
-        var sanitized = SanitizePlayerName(playerName);
-        var baseName = $"{mapName}.{sanitized}";
+        var sanitizedPlayer = SanitizeFileComponent(playerName);
+        var sanitizedMap = SanitizeFileComponent(mapName);
+        var baseName = $"{sanitizedMap}.{sanitizedPlayer}";
 
-        if (!existingFileNames.Contains($"{baseName}.json"))
+        var existing = new HashSet<string>(existingFileNames, StringComparer.OrdinalIgnoreCase);
+
+        if (!existing.Contains($"{baseName}.json"))
             return baseName;
 
         var counter = 2;
-        while (existingFileNames.Contains($"{baseName}-{counter}.json"))
+        while (existing.Contains($"{baseName}-{counter}.json"))
             counter++;
 
         return $"{baseName}-{counter}";
+    }
+
+    public static string FormatSaveDisplayName(string fileName)
+    {
+        var name = Path.GetFileNameWithoutExtension(fileName);
+        var parts = name.Split('.', 2);
+        return parts.Length == 2 ? $"{parts[1]} ({parts[0]})" : name;
     }
 }
