@@ -121,18 +121,7 @@ public class MainMenuScreen : ScreenBase
         }
         else if (input.IsKeyPressed(Keys.Enter) || input.IsKeyPressed(Keys.Space))
         {
-            _state = MenuState.Loading;
-            _statusMessage = "Loading map...";
-
-            // Load the selected map
-            _mapService.LoadMap(_availableMaps[_selectedIndex]);
-
-            // Save and load to initialize properly
-            var path = _saveGameService.SaveGame().Result;
-            _saveGameService.LoadGame(new FileInfo(path)).Wait();
-
-            // Switch to home screen
-            ScreenManager.SwitchTo(ScreenType.Home);
+            ScreenManager.SwitchToCharacterCreation(_availableMaps[_selectedIndex]);
         }
     }
 

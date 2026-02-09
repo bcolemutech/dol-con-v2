@@ -104,6 +104,8 @@ public class Game1 : Game
         _screenManager.RegisterScreen(ScreenType.Inventory, new InventoryScreen());
         _screenManager.RegisterScreen(ScreenType.Location, new LocationScreen(_moveService, _eventService));
         _screenManager.RegisterScreen(ScreenType.WorldMap, new WorldMapScreen());
+        _screenManager.RegisterScreen(ScreenType.CharacterCreation,
+            new CharacterCreationScreen(_mapService, _saveGameService));
 
         // Start at main menu
         _screenManager.SwitchTo(ScreenType.MainMenu);
