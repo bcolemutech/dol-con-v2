@@ -38,6 +38,8 @@ public class SaveGameService : ISaveGameService
 
     public static string CurrentBiome => CurrentMap.biomes.name[CurrentCell.biome];
 
+    public static string? CurrentSaveName { get; set; }
+
     private readonly string _savesPath;
 
     public SaveGameService()
@@ -96,5 +98,30 @@ public class SaveGameService : ISaveGameService
     public static State GetState(int cellState)
     {
         return CurrentMap.Collections.states[cellState];
+    }
+
+    public static string SanitizePlayerName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "Unknown";
+
+        var invalidChars = Path.GetInvalidFileNameChars();
+        var sanitized = new string(name.Where(c => !invalidChars.Contains(c)).ToArray()).Trim();
+
+        return string.IsNullOrWhiteSpace(sanitized) ? "Unknown" : sanitized;
+    }
+
+    public static string GenerateSaveName(string mapName, string playerName, string[] existingFileNames)
+    {
+        var sanitized = SanitizePlayerName(playerName);
+        var baseName = $"{mapName}.{sanitized}";
+
+        if (!existingFileNames.Contains($"{baseName}.json"))
+            return baseName;
+
+        var counter = 2;
+        while (existingFileNames.Contains($"{baseName}-{counter}.json"))
+            counter++;
+
+        return $"{baseName}-{counter}";
     }
 }
