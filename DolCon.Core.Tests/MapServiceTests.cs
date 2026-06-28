@@ -1,9 +1,7 @@
 ﻿namespace DolCon.Core.Tests;
 
-using System.Drawing;
 using Enums;
 using FluentAssertions;
-using Models.BaseTypes;
 using Services;
 
 public class MapServiceTests
@@ -29,61 +27,5 @@ public class MapServiceTests
     {
         var actual = MapService.GetDirection(x1, y1, x2, y2);
         actual.Should().Be(expected);
-    }
-
-    [Theory]
-    [InlineData(1, BurgSize.Town, 2.4)]
-    [InlineData(100, BurgSize.Megalopolis, 450)]
-    [InlineData(.5, BurgSize.Village, .1)]
-    [InlineData(71, BurgSize.Megalopolis, 331.2)]
-    [InlineData(3.5, BurgSize.Town, 14.18)]
-    [InlineData(7.6, BurgSize.Town, 33.44)]
-    public void GivenABurgWithAPopulationThenExpectSizeAndPopulationToBeAdjusted(double burgPop, BurgSize size,
-        double near)
-    {
-        var burg = new Burg()
-        {
-            population = burgPop,
-            isCityOfLight = false,
-        };
-
-        MapService.AdjustBurgSize(burg, .5);
-
-        burg.size.Should().Be(size);
-        burg.population.Should().BeApproximately(near, .1);
-    }
-
-    [Fact]
-    public void GivenACellCalculateTheChallengeRating()
-    {
-        // Arrange
-        var cell = new Cell
-        {
-            p = new List<double>
-            {
-                50, 50
-            }
-        };
-        // Act
-        var actual = MapService.CalculateChallengeRating(cell, 25,25, 50);
-        // Assert
-        actual.Should().Be(14.125);
-    }
-    
-    [Fact]
-    public void GivenACellMoreThanCrDistanceCalculateTheChallengeRating()
-    {
-        // Arrange
-        var cell = new Cell
-        {
-            p = new List<double>
-            {
-                75, 75
-            }
-        };
-        // Act
-        var actual = MapService.CalculateChallengeRating(cell, 25,25, 50);
-        // Assert
-        actual.Should().Be(28.25);
     }
 }

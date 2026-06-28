@@ -40,6 +40,12 @@ public class WorldInfo
     public string? SourceAzgaarVersion { get; set; }
     public DateTime GeneratedAt { get; set; }
     public string? GeneratorVersion { get; set; }
+
+    /// <summary>
+    /// Seed used by the deterministic provisioner for this bake. Stored so a world is reproducible:
+    /// re-baking the same Azgaar export with this seed yields identical content.
+    /// </summary>
+    public int ProvisioningSeed { get; set; }
 }
 
 /// <summary>Geographic bounds carried over from the Azgaar export (reserved for future rendering).</summary>
