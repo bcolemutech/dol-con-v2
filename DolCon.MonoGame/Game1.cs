@@ -67,7 +67,7 @@ public class Game1 : Game
         // Initialize core services
         _playerService = new PlayerService();
         var positionHandler = new NoOpPositionUpdateHandler();
-        _mapService = new MapService(_playerService, positionHandler);
+        _mapService = new MapService(_playerService, positionHandler, new WorldProvisioningService());
         _moveService = new MoveService(positionHandler);
 
         var itemsService = new ItemsService();
