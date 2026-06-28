@@ -1,15 +1,15 @@
-﻿using DolCon.Core.Models.BaseTypes;
+﻿using DolCon.Core.Models.World;
 
 namespace DolCon.Core.Models;
 
 public class Event
 {
-    public Event(Location? currentLocation, Cell currentCell)
+    public Event(WorldLocation? currentLocation, WorldCell currentCell)
     {
         Location = currentLocation;
         Area = currentCell;
     }
 
-    public Location? Location { get; set; }
-    public Cell Area { get; set; }
+    public WorldLocation? Location { get; set; }
+    public WorldCell Area { get; set; }
 }

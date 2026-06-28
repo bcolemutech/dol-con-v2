@@ -2,7 +2,7 @@ namespace DolCon.Core.Services;
 
 using System.Text.Json;
 using DolCon.Core.Models;
-using DolCon.Core.Models.BaseTypes;
+using DolCon.Core.Models.World;
 
 public interface ISaveGameService
 {
@@ -14,30 +14,33 @@ public interface ISaveGameService
 
 public class SaveGameService : ISaveGameService
 {
-    public static Location? CurrentLocation =>
+    public static WorldLocation? CurrentLocation =>
         Party switch
         {
-            { Location: not null, Burg: not null } => CurrentMap.Collections.burgs
-                .Find(b => b.i == Party.Burg.Value)?.locations.FirstOrDefault(x => x.Id == Party.Location.Value),
-            { Location: not null } => CurrentMap.Collections.cells[Party.Cell]
-                .locations.FirstOrDefault(x => x.Id == Party.Location.Value),
+            { Location: not null, Burg: not null } => CurrentWorld.Burgs
+                .Find(b => b.Id == Party.Burg.Value)?.Locations.FirstOrDefault(x => x.Id == Party.Location.Value),
+            { Location: not null } => CurrentWorld.Cells[Party.Cell]
+                .Locations.FirstOrDefault(x => x.Id == Party.Location.Value),
             _ => null
         };
-    public static Map CurrentMap { get; set; } = new();
+    public static DolWorld CurrentWorld { get; set; } = new();
     public static Party Party { get; set; } = new();
     public static Guid CurrentPlayerId { get; set; } = Guid.NewGuid();
 
-    public static Cell CurrentCell => CurrentMap.Collections.cells[Party.Cell];
+    /// <summary>True once a baked world has been loaded (new game started or save loaded).</summary>
+    public static bool HasWorld => CurrentWorld.Cells.Count > 0;
 
-    public static Burg? CurrentBurg => Party.Burg.HasValue
-        ? CurrentMap.Collections.burgs.Find(b => b.i == Party.Burg.Value)
+    public static WorldCell CurrentCell => CurrentWorld.Cells[Party.Cell];
+
+    public static WorldBurg? CurrentBurg => Party.Burg.HasValue
+        ? CurrentWorld.Burgs.Find(b => b.Id == Party.Burg.Value)
         : null;
 
-    public static Province CurrentProvince => CurrentMap.Collections.provinces[CurrentCell.province];
+    public static WorldProvince CurrentProvince => CurrentWorld.Provinces[CurrentCell.Province];
 
-    public static State CurrentState => CurrentMap.Collections.states[CurrentCell.state];
+    public static WorldState CurrentState => CurrentWorld.States[CurrentCell.State];
 
-    public static string CurrentBiome => CurrentMap.biomes.name[CurrentCell.biome];
+    public static string CurrentBiome => CurrentWorld.Biomes[CurrentCell.Biome];
 
     public static string? CurrentSaveName { get; set; }
 
@@ -57,16 +60,15 @@ public class SaveGameService : ISaveGameService
         {
             var existingFiles = Directory.GetFiles(_savesPath, "*.json")
                 .Select(Path.GetFileName).ToArray();
-            var mapName = CurrentMap.info?.mapName ?? "unknown";
+            var worldName = string.IsNullOrEmpty(CurrentWorld.Info.Name) ? "unknown" : CurrentWorld.Info.Name;
             var player = Party.Players.FirstOrDefault(p => p.Id == CurrentPlayerId);
             var playerName = SanitizeFileComponent(player?.Name ?? "Unknown");
-            CurrentSaveName = GenerateSaveName(mapName, playerName, existingFiles!);
+            CurrentSaveName = GenerateSaveName(worldName, playerName, existingFiles!);
         }
 
         var saveGamePath = Path.Combine(_savesPath, $"{CurrentSaveName}.json");
-        CurrentMap.Party = Party;
-        CurrentMap.CurrentPlayerId = CurrentPlayerId;
-        await File.WriteAllTextAsync(saveGamePath, JsonSerializer.Serialize(CurrentMap));
+        var save = new SaveGame { World = CurrentWorld, Party = Party, CurrentPlayerId = CurrentPlayerId };
+        await File.WriteAllTextAsync(saveGamePath, JsonSerializer.Serialize(save, DolWorldSerializer.Options));
         return saveGamePath;
     }
 
@@ -78,12 +80,14 @@ public class SaveGameService : ISaveGameService
     public async Task LoadGame(FileInfo saveFile)
     {
         var fileStream = File.OpenRead(saveFile.FullName);
-        var map = await JsonSerializer.DeserializeAsync<Map>(fileStream);
+        var save = await JsonSerializer.DeserializeAsync<SaveGame>(fileStream, DolWorldSerializer.Options);
         fileStream.Close();
 
-        CurrentMap = map ?? throw new DolSaveGameException("Failed to load game");
-        Party = CurrentMap.Party;
-        CurrentPlayerId = CurrentMap.CurrentPlayerId;
+        if (save is null) throw new DolSaveGameException("Failed to load game");
+
+        CurrentWorld = save.World;
+        Party = save.Party;
+        CurrentPlayerId = save.CurrentPlayerId;
         CurrentSaveName = Path.GetFileNameWithoutExtension(saveFile.Name);
     }
 
@@ -99,29 +103,29 @@ public class SaveGameService : ISaveGameService
             saveFile.Delete();
     }
 
-    public static Cell GetCell(int cellId)
+    public static WorldCell GetCell(int cellId)
     {
-        return CurrentMap.Collections.cells[cellId];
+        return CurrentWorld.Cells[cellId];
     }
 
-    public static Burg? GetBurg(int cellBurg)
+    public static WorldBurg? GetBurg(int cellBurg)
     {
-        return CurrentMap.Collections.burgs.Find(x => x.i == cellBurg);
+        return CurrentWorld.Burgs.Find(x => x.Id == cellBurg);
     }
 
     public static string GetBiome(int cellBiome)
     {
-        return CurrentMap.biomes.name[cellBiome];
+        return CurrentWorld.Biomes[cellBiome];
     }
 
-    public static Province GetProvince(int cellProvince)
+    public static WorldProvince GetProvince(int cellProvince)
     {
-        return CurrentMap.Collections.provinces[cellProvince];
+        return CurrentWorld.Provinces[cellProvince];
     }
 
-    public static State GetState(int cellState)
+    public static WorldState GetState(int cellState)
     {
-        return CurrentMap.Collections.states[cellState];
+        return CurrentWorld.States[cellState];
     }
 
     public static string SanitizeFileComponent(string name)
