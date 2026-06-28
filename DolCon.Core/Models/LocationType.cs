@@ -24,6 +24,12 @@ public record LocationType(
 
 public static class LocationTypes
 {
+    private static readonly Lazy<Dictionary<string, LocationType>> ByKey =
+        new(() => Types!.ToDictionary(t => t.Type));
+
+    /// <summary>Resolves a <see cref="LocationType"/> by its unique <see cref="LocationType.Type"/> key.</summary>
+    public static LocationType Get(string typeKey) => ByKey.Value[typeKey];
+
     public static List<LocationType> Types { get; } = new()
     {
         new LocationType(

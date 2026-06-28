@@ -56,7 +56,7 @@ public class HomeScreen : ScreenBase
         var biome = SaveGameService.CurrentBiome;
 
         int y = locationPanel.Y + 40;
-        DrawText(spriteBatch, $"Cell: {cell.i}", new Vector2(locationPanel.X + 10, y), Color.LightGray);
+        DrawText(spriteBatch, $"Cell: {cell.Id}", new Vector2(locationPanel.X + 10, y), Color.LightGray);
         y += 25;
         DrawText(spriteBatch, $"Biome: {biome}", new Vector2(locationPanel.X + 10, y), Color.LightGray);
         y += 25;
@@ -64,16 +64,16 @@ public class HomeScreen : ScreenBase
         // Show burg info - either the one we're in, or one nearby in the cell
         if (burg != null)
         {
-            DrawText(spriteBatch, $"In Burg: {burg.name} ({burg.size})", new Vector2(locationPanel.X + 10, y), Color.LightBlue);
+            DrawText(spriteBatch, $"In Burg: {burg.Name} ({burg.Size})", new Vector2(locationPanel.X + 10, y), Color.LightBlue);
             y += 25;
         }
         else
         {
             // Check if there's a burg in this cell we could enter
-            var cellBurg = SaveGameService.GetBurg(cell.burg);
+            var cellBurg = SaveGameService.GetBurg(cell.Burg);
             if (cellBurg != null)
             {
-                DrawText(spriteBatch, $"Nearby: {cellBurg.name} ({cellBurg.size})", new Vector2(locationPanel.X + 10, y), Color.Cyan);
+                DrawText(spriteBatch, $"Nearby: {cellBurg.Name} ({cellBurg.Size})", new Vector2(locationPanel.X + 10, y), Color.Cyan);
                 y += 25;
             }
         }

@@ -116,6 +116,19 @@ It also deliberately **excludes per-playthrough player progress**. The canonical
 exploration/discovery state (`ExploredPercent`, `Discovered`, `LastExplored`) and player/party data
 (`Party`, `CurrentPlayerId`) live in the **save game**, not in `world.dol`.
 
+### Runtime progress and save games (Phase 2)
+
+The game loads `world.dol` directly (`MapService.LoadWorld` → `SaveGameService.CurrentWorld`) and runs
+entirely off `DolWorld` — Azgaar shapes are no longer used at runtime. To keep the canonical file
+clean while still tracking progress, `WorldCell` and `WorldLocation` carry the mutable progress fields
+(`ExploredPercent`, `Discovered`, `LastExplored`) annotated
+`[JsonIgnore(Condition = WhenWritingDefault)]`. A freshly baked world has them all at default, so they
+are **omitted from `world.dol`**; once the player makes progress they are non-default and get written.
+
+A save file is a **`SaveGame`** (`Models/World/SaveGame.cs`) — the `DolWorld` (now carrying progress)
+plus `Party` and `CurrentPlayerId` — serialized with the same `DolWorldSerializer.Options`. This is
+distinct from the shipped, progress-free `world.dol`.
+
 ## Example
 
 A trimmed `world.dol` (one cell, one burg with an authored enrichment block):

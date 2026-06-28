@@ -1,12 +1,14 @@
 namespace DolCon.Core.Models.World;
 
+using System.Text.Json.Serialization;
+using DolCon.Core.Models;
 using Enums;
 
 /// <summary>
-/// A baked location definition placed on a cell or burg. Stores only the static identity — the
-/// full <c>LocationType</c> template is rehydrated at load time from the <c>LocationTypes.Types</c>
-/// catalog via <see cref="TypeKey"/>. Per-playthrough exploration/discovery state is NOT stored
-/// here; it lives in the save game.
+/// A baked location placed on a cell or burg. Stores the static identity — the full
+/// <c>LocationType</c> template is rehydrated from the <c>LocationTypes.Types</c> catalog via
+/// <see cref="TypeKey"/>. Per-playthrough exploration/discovery is runtime/save state: it's omitted
+/// from a freshly baked world.dol and only written into save files once the player makes progress.
 /// </summary>
 public class WorldLocation
 {
@@ -25,4 +27,20 @@ public class WorldLocation
 
     /// <summary>Reserved enrichment for this location. Optional; omitted when null.</summary>
     public Enrichment? Enrichment { get; set; }
+
+    /// <summary>Whether the player has discovered this location. Runtime/save state.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool Discovered { get; set; }
+
+    /// <summary>Per-playthrough exploration progress (0–1). Runtime/save state.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public double ExploredPercent { get; set; }
+
+    /// <summary>When the location was last explored. Runtime/save state.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public DateTime LastExplored { get; set; }
+
+    /// <summary>The full location template, rehydrated from the static catalog by <see cref="TypeKey"/>.</summary>
+    [JsonIgnore]
+    public LocationType Type => LocationTypes.Get(TypeKey);
 }
