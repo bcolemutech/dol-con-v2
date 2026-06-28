@@ -22,7 +22,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="PrebuiltMaps\*.json">
+    <!-- Ship the baked canonical world(s); the game installs these to %APPDATA%/DolCon/Worlds on
+         first run. The raw Azgaar export under PrebuiltMaps is kept in-repo only as WorldForge input
+         and is no longer copied to output. -->
+    <None Update="Worlds\*.world.dol">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

@@ -231,11 +231,11 @@ public class CharacterCreationScreen : ScreenBase
 
     private void ConfirmCharacter()
     {
-        _mapService.LoadMap(_selectedMap, _playerName.Trim(), _abilities);
+        _mapService.LoadWorld(_selectedMap, _playerName.Trim(), _abilities);
 
         var existingFiles = _saveGameService.GetSaves()
             .Select(f => f.Name).ToArray();
-        var mapName = SaveGameService.CurrentMap.info?.mapName ?? "unknown";
+        var mapName = SaveGameService.CurrentWorld.Info.Name;
         var sanitizedName = SaveGameService.SanitizeFileComponent(_playerName.Trim());
         SaveGameService.CurrentSaveName = SaveGameService.GenerateSaveName(
             mapName, sanitizedName, existingFiles);
