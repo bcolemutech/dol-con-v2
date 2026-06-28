@@ -19,7 +19,7 @@ public static class SaveHelper
     /// </summary>
     public static void TriggerSave()
     {
-        if (SaveGameService.CurrentMap.info == null) return;
+        if (!SaveGameService.HasWorld) return;
 
         Task.Run(async () =>
         {
@@ -67,7 +67,7 @@ public class Game1 : Game
         // Initialize core services
         _playerService = new PlayerService();
         var positionHandler = new NoOpPositionUpdateHandler();
-        _mapService = new MapService(_playerService, positionHandler, new WorldProvisioningService());
+        _mapService = new MapService(_playerService, positionHandler);
         _moveService = new MoveService(positionHandler);
 
         var itemsService = new ItemsService();
@@ -141,7 +141,7 @@ public class Game1 : Game
     protected override void OnExiting(object sender, EventArgs args)
     {
         // Auto-save on exit
-        if (SaveGameService.CurrentMap.info != null)
+        if (SaveGameService.HasWorld)
         {
             _saveGameService.SaveGame().Wait();
         }

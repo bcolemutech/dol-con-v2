@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using DolCon.Core.Enums;
 using DolCon.Core.Models;
-using DolCon.Core.Models.BaseTypes;
+using DolCon.Core.Models.World;
 using DolCon.Core.Services;
 using DolCon.Core.Utilities;
 using DolCon.MonoGame.Input;
@@ -75,7 +75,7 @@ public class NavigationScreen : ScreenBase
         _cellPolygons.Clear();
         _maxSelectionNumber = 0;
 
-        var map = SaveGameService.CurrentMap;
+        var map = SaveGameService.CurrentWorld;
         var cell = SaveGameService.CurrentCell;
         var location = SaveGameService.CurrentLocation;
         var burg = SaveGameService.CurrentBurg;
@@ -83,70 +83,70 @@ public class NavigationScreen : ScreenBase
         // Check for special actions at current position
         _canExplore = location == null && burg == null;
         _canCamp = location == null && burg == null;
-        var cellBurg = SaveGameService.GetBurg(cell.burg);
+        var cellBurg = SaveGameService.GetBurg(cell.Burg);
         _canEnterBurg = cellBurg != null && burg == null;
-        _burgName = cellBurg?.name;
+        _burgName = cellBurg?.Name;
 
         // Collect all vertices for viewport calculation
         var allVertices = new List<(double X, double Y)>();
 
         // Add current cell
         var currentVerts = GetCellVertices(cell, map);
-        var centerProvince = SaveGameService.GetProvince(cell.province);
+        var centerProvince = SaveGameService.GetProvince(cell.Province);
         allVertices.AddRange(currentVerts.Select(v => ((double)v.X, (double)v.Y)));
 
         _cellPolygons.Add(new PolygonCellData(
-            cell.i,
-            cell.Biome,
+            cell.Id,
+            cell.BiomeType,
             cell.ExploredPercent,
-            cellBurg?.name,
-            centerProvince.fullName,
+            cellBurg?.Name,
+            centerProvince.FullName,
             true,
             null,
             false,
             currentVerts,
-            new Vector2((float)cell.p[0], (float)cell.p[1])));
+            new Vector2((float)cell.Center[0], (float)cell.Center[1])));
 
         // Build neighbor inputs for clockwise sorting
         var neighborInputs = new List<ClockwiseNeighborSorter.NeighborInput>();
-        var neighborData = new Dictionary<int, (Cell Cell, Vector2[] Verts, Burg? Burg, Province Province)>();
+        var neighborData = new Dictionary<int, (WorldCell Cell, Vector2[] Verts, WorldBurg? Burg, WorldProvince Province)>();
 
-        foreach (var neighborId in cell.c)
+        foreach (var neighborId in cell.Neighbors)
         {
             if (neighborId < 0) continue;
 
             var neighbor = SaveGameService.GetCell(neighborId);
             var nVerts = GetCellVertices(neighbor, map);
-            var nBurg = SaveGameService.GetBurg(neighbor.burg);
-            var nProvince = SaveGameService.GetProvince(neighbor.province);
-            var isBlocked = neighbor.Biome == Biome.Marine;
+            var nBurg = SaveGameService.GetBurg(neighbor.Burg);
+            var nProvince = SaveGameService.GetProvince(neighbor.Province);
+            var isBlocked = neighbor.BiomeType == Biome.Marine;
 
             neighborData[neighborId] = (neighbor, nVerts, nBurg, nProvince);
             neighborInputs.Add(new ClockwiseNeighborSorter.NeighborInput(
-                neighborId, neighbor.p[0], neighbor.p[1], isBlocked));
+                neighborId, neighbor.Center[0], neighbor.Center[1], isBlocked));
 
             allVertices.AddRange(nVerts.Select(v => ((double)v.X, (double)v.Y)));
         }
 
         // Sort neighbors clockwise from north
         var sorted = ClockwiseNeighborSorter.SortNeighborsClockwise(
-            cell.p[0], cell.p[1], neighborInputs);
+            cell.Center[0], cell.Center[1], neighborInputs);
 
         foreach (var entry in sorted)
         {
             var (neighbor, verts, nBurg, province) = neighborData[entry.CellId];
 
             _cellPolygons.Add(new PolygonCellData(
-                neighbor.i,
-                neighbor.Biome,
+                neighbor.Id,
+                neighbor.BiomeType,
                 neighbor.ExploredPercent,
-                nBurg?.name,
-                province.fullName,
+                nBurg?.Name,
+                province.FullName,
                 false,
                 entry.SelectionNumber,
-                neighbor.Biome == Biome.Marine,
+                neighbor.BiomeType == Biome.Marine,
                 verts,
-                new Vector2((float)neighbor.p[0], (float)neighbor.p[1])));
+                new Vector2((float)neighbor.Center[0], (float)neighbor.Center[1])));
 
             if (entry.SelectionNumber.HasValue)
                 _maxSelectionNumber = entry.SelectionNumber.Value;
@@ -159,19 +159,19 @@ public class NavigationScreen : ScreenBase
         _viewport = new CellClusterViewport(allVertices, polyAreaWidth, polyAreaHeight);
     }
 
-    private Vector2[] GetCellVertices(Cell cell, Map map)
+    private Vector2[] GetCellVertices(WorldCell cell, DolWorld map)
     {
-        if (cell.v == null || cell.v.Count < 3)
+        if (cell.VertexIndices == null || cell.VertexIndices.Count < 3)
             return Array.Empty<Vector2>();
 
-        var vertices = new List<Vector2>(cell.v.Count);
-        for (int i = 0; i < cell.v.Count; i++)
+        var vertices = new List<Vector2>(cell.VertexIndices.Count);
+        for (int i = 0; i < cell.VertexIndices.Count; i++)
         {
-            int vi = cell.v[i];
-            if (vi >= 0 && vi < map.vertices.Count)
+            int vi = cell.VertexIndices[i];
+            if (vi >= 0 && vi < map.Vertices.Count)
             {
-                var v = map.vertices[vi];
-                vertices.Add(new Vector2((float)v.p[0], (float)v.p[1]));
+                var v = map.Vertices[vi];
+                vertices.Add(new Vector2((float)v.P[0], (float)v.P[1]));
             }
         }
         return vertices.ToArray();
@@ -316,12 +316,12 @@ public class NavigationScreen : ScreenBase
     private void ProcessEnterBurg()
     {
         var cell = SaveGameService.CurrentCell;
-        var cellBurg = SaveGameService.GetBurg(cell.burg);
+        var cellBurg = SaveGameService.GetBurg(cell.Burg);
         if (cellBurg != null)
         {
             var party = SaveGameService.Party;
-            party.Burg = cellBurg.i;
-            _message = $"Entered {cellBurg.name}";
+            party.Burg = cellBurg.Id;
+            _message = $"Entered {cellBurg.Name}";
             SaveHelper.TriggerSave();
             BuildPolygonData();
         }
@@ -375,7 +375,7 @@ public class NavigationScreen : ScreenBase
         var burg = SaveGameService.CurrentBurg;
         if (burg != null)
         {
-            DrawText(spriteBatch, $"In Burg: {burg.name} ({burg.size})", new Vector2(20, 85), Color.Cyan);
+            DrawText(spriteBatch, $"In Burg: {burg.Name} ({burg.Size})", new Vector2(20, 85), Color.Cyan);
         }
 
         // Polygon area background
@@ -576,9 +576,9 @@ public class NavigationScreen : ScreenBase
 
         // Current cell info
         var cell = SaveGameService.CurrentCell;
-        DrawText(spriteBatch, $"Cell: {cell.i}", new Vector2(panelX + 15, y), Color.LightGray);
+        DrawText(spriteBatch, $"Cell: {cell.Id}", new Vector2(panelX + 15, y), Color.LightGray);
         y += 22;
-        DrawText(spriteBatch, $"Biome: {FormatBiomeName(cell.Biome)}", new Vector2(panelX + 15, y), Color.LightGray);
+        DrawText(spriteBatch, $"Biome: {FormatBiomeName(cell.BiomeType)}", new Vector2(panelX + 15, y), Color.LightGray);
         y += 22;
         DrawText(spriteBatch, $"Explored: {cell.ExploredPercent:P0}", new Vector2(panelX + 15, y), Color.LightGray);
         y += 30;
@@ -592,7 +592,7 @@ public class NavigationScreen : ScreenBase
 
         if (burg != null)
         {
-            DrawText(spriteBatch, $"In Burg: {burg.name}", new Vector2(panelX + 15, y), Color.Cyan);
+            DrawText(spriteBatch, $"In Burg: {burg.Name}", new Vector2(panelX + 15, y), Color.Cyan);
             y += 22;
             DrawText(spriteBatch, "[L] Explore Locations", new Vector2(panelX + 15, y), Color.Orange);
             y += 22;

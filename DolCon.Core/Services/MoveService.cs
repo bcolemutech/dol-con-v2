@@ -26,11 +26,11 @@ public class MoveService : IMoveService
     public MoveStatus MoveToCell(int cellId)
     {
         var party = SaveGameService.Party;
-        var cell = SaveGameService.CurrentMap.Collections.cells[cellId];
+        var cell = SaveGameService.GetCell(cellId);
 
         double baseMoveCost;
 
-        switch (cell.Biome)
+        switch (cell.BiomeType)
         {
             case Biome.Marine:
                 return MoveStatus.Blocked;

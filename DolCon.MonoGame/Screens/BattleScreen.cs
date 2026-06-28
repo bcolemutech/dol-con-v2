@@ -65,8 +65,8 @@ public class BattleScreen : ScreenBase
 
         if (players.Count > 0)
         {
-            // Get biome type for enemy spawning (cell.biome is an index matching Biome enum)
-            var gameBiome = (Biome)cell.biome;
+            // Get biome type for enemy spawning
+            var gameBiome = cell.BiomeType;
             var biome = BiomeMapper.MapToCombatBiome(gameBiome);
 
             // Get challenge rating from cell (default to 1.0 if not set)

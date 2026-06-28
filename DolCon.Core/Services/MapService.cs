@@ -1,21 +1,20 @@
 namespace DolCon.Core.Services;
 
-using System.Text.Json;
 using DolCon.Core.Enums;
 using DolCon.Core.Models;
-using DolCon.Core.Models.BaseTypes;
+using DolCon.Core.Models.World;
 
 public interface IMapService
 {
-    IEnumerable<FileInfo> GetMaps();
-    void LoadMap(FileInfo mapFile);
-    void LoadMap(FileInfo mapFile, IMapProvisioningCallback callback);
-    void LoadMap(FileInfo mapFile, string playerName, PlayerAbilities abilities);
-    void LoadMap(FileInfo mapFile, IMapProvisioningCallback callback, string playerName, PlayerAbilities abilities);
+    IEnumerable<FileInfo> GetWorlds();
+    void LoadWorld(FileInfo worldFile, string playerName, PlayerAbilities abilities);
+    void LoadWorld(FileInfo worldFile, IMapProvisioningCallback callback, string playerName, PlayerAbilities abilities);
 }
 
 public class MapService : IMapService
 {
+    public const string WorldFileExtension = ".world.dol";
+
     public static Direction GetDirection(double ax, double ay, double bx, double by)
     {
         var angle = Math.Atan2(by - ay, bx - ax);
@@ -26,100 +25,74 @@ public class MapService : IMapService
         return (Direction)halfQuarter;
     }
 
-    private readonly string _mapsPath;
+    private readonly string _worldsPath;
     private readonly IPlayerService _playerService;
     private readonly IPositionUpdateHandler _positionUpdateHandler;
-    private readonly IWorldProvisioningService _worldProvisioningService;
 
-    public MapService(IPlayerService playerService, IPositionUpdateHandler positionUpdateHandler,
-        IWorldProvisioningService worldProvisioningService)
+    public MapService(IPlayerService playerService, IPositionUpdateHandler positionUpdateHandler)
     {
         _playerService = playerService;
         _positionUpdateHandler = positionUpdateHandler;
-        _worldProvisioningService = worldProvisioningService;
         var mainPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DolCon");
-        _mapsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DolCon",
-            "Maps");
-        if (Directory.Exists(_mapsPath)) return;
+        _worldsPath = Path.Combine(mainPath, "Worlds");
+        if (Directory.Exists(_worldsPath)) return;
 
-        Directory.CreateDirectory(mainPath);
+        Directory.CreateDirectory(_worldsPath);
 
-        // Move pre-built maps if they exist
-        var prebuiltPath = Environment.CurrentDirectory + "/PrebuiltMaps";
-        if (Directory.Exists(prebuiltPath))
+        // Install the baked worlds that ship with the game on first run.
+        var shippedWorlds = Path.Combine(Environment.CurrentDirectory, "Worlds");
+        if (!Directory.Exists(shippedWorlds)) return;
+        foreach (var world in Directory.GetFiles(shippedWorlds, $"*{WorldFileExtension}"))
         {
-            Directory.Move(prebuiltPath, _mapsPath);
+            File.Copy(world, Path.Combine(_worldsPath, Path.GetFileName(world)), overwrite: true);
         }
     }
 
-    public MapService(IPlayerService playerService)
-        : this(playerService, new NoOpPositionUpdateHandler(), new WorldProvisioningService())
+    public MapService(IPlayerService playerService) : this(playerService, new NoOpPositionUpdateHandler())
     {
     }
 
-    public IEnumerable<FileInfo> GetMaps()
+    public IEnumerable<FileInfo> GetWorlds()
     {
-        var maps = new DirectoryInfo(_mapsPath).GetFiles("*.json");
-        return maps;
+        return new DirectoryInfo(_worldsPath).GetFiles($"*{WorldFileExtension}");
     }
 
-    public void LoadMap(FileInfo mapFile)
+    public void LoadWorld(FileInfo worldFile, string playerName, PlayerAbilities abilities)
     {
-        LoadMap(mapFile, new NoOpMapProvisioningCallback());
+        LoadWorld(worldFile, new NoOpMapProvisioningCallback(), playerName, abilities);
     }
 
-    public void LoadMap(FileInfo mapFile, IMapProvisioningCallback callback)
+    public void LoadWorld(FileInfo worldFile, IMapProvisioningCallback callback, string playerName,
+        PlayerAbilities abilities)
     {
-        callback.OnStatus("Loading map...");
-        var map = DeserializeMap(mapFile).Result ?? throw new DolMapException("Failed to load map");
-        callback.OnEvent($"Loaded map {mapFile.Name}");
-        ProvisionMap(callback, map);
-        SaveGameService.CurrentMap = map;
+        callback.OnStatus("Loading world...");
+        var world = DolWorldSerializer.Deserialize(File.ReadAllText(worldFile.FullName))
+                    ?? throw new DolMapException("Failed to load world");
+        callback.OnEvent($"Loaded world {world.Info.Name}");
+
+        SaveGameService.CurrentWorld = world;
+
+        // The world is pre-baked (City of Light, challenge ratings, locations all provisioned by
+        // WorldForge). Only per-playthrough player placement happens here.
+        PlacePlayer(callback, world, playerName, abilities);
     }
 
-    public void LoadMap(FileInfo mapFile, string playerName, PlayerAbilities abilities)
+    private void PlacePlayer(IMapProvisioningCallback callback, DolWorld world, string playerName,
+        PlayerAbilities abilities)
     {
-        LoadMap(mapFile, new NoOpMapProvisioningCallback(), playerName, abilities);
-    }
-
-    public void LoadMap(FileInfo mapFile, IMapProvisioningCallback callback, string playerName, PlayerAbilities abilities)
-    {
-        callback.OnStatus("Loading map...");
-        var map = DeserializeMap(mapFile).Result ?? throw new DolMapException("Failed to load map");
-        callback.OnEvent($"Loaded map {mapFile.Name}");
-        ProvisionMap(callback, map, playerName, abilities);
-        SaveGameService.CurrentMap = map;
-    }
-
-    private void ProvisionMap(IMapProvisioningCallback callback, Map map,
-        string? playerName = null, PlayerAbilities? abilities = null)
-    {
-        // World provisioning now lives in WorldProvisioningService (shared with WorldForge). The game
-        // still provisions at load time until Phase 2 wires it to consume world.dol. A fresh seed each
-        // load preserves today's "flair differs every game" behaviour.
-        _worldProvisioningService.Provision(map, Environment.TickCount, callback);
-
         callback.OnStatus("Setting player position...");
 
-        var cityOfLight = map.Collections.burgs.First(x => x.isCityOfLight);
+        var cityOfLight = world.Burgs.First(b => b.IsCityOfLight);
         SaveGameService.Party = new Party
         {
-            Cell = cityOfLight.cell,
-            Burg = cityOfLight.i,
+            Cell = cityOfLight.Cell,
+            Burg = cityOfLight.Id,
             Stamina = 1
         };
-        var player = abilities != null
-            ? _playerService.SetPlayer(playerName ?? "Player 1", false, abilities)
-            : _playerService.SetPlayer(playerName ?? "Player 1", false);
+        var player = _playerService.SetPlayer(playerName, false, abilities);
         SaveGameService.CurrentPlayerId = player.Id;
         _positionUpdateHandler.OnPositionUpdated();
 
-        callback.OnEvent($"Player position set to {cityOfLight.name}");
-    }
-
-    private static async Task<Map?> DeserializeMap(FileSystemInfo mapFile)
-    {
-        var stream = File.OpenRead(mapFile.FullName);
-        return await JsonSerializer.DeserializeAsync<Map>(stream);
+        callback.OnEvent($"Player position set to {cityOfLight.Name}");
     }
 }

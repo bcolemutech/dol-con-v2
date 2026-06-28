@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using DolCon.Core.Enums;
 using DolCon.Core.Models;
-using DolCon.Core.Models.BaseTypes;
+using DolCon.Core.Models.World;
 using DolCon.Core.Services;
 using DolCon.MonoGame.Input;
 
@@ -69,7 +69,7 @@ public class LocationScreen : ScreenBase
         if (burg != null)
         {
             // In a burg - show burg locations
-            foreach (var loc in burg.locations)
+            foreach (var loc in burg.Locations)
             {
                 var isExplorable = loc.Type.Size != LocationSize.unexplorable;
                 _locations.Add(new LocationDisplayItem(
@@ -84,7 +84,7 @@ public class LocationScreen : ScreenBase
         else
         {
             // In wilderness - show discovered cell locations
-            foreach (var loc in cell.locations.Where(l => l.Discovered))
+            foreach (var loc in cell.Locations.Where(l => l.Discovered))
             {
                 var isExplorable = loc.Type.Size != LocationSize.unexplorable;
                 _locations.Add(new LocationDisplayItem(
@@ -97,14 +97,14 @@ public class LocationScreen : ScreenBase
             }
 
             // Also check if there's a burg we can enter
-            var cellBurg = SaveGameService.GetBurg(cell.burg);
+            var cellBurg = SaveGameService.GetBurg(cell.Burg);
             if (cellBurg != null)
             {
                 // Add burg as a special "location" entry
                 _locations.Insert(0, new LocationDisplayItem(
                     Guid.Empty, // Special marker for burg
-                    cellBurg.name,
-                    $"Burg ({cellBurg.size})",
+                    cellBurg.Name,
+                    $"Burg ({cellBurg.Size})",
                     0,
                     true,
                     false));
@@ -251,19 +251,19 @@ public class LocationScreen : ScreenBase
     private void ProcessEnterBurg()
     {
         var cell = SaveGameService.CurrentCell;
-        var burg = SaveGameService.GetBurg(cell.burg);
+        var burg = SaveGameService.GetBurg(cell.Burg);
 
         if (burg != null)
         {
             var party = SaveGameService.Party;
-            party.Burg = burg.i;
-            _message = $"Entered {burg.name}";
+            party.Burg = burg.Id;
+            _message = $"Entered {burg.Name}";
             BuildLocationList();
             SaveHelper.TriggerSave();
         }
     }
 
-    private void ProcessExploration(Location location)
+    private void ProcessExploration(WorldLocation location)
     {
         var cell = SaveGameService.CurrentCell;
         var thisEvent = new Event(location, cell);
@@ -331,7 +331,7 @@ public class LocationScreen : ScreenBase
         var cell = SaveGameService.CurrentCell;
         var burg = SaveGameService.CurrentBurg;
         var location = SaveGameService.CurrentLocation;
-        var biome = SaveGameService.GetBiome(cell.biome);
+        var biome = SaveGameService.GetBiome(cell.Biome);
 
         if (location != null)
         {
@@ -371,7 +371,7 @@ public class LocationScreen : ScreenBase
         }
         else if (burg != null)
         {
-            DrawText(spriteBatch, $"In Burg: {burg.name} ({burg.size})", new Vector2(padding, y), Color.Cyan);
+            DrawText(spriteBatch, $"In Burg: {burg.Name} ({burg.Size})", new Vector2(padding, y), Color.Cyan);
             y += 25;
             DrawText(spriteBatch, $"Biome: {biome}", new Vector2(padding, y), Color.LightGray);
             y += 35;
@@ -380,7 +380,7 @@ public class LocationScreen : ScreenBase
         }
         else
         {
-            DrawText(spriteBatch, $"Wilderness - Cell {cell.i}", new Vector2(padding, y), Color.LightGray);
+            DrawText(spriteBatch, $"Wilderness - Cell {cell.Id}", new Vector2(padding, y), Color.LightGray);
             y += 25;
             DrawText(spriteBatch, $"Biome: {biome}", new Vector2(padding, y), Color.LightGray);
             y += 35;

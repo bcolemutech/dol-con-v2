@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using DolCon.Core.Enums;
-using DolCon.Core.Models.BaseTypes;
+using DolCon.Core.Models.World;
 using DolCon.Core.Services;
 using DolCon.Core.Utilities;
 using DolCon.MonoGame.Input;
@@ -30,7 +30,7 @@ public class WorldMapScreen : ScreenBase
     private const int ControlsBarHeight = 70;
 
     private readonly Dictionary<int, float> _cellVisibility = new();
-    private Burg? _cityOfLight;
+    private WorldBurg? _cityOfLight;
     private bool _needsCenter = true;
     private PolygonRenderer? _polygonRenderer;
 
@@ -40,8 +40,8 @@ public class WorldMapScreen : ScreenBase
 
         PrecomputeVisibility();
 
-        _cityOfLight = SaveGameService.CurrentMap.Collections.burgs
-            .FirstOrDefault(b => b.isCityOfLight);
+        _cityOfLight = SaveGameService.CurrentWorld.Burgs
+            .FirstOrDefault(b => b.IsCityOfLight);
     }
 
     public override void LoadContent(ContentManager content, GraphicsDevice graphicsDevice)
@@ -60,7 +60,7 @@ public class WorldMapScreen : ScreenBase
     private void PrecomputeVisibility()
     {
         _cellVisibility.Clear();
-        var cells = SaveGameService.CurrentMap.Collections.cells;
+        var cells = SaveGameService.CurrentWorld.Cells;
         var currentCellId = SaveGameService.Party.Cell;
 
         // Always show the player's current cell at full visibility
@@ -71,9 +71,9 @@ public class WorldMapScreen : ScreenBase
         {
             if (cell.ExploredPercent > 0)
             {
-                _cellVisibility[cell.i] = (float)Math.Max(
+                _cellVisibility[cell.Id] = (float)Math.Max(
                     cell.ExploredPercent,
-                    _cellVisibility.GetValueOrDefault(cell.i, 0f));
+                    _cellVisibility.GetValueOrDefault(cell.Id, 0f));
             }
         }
 
@@ -85,7 +85,7 @@ public class WorldMapScreen : ScreenBase
             var cell = cells[cellId];
             float sourceVisibility = _cellVisibility[cellId];
 
-            foreach (var neighborId in cell.c)
+            foreach (var neighborId in cell.Neighbors)
             {
                 if (neighborId < 0 || neighborId >= cells.Count) continue;
 
@@ -185,9 +185,9 @@ public class WorldMapScreen : ScreenBase
     {
         if (_polygonRenderer == null) return;
 
-        var map = SaveGameService.CurrentMap;
-        var cells = map.Collections.cells;
-        var vertices = map.vertices;
+        var map = SaveGameService.CurrentWorld;
+        var cells = map.Cells;
+        var vertices = map.Vertices;
 
         if (vertices == null || vertices.Count == 0) return;
 
@@ -201,19 +201,19 @@ public class WorldMapScreen : ScreenBase
 
         foreach (var cell in cells)
         {
-            if (!_cellVisibility.TryGetValue(cell.i, out float visibility))
+            if (!_cellVisibility.TryGetValue(cell.Id, out float visibility))
                 continue;
 
             // Frustum culling using cell center
-            float cx = (float)cell.p[0];
-            float cy = (float)cell.p[1];
+            float cx = (float)cell.Center[0];
+            float cy = (float)cell.Center[1];
             if (cx < worldLeft || cx > worldRight || cy < worldTop || cy > worldBottom)
                 continue;
 
-            if (cell.v == null || cell.v.Count < 3) continue;
+            if (cell.VertexIndices == null || cell.VertexIndices.Count < 3) continue;
 
             // Get biome color dimmed by visibility
-            var baseColor = GetBiomeColor(cell.Biome);
+            var baseColor = GetBiomeColor(cell.BiomeType);
             var dimmedColor = new Color(
                 (int)(baseColor.R * visibility),
                 (int)(baseColor.G * visibility),
@@ -221,15 +221,15 @@ public class WorldMapScreen : ScreenBase
 
             // Convert vertices to screen space, skipping invalid indices
             var centerScreen = WorldToScreen(cx, cy, mapViewport);
-            var screenVertList = new List<Vector2>(cell.v.Count);
+            var screenVertList = new List<Vector2>(cell.VertexIndices.Count);
 
-            for (int i = 0; i < cell.v.Count; i++)
+            for (int i = 0; i < cell.VertexIndices.Count; i++)
             {
-                int vi = cell.v[i];
+                int vi = cell.VertexIndices[i];
                 if (vi < 0 || vi >= vertices.Count) continue;
 
                 var v = vertices[vi];
-                screenVertList.Add(WorldToScreen((float)v.p[0], (float)v.p[1], mapViewport));
+                screenVertList.Add(WorldToScreen((float)v.P[0], (float)v.P[1], mapViewport));
             }
 
             if (screenVertList.Count < 3) continue;
@@ -242,7 +242,7 @@ public class WorldMapScreen : ScreenBase
     private void DrawPlayerIndicator(SpriteBatch spriteBatch, Rectangle mapViewport)
     {
         var cell = SaveGameService.CurrentCell;
-        var screenPos = WorldToScreen((float)cell.p[0], (float)cell.p[1], mapViewport);
+        var screenPos = WorldToScreen((float)cell.Center[0], (float)cell.Center[1], mapViewport);
 
         int cx = (int)screenPos.X;
         int cy = (int)screenPos.Y;
@@ -255,10 +255,10 @@ public class WorldMapScreen : ScreenBase
 
     private void DrawCityOfLightIndicator(SpriteBatch spriteBatch, Rectangle mapViewport)
     {
-        if (_cityOfLight?.x == null || _cityOfLight.y == null)
+        if (_cityOfLight?.X == null || _cityOfLight.Y == null)
             return;
 
-        var screenPos = WorldToScreen((float)_cityOfLight.x.Value, (float)_cityOfLight.y.Value, mapViewport);
+        var screenPos = WorldToScreen((float)_cityOfLight.X.Value, (float)_cityOfLight.Y.Value, mapViewport);
 
         int cx = (int)screenPos.X;
         int cy = (int)screenPos.Y;
@@ -270,12 +270,12 @@ public class WorldMapScreen : ScreenBase
         DrawRect(spriteBatch, new Rectangle(cx - 1, cy - 1, 3, 3), Color.White);
 
         // Label
-        if (_cityOfLight.name != null)
+        if (_cityOfLight.Name != null)
         {
             var shadowColor = new Color(0, 0, 0, 180);
             var labelPos = new Vector2(cx + r + 4, cy - 8);
-            DrawText(spriteBatch, _cityOfLight.name, labelPos + new Vector2(1, 1), shadowColor);
-            DrawText(spriteBatch, _cityOfLight.name, labelPos, Color.White);
+            DrawText(spriteBatch, _cityOfLight.Name, labelPos + new Vector2(1, 1), shadowColor);
+            DrawText(spriteBatch, _cityOfLight.Name, labelPos, Color.White);
         }
     }
 
@@ -289,14 +289,14 @@ public class WorldMapScreen : ScreenBase
     private void CenterOnPlayer()
     {
         var cell = SaveGameService.CurrentCell;
-        CenterOn((float)cell.p[0], (float)cell.p[1]);
+        CenterOn((float)cell.Center[0], (float)cell.Center[1]);
     }
 
     private void CenterOnCityOfLight()
     {
-        if (_cityOfLight?.x != null && _cityOfLight.y != null)
+        if (_cityOfLight?.X != null && _cityOfLight.Y != null)
         {
-            CenterOn((float)_cityOfLight.x.Value, (float)_cityOfLight.y.Value);
+            CenterOn((float)_cityOfLight.X.Value, (float)_cityOfLight.Y.Value);
         }
     }
 

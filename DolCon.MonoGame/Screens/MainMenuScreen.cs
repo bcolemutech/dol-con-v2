@@ -77,10 +77,10 @@ public class MainMenuScreen : ScreenBase
             switch (_selectedIndex)
             {
                 case 0: // New Game
-                    _availableMaps = _mapService.GetMaps().ToArray();
+                    _availableMaps = _mapService.GetWorlds().ToArray();
                     if (_availableMaps.Length == 0)
                     {
-                        _statusMessage = "No maps found! Place map files in %APPDATA%/DolCon/Maps/";
+                        _statusMessage = "No worlds found! Place world.dol files in %APPDATA%/DolCon/Worlds/";
                     }
                     else
                     {
@@ -203,8 +203,9 @@ public class MainMenuScreen : ScreenBase
                 DrawMenu(spriteBatch, _menuOptions, centerX, startY);
                 break;
             case MenuState.SelectMap:
-                DrawCenteredText(spriteBatch, "Select a Map", 150, Color.White);
-                var mapNames = _availableMaps.Select(m => m.Name).ToArray();
+                DrawCenteredText(spriteBatch, "Select a World", 150, Color.White);
+                var mapNames = _availableMaps
+                    .Select(m => m.Name.Replace(MapService.WorldFileExtension, string.Empty)).ToArray();
                 DrawMenu(spriteBatch, mapNames, centerX, startY);
                 DrawCenteredText(spriteBatch, "Press ESC to go back", 500, Color.Gray);
                 break;

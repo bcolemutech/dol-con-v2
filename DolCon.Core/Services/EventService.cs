@@ -176,14 +176,14 @@ public class EventService : IEventService
             if (Math.Abs(currentCell.ExploredPercent - 1) < .01)
             {
                 currentCell.ExploredPercent = 1;
-                currentCell.locations.ForEach(x => x.Discovered = true);
+                currentCell.Locations.ForEach(x => x.Discovered = true);
             }
             else
             {
                 // Roll for location discovery
                 var chance = new Chance();
                 var dice = chance.Dice(20);
-                var undiscoveredLocations = currentCell.locations.Where(x => !x.Discovered).ToList();
+                var undiscoveredLocations = currentCell.Locations.Where(x => !x.Discovered).ToList();
 
                 if (dice > 0 && undiscoveredLocations.Count > 0)
                 {

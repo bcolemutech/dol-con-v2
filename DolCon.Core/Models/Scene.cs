@@ -2,6 +2,7 @@
 
 using Combat;
 using Enums;
+using World;
 
 public class Scene
 {
@@ -14,7 +15,7 @@ public class Scene
     public Dictionary<int, ShopSelection> Selections { get; set; } = new();
     public ServiceType? SelectedService { get; set; }
     public int Selection { get; set; }
-    public Location? Location { get; set; }
+    public WorldLocation? Location { get; set; }
 
     // Combat-specific properties
     public CombatState? CombatState { get; set; }
