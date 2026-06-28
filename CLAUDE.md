@@ -14,18 +14,22 @@ The solution consists of 3 projects:
 dol-con-v2/
 ├── DolCon.Core/           # Shared game logic library (Models, Services, Enums, Data)
 ├── DolCon.Core.Tests/     # Tests for Core library
-├── DolCon.MonoGame/       # MonoGame graphical application
+├── DolCon.MonoGame/       # MonoGame graphical application (loads world.dol)
+├── DolCon.WorldForge/     # CLI that bakes Azgaar exports into canonical world.dol
 ├── version.json           # Semantic versioning
 └── Directory.Build.props  # Shared build properties
 ```
 
 ### DolCon.Core (Shared Library)
 Contains all UI-agnostic game logic:
-- **Models/**: Player, Party, Item, Location, Scene, Combat models, BaseTypes (Map data)
-- **Services/**: CombatService, MapService, MoveService, EventService, ShopService, SaveGameService
+- **Models/**: Player, Party, Item, Scene, Combat models, `Models/World/` (the `DolWorld` canonical schema + `SaveGame`), BaseTypes (raw Azgaar Map data, WorldForge input)
+- **Services/**: CombatService, MapService, MoveService, EventService, ShopService, SaveGameService, WorldProvisioningService, WorldBaker
 - **Data/**: EnemyIndex (100+ enemies), EncounterBuilder
 - **Enums/**: Game enums (Direction, Biome, Equipment, CombatEnums, etc.)
 - **Utilities/**: PaginatedList
+
+### DolCon.WorldForge (CLI)
+Bakes a raw Azgaar export into a canonical `world.dol`: `worldforge bake <azgaar-export.json> -o <world.dol> [--seed <int>]`. See `docs/WORLD_DOL_FORMAT.md`.
 
 ### DolCon.MonoGame (Graphical Application)
 MonoGame-based UI:
@@ -75,8 +79,9 @@ dotnet restore
 
 Services are located in `DolCon.Core/Services/` and handle core game logic:
 
-- **SaveGameService**: Manages game save/load operations. Contains static properties for global game state: `CurrentMap`, `Party`, `CurrentCell`, `CurrentBurg`, `CurrentLocation`, `CurrentProvince`, `CurrentState`, `CurrentBiome`, and `CurrentPlayerId`.
-- **MapService**: Loads map JSON files from `%APPDATA%/DolCon/Maps`, handles direction calculations between coordinates, and generates location types for cells and burgs.
+- **SaveGameService**: Manages game save/load operations. Contains static properties for global game state: `CurrentWorld` (a `DolWorld`), `Party`, `CurrentCell`, `CurrentBurg`, `CurrentLocation`, `CurrentProvince`, `CurrentState`, `CurrentBiome`, and `CurrentPlayerId`. Save files are a `SaveGame` (`DolWorld` + party + player progress); the shipped, progress-free `world.dol` is loaded for new games.
+- **MapService**: Loads a baked `world.dol` (`DolWorld`) from `%APPDATA%/DolCon/Worlds` via `DolWorldSerializer`, installs shipped worlds on first run, and handles direction calculations. It no longer provisions the world at runtime — only player placement happens at load. World provisioning lives in `WorldProvisioningService` and is pre-baked by WorldForge.
+- **WorldProvisioningService / WorldBaker**: The single home for world provisioning (City of Light, challenge ratings, location placement, burg sizing), made deterministic via a seeded RNG. `WorldBaker` provisions an Azgaar `Map` and maps it to a `DolWorld`. Consumed by the `DolCon.WorldForge` CLI (`worldforge bake`), not by the game at runtime.
 - **PlayerService**: Manages player creation and persistence.
 - **MoveService**: Handles party movement between cells, calculates movement costs based on biome, and manages stamina consumption.
 - **EventService**: Processes events when entering locations (exploration, rewards, services, combat encounters).
@@ -112,7 +117,7 @@ Models are in `DolCon.Core/Models/`:
 
 1. Application starts via MonoGame's `Game1` class which initializes the ScreenManager.
 2. MainMenuScreen presents New Game or Load Game options.
-3. Player selection populates `SaveGameService.CurrentMap` and `SaveGameService.Party`.
+3. New Game loads a baked `world.dol` into `SaveGameService.CurrentWorld` and places the player; the world is no longer re-provisioned at runtime, so City of Light, challenge ratings, and locations are identical run-to-run.
 4. User navigates between screens using keyboard input handled by InputManager.
 5. Movement handled by `MoveService`, which updates Party position and triggers `EventService`.
 6. Events determine scene type (exploration rewards, shop interaction, services, combat).
@@ -121,7 +126,7 @@ Models are in `DolCon.Core/Models/`:
 
 ### Key Data Patterns
 
-- **Static State**: `SaveGameService.CurrentMap` and `SaveGameService.Party` are static and accessed globally throughout services.
+- **Static State**: `SaveGameService.CurrentWorld` (a `DolWorld`) and `SaveGameService.Party` are static and accessed globally throughout services. The game depends only on `DolWorld`; raw Azgaar shapes (`Models/BaseTypes`) are now an input to WorldForge, not used at runtime.
 - **Scene Management**: The Scene model acts as a state machine for multi-step interactions, tracking completion and selections.
 - **Currency System**: Coin values use integer math: 1 gold = 100 silver = 1000 copper = 1000 coin.
 
@@ -129,7 +134,8 @@ Models are in `DolCon.Core/Models/`:
 
 - **Items.json**: Defines all items/equipment with tags (TagType enum) for categorization.
 - **Services.json**: Defines available services at locations (inns, vendors, etc.).
-- **PrebuiltMaps/**: Contains pre-generated world maps that are copied to `%APPDATA%/DolCon/Maps` on first run.
+- **Worlds/**: Contains baked `world.dol` files (produced by WorldForge) that ship with the game and are copied to `%APPDATA%/DolCon/Worlds` on first run.
+- **PrebuiltMaps/**: Raw Azgaar exports kept in-repo only as WorldForge input; no longer copied to the game at runtime.
 
 ### Combat System
 
