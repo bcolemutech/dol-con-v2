@@ -406,3 +406,7 @@ Maps/
 
 # Claude
 .claude/
+
+# Baked worlds are build artifacts, produced by DolCon.WorldForge from the Azgaar
+# export in PrebuiltMaps/. Regenerate with `dotnet build` (auto-bakes) or `worldforge bake`.
+*.world.dol

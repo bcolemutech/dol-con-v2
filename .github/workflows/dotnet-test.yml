@@ -62,4 +62,50 @@ jobs:
       run: dotnet restore DolCon.MonoGame/DolCon.MonoGame.csproj
 
     - name: Build MonoGame
+      # This also exercises the auto-bake target: a fresh clone has no world.dol, so a successful
+      # build proves the cold-clone path produces a playable world on every OS.
       run: dotnet build DolCon.MonoGame/DolCon.MonoGame.csproj --no-restore --configuration Release
+
+    - name: Verify a world was baked
+      shell: bash
+      run: |
+        world=$(find DolCon.MonoGame/bin/Release -name '*.world.dol' | head -1)
+        if [ -z "$world" ]; then
+          echo "::error::Build produced no .world.dol — the auto-bake target did not run."
+          exit 1
+        fi
+        echo "Baked $world ($(wc -c < "$world") bytes)"
+
+  verify-bake-reproducible:
+    name: Verify world bake is reproducible
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Build WorldForge
+      run: dotnet build DolCon.WorldForge/DolCon.WorldForge.csproj --configuration Release
+
+    # world.dol is a build artifact rather than a committed file, which only holds up if the bake is
+    # deterministic. Bake the same export twice with a pinned timestamp and require identical bytes.
+    - name: Bake twice and compare
+      env:
+        SOURCE_DATE_EPOCH: 1750000000
+      run: |
+        set -euo pipefail
+        export_json="DolCon.MonoGame/PrebuiltMaps/Ouvia Full 2023-07-08-13-04.json"
+        for run in a b; do
+          dotnet run --project DolCon.WorldForge --configuration Release --no-build -- \
+            bake "$export_json" -o "/tmp/world-$run.dol" > /dev/null
+        done
+        if ! cmp -s /tmp/world-a.dol /tmp/world-b.dol; then
+          echo "::error::Bake is not reproducible — two bakes of the same export differ."
+          exit 1
+        fi
+        echo "Bake is reproducible: $(sha256sum /tmp/world-a.dol | cut -d' ' -f1)"

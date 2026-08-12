@@ -115,6 +115,33 @@ public class WorldBakerTests
     }
 
     [Fact]
+    public void Bake_WithPinnedTimestamp_IsByteIdentical()
+    {
+        var baker = new WorldBaker();
+        var pinned = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        var first = baker.Bake(BuildFixtureMap(), seed: 12345, new NoOpMapProvisioningCallback(), pinned);
+        var second = baker.Bake(BuildFixtureMap(), seed: 12345, new NoOpMapProvisioningCallback(), pinned);
+
+        // Pinning GeneratedAt removes the only source of non-determinism, so the serialized bytes
+        // match exactly. This is what lets world.dol be treated as a reproducible build artifact
+        // rather than a committed source file — CI can re-bake and verify.
+        DolWorldSerializer.Serialize(second).Should().Be(DolWorldSerializer.Serialize(first));
+        first.Info.GeneratedAt.Should().Be(pinned);
+    }
+
+    [Fact]
+    public void Bake_WithoutPinnedTimestamp_StampsCurrentTime()
+    {
+        var baker = new WorldBaker();
+        var before = DateTime.UtcNow;
+
+        var world = baker.Bake(BuildFixtureMap(), seed: 42, new NoOpMapProvisioningCallback());
+
+        world.Info.GeneratedAt.Should().BeOnOrAfter(before).And.BeOnOrBefore(DateTime.UtcNow);
+    }
+
+    [Fact]
     public void Bake_DiffersForDifferentSeeds()
     {
         var baker = new WorldBaker();

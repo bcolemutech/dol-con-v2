@@ -11,7 +11,11 @@ public interface IWorldBaker
     /// Provisions a deserialized Azgaar map (deterministically, given <paramref name="seed"/>) and
     /// maps it into a canonical <see cref="DolWorld"/>, dropping the Azgaar bulk the game never reads.
     /// </summary>
-    DolWorld Bake(Map map, int seed, IMapProvisioningCallback callback);
+    /// <param name="generatedAt">
+    /// Stamped into <see cref="WorldInfo.GeneratedAt"/>. Pass an explicit value for a
+    /// byte-reproducible bake; defaults to <see cref="DateTime.UtcNow"/>.
+    /// </param>
+    DolWorld Bake(Map map, int seed, IMapProvisioningCallback callback, DateTime? generatedAt = null);
 }
 
 /// <summary>
@@ -31,12 +35,12 @@ public class WorldBaker : IWorldBaker
     {
     }
 
-    public DolWorld Bake(Map map, int seed, IMapProvisioningCallback callback)
+    public DolWorld Bake(Map map, int seed, IMapProvisioningCallback callback, DateTime? generatedAt = null)
     {
         _provisioning.Provision(map, seed, callback);
 
         callback.OnStatus("Mapping to world.dol...");
-        var world = ToDolWorld(map, seed);
+        var world = ToDolWorld(map, seed, generatedAt ?? DateTime.UtcNow);
 
         var cityOfLight = map.Collections.burgs.FirstOrDefault(b => b.isCityOfLight)?.name ?? "(none)";
         var locationCount = world.Cells.Sum(c => c.Locations.Count) + world.Burgs.Sum(b => b.Locations.Count);
@@ -47,7 +51,7 @@ public class WorldBaker : IWorldBaker
         return world;
     }
 
-    private static DolWorld ToDolWorld(Map map, int seed)
+    private static DolWorld ToDolWorld(Map map, int seed, DateTime generatedAt)
     {
         return new DolWorld
         {
@@ -57,7 +61,7 @@ public class WorldBaker : IWorldBaker
                 Name = map.info?.mapName ?? "Unnamed World",
                 SourceSeed = map.info?.seed,
                 SourceAzgaarVersion = map.info?.version,
-                GeneratedAt = DateTime.UtcNow,
+                GeneratedAt = generatedAt,
                 GeneratorVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString(),
                 ProvisioningSeed = seed
             },

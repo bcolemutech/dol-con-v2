@@ -14,6 +14,45 @@ later phases build on:
 - **Phase 2 (#75):** the game loads `world.dol` and retires runtime provisioning.
 - **Phases 3–5 (#76–#78):** AI-assisted enrichment fills the reserved containers described below.
 
+## `world.dol` is a build artifact, not a source file
+
+A baked world is **generated output and is not committed** (`*.world.dol` is gitignored). The
+committed source of the world is the raw Azgaar export under `DolCon.MonoGame/PrebuiltMaps/` plus the
+WorldForge code that transforms it; the baked file is derived from those and can be rebuilt at any
+time in well under a second.
+
+This keeps the repository small as the world grows. The baked JSON is roughly **4× larger than the
+Azgaar export it comes from** (pretty-printing plus tens of thousands of GUID-keyed locations), and
+the AI-assisted enrichment phases (#76–#78) rewrite it on every authoring pass — committing each
+revision would add a multi-megabyte blob to history every time, permanently.
+
+How it works in practice:
+
+| Concern | Mechanism |
+| --- | --- |
+| Fresh clone can just `dotnet run` | The `BakeWorlds` target in `DolCon.MonoGame.csproj` bakes any missing/stale world during build, and skips when nothing changed. |
+| Published builds ship a world | `PublishBakedWorld` adds the baked file to the publish output. |
+| Players get a downloadable world | `.github/workflows/release-world.yml` bakes on a version tag and attaches the world (plus a `.gz` and `SHA256SUMS.txt`) to the GitHub Release. |
+| A re-bake actually reaches the player | `MapService` installs shipped worlds into `%APPDATA%/DolCon/Worlds` at startup and refreshes any stale copy, rather than only on first run. |
+
+### Reproducibility is a requirement, not a nicety
+
+Treating the world as a rebuildable artifact only holds if the bake is deterministic — otherwise
+"regenerate it" would mean "get a different world." Provisioning is already seeded
+(`WorldInfo.ProvisioningSeed`, derived from the Azgaar seed when not supplied). The only wall-clock
+field is `info.generatedAt`, which can be pinned two ways:
+
+```bash
+worldforge bake <export> -o <out> --generated-at 2026-01-01T00:00:00Z
+SOURCE_DATE_EPOCH=1750000000 worldforge bake <export> -o <out>   # reproducible-builds convention
+```
+
+With the stamp pinned, two bakes of the same export are **byte-identical**. The
+`verify-bake-reproducible` CI job enforces this on every pull request, and
+`WorldBakerTests.Bake_WithPinnedTimestamp_IsByteIdentical` covers it at the unit level. Do not add
+unpinned nondeterminism (`DateTime.Now`, unseeded RNG, hash-order-dependent iteration) to the bake
+path.
+
 ## Where the model lives
 
 All types live in `DolCon.Core/Models/World/` so both WorldForge and the game reference one

@@ -14,6 +14,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DolCon.Core\DolCon.Core.csproj" />
+    <!-- Build-order edge only: WorldForge must exist before we can bake. ReferenceOutputAssembly=false
+         keeps the game free of any code dependency on the authoring tool. -->
+    <ProjectReference Include="..\DolCon.WorldForge\DolCon.WorldForge.csproj"
+                      ReferenceOutputAssembly="false"
+                      Private="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -21,13 +26,60 @@
     <PackageReference Include="FontStashSharp.MonoGame" Version="1.3.*" />
   </ItemGroup>
 
+  <!--
+    Baked worlds are BUILD ARTIFACTS, not source. They are gitignored and regenerated from the
+    committed Azgaar export by DolCon.WorldForge, so a fresh clone can `dotnet run` with no extra
+    steps and the shipped world can never drift from the code that produced it.
+    See docs/WORLD_DOL_FORMAT.md.
+  -->
+  <PropertyGroup>
+    <AzgaarExport>$(MSBuildThisFileDirectory)PrebuiltMaps\Ouvia Full 2023-07-08-13-04.json</AzgaarExport>
+    <BakedWorld>$(MSBuildThisFileDirectory)Worlds\Ouvia.world.dol</BakedWorld>
+  </PropertyGroup>
+
   <ItemGroup>
-    <!-- Ship the baked canonical world(s); the game installs these to %APPDATA%/DolCon/Worlds on
-         first run. The raw Azgaar export under PrebuiltMaps is kept in-repo only as WorldForge input
-         and is no longer copied to output. -->
-    <None Update="Worlds\*.world.dol">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    <!-- Re-bake when the source export, the bake CLI, or the world schema/provisioning changes. -->
+    <WorldBakeInput Include="$(AzgaarExport)" />
+    <WorldBakeInput Include="$(MSBuildThisFileDirectory)..\DolCon.WorldForge\**\*.cs"
+                    Exclude="$(MSBuildThisFileDirectory)..\DolCon.WorldForge\bin\**;$(MSBuildThisFileDirectory)..\DolCon.WorldForge\obj\**" />
+    <WorldBakeInput Include="$(MSBuildThisFileDirectory)..\DolCon.Core\Models\World\**\*.cs" />
+    <WorldBakeInput Include="$(MSBuildThisFileDirectory)..\DolCon.Core\Services\World*.cs" />
   </ItemGroup>
+
+  <Target Name="BakeWorlds"
+          AfterTargets="Build"
+          Inputs="@(WorldBakeInput)"
+          Outputs="$(BakedWorld)">
+    <MSBuild Projects="$(MSBuildThisFileDirectory)..\DolCon.WorldForge\DolCon.WorldForge.csproj"
+             Targets="GetTargetPath"
+             Properties="Configuration=$(Configuration)">
+      <Output TaskParameter="TargetOutputs" ItemName="WorldForgeAssembly" />
+    </MSBuild>
+    <Message Importance="high" Text="Baking world: $(BakedWorld)" />
+    <Exec Command="dotnet exec &quot;@(WorldForgeAssembly)&quot; bake &quot;$(AzgaarExport)&quot; -o &quot;$(BakedWorld)&quot;" />
+  </Target>
+
+  <!-- Copy the freshly baked world into the build output for `dotnet run`. -->
+  <Target Name="CopyBakedWorldToOutput" AfterTargets="BakeWorlds;Build">
+    <ItemGroup>
+      <BakedWorldFile Include="$(MSBuildThisFileDirectory)Worlds\*.world.dol" />
+    </ItemGroup>
+    <Copy SourceFiles="@(BakedWorldFile)"
+          DestinationFolder="$(OutDir)Worlds"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <!-- ...and into `dotnet publish` output, so a published build ships a playable world. -->
+  <Target Name="PublishBakedWorld" BeforeTargets="ComputeResolvedFilesToPublishList" DependsOnTargets="BakeWorlds">
+    <ItemGroup>
+      <_BakedWorldToPublish Include="$(MSBuildThisFileDirectory)Worlds\*.world.dol" />
+      <!-- Metadata must be item-qualified: a bare %(Filename) here batches against the existing
+           ResolvedFileToPublish list and mis-names the output. -->
+      <ResolvedFileToPublish Include="@(_BakedWorldToPublish)">
+        <RelativePath>Worlds\%(_BakedWorldToPublish.Filename)%(_BakedWorldToPublish.Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
 
 </Project>

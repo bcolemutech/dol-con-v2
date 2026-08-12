@@ -8,7 +8,7 @@ DolCon is a role-playing game written in C# (.NET 10.0) with a MonoGame graphica
 
 ## Project Structure
 
-The solution consists of 3 projects:
+The solution consists of 4 projects:
 
 ```
 dol-con-v2/
@@ -16,9 +16,25 @@ dol-con-v2/
 ├── DolCon.Core.Tests/     # Tests for Core library
 ├── DolCon.MonoGame/       # MonoGame graphical application (loads world.dol)
 ├── DolCon.WorldForge/     # CLI that bakes Azgaar exports into canonical world.dol
+├── docs/                  # Gameplay docs + WORLD_DOL_FORMAT.md (the world.dol schema contract)
 ├── version.json           # Semantic versioning
 └── Directory.Build.props  # Shared build properties
 ```
+
+### World Content Pipeline
+
+World content is **baked at design time, not generated at runtime**:
+
+```
+Azgaar JSON ──▶ DolCon.WorldForge ──▶ world.dol ──▶ DolCon.MonoGame
+ (repo input)     bake (seeded)        (canonical)     (loads & plays)
+```
+
+**`world.dol` is a build artifact, not a source file.** It is gitignored and never committed. The committed source is the raw Azgaar export in `DolCon.MonoGame/PrebuiltMaps/` plus the WorldForge code; `DolCon.MonoGame/Worlds/*.world.dol` is generated output.
+
+Building `DolCon.MonoGame` auto-bakes any missing or out-of-date world (the `BakeWorlds` target in its `.csproj`), so a fresh clone can `dotnet run` with no extra steps. The bake takes well under a second and is skipped when nothing changed.
+
+Because it is regenerated rather than versioned, the bake must stay **byte-reproducible**: pass `--generated-at` or set `SOURCE_DATE_EPOCH` to pin the only wall-clock field, and CI (`verify-bake-reproducible`) fails the build if two bakes of the same export differ. Don't introduce unpinned nondeterminism (`DateTime.Now`, unseeded RNG, hash-order-dependent iteration) into the bake path. See `docs/WORLD_DOL_FORMAT.md`.
 
 ### DolCon.Core (Shared Library)
 Contains all UI-agnostic game logic:
@@ -51,6 +67,24 @@ dotnet run --project DolCon.MonoGame/DolCon.MonoGame.csproj
 # Build in Release mode
 dotnet build -c Release
 ```
+
+### Baking a World
+
+Normally you don't — `dotnet build` bakes automatically. To bake by hand:
+
+```bash
+# Bake a raw Azgaar export into a canonical world.dol
+dotnet run --project DolCon.WorldForge/DolCon.WorldForge.csproj -- \
+  bake "DolCon.MonoGame/PrebuiltMaps/Ouvia Full 2023-07-08-13-04.json" \
+  -o DolCon.MonoGame/Worlds/Ouvia.world.dol
+
+# Byte-reproducible bake (pins the generatedAt stamp)
+SOURCE_DATE_EPOCH=1750000000 dotnet run --project DolCon.WorldForge -- \
+  bake "<export>" -o "<out>.world.dol"
+```
+
+Bakes are deterministic: `--seed <int>` sets the provisioning seed, and omitting it derives a stable
+seed from the Azgaar export. Re-baking the same input therefore reproduces the same world.
 
 ### Testing
 ```bash
@@ -95,8 +129,11 @@ Services are located in `DolCon.Core/Services/` and handle core game logic:
 Screens are in `DolCon.MonoGame/Screens/`:
 
 - **MainMenuScreen**: Entry point with New Game, Load Game, and Exit options.
+- **CharacterCreationScreen**: D&D-style point-buy character creation for new games.
 - **HomeScreen**: Displays party status, current location, and navigation options.
-- **NavigationScreen**: Handles movement UI with directional navigation and movement costs.
+- **NavigationScreen**: Polygon-based movement UI showing neighboring cells and movement costs.
+- **WorldMapScreen**: Renders the full world map with polygon cells and fog-of-war.
+- **LocationScreen**: Handles entering and exploring a location within a cell or burg.
 - **ShopScreen**: Renders shop interactions for buying/selling items and services.
 - **BattleScreen**: Renders combat encounters with turn order, health bars, and action selection.
 - **InventoryScreen**: Displays player inventory with equipment management.
@@ -105,10 +142,11 @@ Screens are in `DolCon.MonoGame/Screens/`:
 
 Models are in `DolCon.Core/Models/`:
 
-- **BaseTypes/**: Contains map data structures deserialized from JSON files (Map, Cell, Burg, State, Province, etc.). These represent the world geography imported from external map generation tools.
+- **World/**: The canonical baked-world schema the game runs on — `DolWorld` (root), `WorldCell`, `WorldBurg`, `WorldLocation`, `WorldState`, `WorldProvince`, `WorldRiver`, plus `Enrichment` (reserved authored-content containers) and `SaveGame`. `DolWorldSerializer` is the **single source of truth** for JSON options; both the baker and the loader must use it.
+- **BaseTypes/**: Raw Azgaar export shapes (Map, Cell, Burg, State, Province, etc.). These are **WorldForge input only** — the game no longer touches them at runtime. Don't add runtime dependencies on them.
 - **Player**: Represents a character with inventory and currency (coin subdivided into copper/silver/gold).
 - **Party**: Contains multiple players, tracks current Cell/Burg/Location, and manages stamina for movement.
-- **Location**: Represents explorable places within cells or burgs, with discovery/exploration tracking.
+- **Location / LocationType**: `Location` is an explorable place with discovery/exploration tracking. In `world.dol` it is stored slim as a `WorldLocation` (`id`, `name`, `typeKey`, `rarity`); the full template is rehydrated at load time from the static `LocationTypes.Types` catalog, so the catalog is never duplicated into the world file.
 - **Item**: Equipment and goods with tags determining type (weapon, armor, etc.) and rarity.
 - **Scene**: Manages the current interaction state (shop selections, event type, completion status).
 - **Combat/**: Contains combat system models including `Enemy`, `CombatState`, `PlayerCombatant`, `CombatEntity`, `AttackResult`, and `CombatSupport`.
@@ -134,8 +172,8 @@ Models are in `DolCon.Core/Models/`:
 
 - **Items.json**: Defines all items/equipment with tags (TagType enum) for categorization.
 - **Services.json**: Defines available services at locations (inns, vendors, etc.).
-- **Worlds/**: Contains baked `world.dol` files (produced by WorldForge) that ship with the game and are copied to `%APPDATA%/DolCon/Worlds` on first run.
-- **PrebuiltMaps/**: Raw Azgaar exports kept in-repo only as WorldForge input; no longer copied to the game at runtime.
+- **Worlds/**: Baked `world.dol` files — **generated build output, gitignored**, produced by the `BakeWorlds` MSBuild target. Installed to `%APPDATA%/DolCon/Worlds` at startup, refreshed when the shipped copy is newer so a re-bake actually reaches the player.
+- **PrebuiltMaps/**: Raw Azgaar exports, committed. These are the true world source and WorldForge's only input; not copied to the game at runtime.
 
 ### Combat System
 
@@ -153,16 +191,18 @@ Combat flow:
 
 ### Testing
 
-Tests use xUnit, NSubstitute for mocking, and FluentAssertions. Located in `DolCon.Core.Tests/`. Key test files include `CombatServiceTests` (extensive combat mechanics), `MapServiceTests` (direction calculation), `PlayerTests`, and `AttackResultTests`.
+Tests use xUnit, NSubstitute for mocking, and FluentAssertions. Located in `DolCon.Core.Tests/`. Key test files include `CombatServiceTests` (extensive combat mechanics), `MapServiceTests` (direction calculation), `PlayerTests`, and `AttackResultTests`. World-pipeline coverage lives in `DolCon.Core.Tests/World/`: `DolWorldSerializationTests` (lossless round-trip, human-readable enums, `schemaVersion`, `typeKey` rehydration), `WorldBakerTests`, `WorldProvisioningServiceTests` (determinism under a fixed seed), and `GameWorldStateTests`.
 
 GitHub Actions runs tests on Ubuntu, Windows, and macOS to ensure cross-platform compatibility.
 
 ## Important Notes
 
 - Game state is managed through static properties on SaveGameService rather than passed parameters.
-- Map JSON structure comes from an external map generator tool and follows a specific schema (cells, burgs, states, provinces, rivers).
-- Movement costs vary by biome and are calculated in MoveService based on map cell data.
+- The world is **authored, not re-rolled**. Anything that should be identical run-to-run belongs in the bake (WorldForge), not at runtime. Adding a `new Random()` to a runtime code path re-introduces the drift Phase 2 removed.
+- The canonical `world.dol` is immutable and progress-free. Player progress (`ExploredPercent`, `Discovered`, `LastExplored`) and party data live in the `SaveGame`; progress fields are `[JsonIgnore(WhenWritingDefault)]` so a fresh bake omits them.
+- Schema changes follow `docs/WORLD_DOL_FORMAT.md`: additive optional fields don't bump `schemaVersion`; renames, removals, and semantic changes do.
+- Movement costs vary by biome and are calculated in MoveService based on world cell data.
 - The UI is fully keyboard-driven with no mouse support.
 - Inventory is limited to 50 items per player.
 - Location exploration uses a percentage system that increases over time.
-- Encounter difficulty scales based on cell distance from the map center (challenge rating increases further from civilization).
+- Encounter difficulty scales with a cell's distance from the **City of Light** (`WorldProvisioningService.CalculateChallengeRating`, CR 0–20), so challenge rises the further the party travels from civilization. This is baked into `world.dol`.
