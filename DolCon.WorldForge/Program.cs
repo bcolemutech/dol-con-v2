@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using DolCon.Core.Models.BaseTypes;
 using DolCon.Core.Models.World;
@@ -29,6 +30,7 @@ internal static class WorldForgeCli
         string? input = null;
         string? output = null;
         int? seed = null;
+        DateTime? generatedAt = null;
 
         for (var i = 0; i < args.Length; i++)
         {
@@ -42,6 +44,12 @@ internal static class WorldForgeCli
                     if (++i >= args.Length) return Fail("Missing value for --seed.");
                     if (!int.TryParse(args[i], out var parsedSeed)) return Fail($"--seed must be an integer, got '{args[i]}'.");
                     seed = parsedSeed;
+                    break;
+                case "--generated-at":
+                    if (++i >= args.Length) return Fail("Missing value for --generated-at.");
+                    if (!TryParseTimestamp(args[i], out var parsedStamp))
+                        return Fail($"--generated-at must be an ISO-8601 UTC timestamp, got '{args[i]}'.");
+                    generatedAt = parsedStamp;
                     break;
                 default:
                     if (input is null) input = args[i];
@@ -75,8 +83,14 @@ internal static class WorldForgeCli
         var resolvedSeed = seed ?? DefaultSeed(map);
         Console.WriteLine($"  seed: {resolvedSeed}{(seed is null ? " (derived from map)" : "")}");
 
+        var resolvedStamp = generatedAt ?? SourceDateEpoch();
+        if (resolvedStamp is not null)
+        {
+            Console.WriteLine($"  generatedAt: {resolvedStamp:O} (pinned — reproducible bake)");
+        }
+
         var baker = new WorldBaker();
-        var world = baker.Bake(map, resolvedSeed, new ConsoleProvisioningCallback());
+        var world = baker.Bake(map, resolvedSeed, new ConsoleProvisioningCallback(), resolvedStamp);
 
         var json = DolWorldSerializer.Serialize(world);
         var outputDir = Path.GetDirectoryName(Path.GetFullPath(output));
@@ -103,6 +117,36 @@ internal static class WorldForgeCli
         Console.WriteLine($"  City of Light : {cityOfLight}");
         Console.WriteLine($"  locations     : {locations}");
         Console.WriteLine($"  output        : {output} ({bytes:N0} bytes)");
+    }
+
+    /// <summary>
+    /// Parses an ISO-8601 timestamp and normalises it to UTC, so a pinned bake is byte-identical
+    /// regardless of the machine's local time zone.
+    /// </summary>
+    private static bool TryParseTimestamp(string value, out DateTime utc)
+    {
+        if (DateTime.TryParse(value, CultureInfo.InvariantCulture,
+                DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out var parsed))
+        {
+            utc = DateTime.SpecifyKind(parsed, DateTimeKind.Utc);
+            return true;
+        }
+
+        utc = default;
+        return false;
+    }
+
+    /// <summary>
+    /// Honours the reproducible-builds <c>SOURCE_DATE_EPOCH</c> convention (Unix seconds) so CI can
+    /// pin the bake timestamp without passing a flag. Ignored when unset or unparseable.
+    /// </summary>
+    private static DateTime? SourceDateEpoch()
+    {
+        var raw = Environment.GetEnvironmentVariable("SOURCE_DATE_EPOCH");
+        if (string.IsNullOrWhiteSpace(raw)) return null;
+        return long.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var seconds)
+            ? DateTimeOffset.FromUnixTimeSeconds(seconds).UtcDateTime
+            : null;
     }
 
     /// <summary>
@@ -138,12 +182,14 @@ internal static class WorldForgeCli
             WorldForge — bake an Azgaar export into a canonical world.dol
 
             Usage:
-              worldforge bake <azgaar-export.json> -o <world.dol> [--seed <int>]
+              worldforge bake <azgaar-export.json> -o <world.dol> [--seed <int>] [--generated-at <iso8601>]
 
             Options:
-              -o, --output   Path to write the baked world.dol (required).
-              --seed         Provisioning seed for reproducible bakes (default: derived from the map).
-              -h, --help     Show this help.
+              -o, --output     Path to write the baked world.dol (required).
+              --seed           Provisioning seed for reproducible bakes (default: derived from the map).
+              --generated-at   Pin the generatedAt stamp (ISO-8601 UTC) for a byte-reproducible bake.
+                               Also honours the SOURCE_DATE_EPOCH environment variable.
+              -h, --help       Show this help.
             """);
         return 0;
     }

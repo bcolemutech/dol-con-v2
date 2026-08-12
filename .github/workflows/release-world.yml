@@ -1,0 +1,59 @@
+name: Release World
+
+# Baked worlds are build artifacts, not repo files (see docs/WORLD_DOL_FORMAT.md). This publishes
+# them: on a version tag, bake the canonical world and attach it to the GitHub Release so players
+# and downstream builds have a stable, downloadable copy without it living in git history.
+on:
+  push:
+    tags: [ 'v*' ]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing release tag to attach the baked world to'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  bake-and-publish:
+    name: Bake canonical world and attach to release
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Build WorldForge
+      run: dotnet build DolCon.WorldForge/DolCon.WorldForge.csproj --configuration Release
+
+    - name: Bake canonical world
+      shell: bash
+      run: |
+        set -euo pipefail
+        # Pin the bake timestamp to the tagged commit so the published artifact is reproducible:
+        # anyone re-baking this tag gets byte-identical output.
+        SOURCE_DATE_EPOCH=$(git -c log.showSignature=false log -1 --format=%ct)
+        export SOURCE_DATE_EPOCH
+        echo "Pinned SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH"
+
+        mkdir -p dist
+        dotnet run --project DolCon.WorldForge --configuration Release --no-build -- \
+          bake "DolCon.MonoGame/PrebuiltMaps/Ouvia Full 2023-07-08-13-04.json" \
+          -o dist/Ouvia.world.dol
+
+        # Ship compressed too — the baked JSON is ~7x smaller gzipped.
+        gzip -9 -k dist/Ouvia.world.dol
+        (cd dist && sha256sum Ouvia.world.dol Ouvia.world.dol.gz > SHA256SUMS.txt)
+        ls -la dist
+
+    - name: Attach to release
+      env:
+        GH_TOKEN: ${{ github.token }}
+        TAG: ${{ github.event.inputs.tag || github.ref_name }}
+      run: gh release upload "$TAG" dist/Ouvia.world.dol dist/Ouvia.world.dol.gz dist/SHA256SUMS.txt --clobber
